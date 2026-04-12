@@ -98,20 +98,20 @@ function TestPreviewPage() {
           try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-              const { data: session } = await supabase
-                .from("sessions_test" as any)
+              const { data: session } = await (supabase as any)
+                .from("sessions_test")
                 .insert({
                   user_id: user.id,
                   test_type: "simon",
                   score_global: results.accuracy,
                   duree_totale: rawTrials.reduce((s, t) => s + (t.responseTime || 0), 0),
                   donnees_brutes: { trials: rawTrials },
-                } as any)
+                })
                 .select()
                 .single();
 
               if (session) {
-                await supabase.from("resultats_test" as any).insert({
+                await (supabase as any).from("resultats_test").insert({
                   session_id: (session as any).id,
                   user_id: user.id,
                   test_type: "simon",
