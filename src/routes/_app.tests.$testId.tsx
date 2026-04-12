@@ -1,7 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Zap, GitBranch, Clock, Target, ArrowLeft, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SimonTest } from "@/components/tests/SimonTest";
+import { SimonResults } from "@/components/tests/SimonResults";
+import { supabase } from "@/integrations/supabase/client";
+import type { SimonTrial } from "@/lib/simon-engine";
+import { computeSimonResults } from "@/lib/simon-engine";
 
 export const Route = createFileRoute("/_app/tests/$testId")({
   component: TestPreviewPage,
@@ -64,8 +70,12 @@ const testData: Record<string, {
   },
 };
 
+type TestState = "preview" | "running" | "results";
+
 function TestPreviewPage() {
   const { testId } = Route.useParams();
+  const [state, setState] = useState<TestState>("preview");
+  const [simonResults, setSimonResults] = useState<ReturnType<typeof computeSimonResults> | null>(null);
   const test = testData[testId];
 
   if (!test) {
@@ -74,6 +84,62 @@ function TestPreviewPage() {
         <p className="text-muted-foreground">Test introuvable</p>
       </div>
     );
+  }
+
+  // Simon test running
+  if (testId === "simon" && state === "running") {
+    return (
+      <SimonTest
+        onComplete={async (results, rawTrials) => {
+          setSimonResults(results);
+          setState("results");
+
+          // Try to save to DB (will work once tables exist)
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data: session } = await (supabase as any)
+                .from("sessions_test")
+                .insert({
+                  user_id: user.id,
+                  test_type: "simon",
+                  score_global: results.accuracy,
+                  duree_totale: rawTrials.reduce((s, t) => s + (t.responseTime || 0), 0),
+                  donnees_brutes: { trials: rawTrials },
+                })
+                .select()
+                .single();
+
+              if (session) {
+                await (supabase as any).from("resultats_test").insert({
+                  session_id: (session as any).id,
+                  user_id: user.id,
+                  test_type: "simon",
+                  metrique: "simon_effect",
+                  valeur: results.simonEffect,
+                  unite: "ms",
+                  details: {
+                    avg_rt: results.avgRT,
+                    avg_congruent: results.avgCongruent,
+                    avg_incongruent: results.avgIncongruent,
+                    accuracy: results.accuracy,
+                    error_rate: results.errorRate,
+                    missed: results.missedCount,
+                  },
+                } as any);
+              }
+            }
+          } catch (e) {
+            console.warn("Could not save results:", e);
+          }
+        }}
+      />
+    );
+  }
+
+  // Simon results
+  if (testId === "simon" && state === "results" && simonResults) {
+    return <SimonResults results={simonResults} />;
   }
 
   const Icon = test.icon;
@@ -144,7 +210,11 @@ function TestPreviewPage() {
         transition={{ delay: 0.3 }}
         className="mt-8"
       >
-        <Button className="h-14 w-full text-base font-semibold" size="lg">
+        <Button
+          onClick={() => setState("running")}
+          className="h-14 w-full text-base font-semibold"
+          size="lg"
+        >
           <Play className="mr-2 h-5 w-5" /> Commencer l'entraînement
         </Button>
       </motion.div>
