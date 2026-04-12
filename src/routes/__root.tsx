@@ -31,11 +31,11 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "CogniRaja — Évaluation Cognitive" },
+      { name: "description", content: "Application d'évaluation cognitive pour l'Académie Raja Casablanca" },
+      { name: "author", content: "Académie Raja Casablanca" },
+      { property: "og:title", content: "CogniRaja — Évaluation Cognitive" },
+      { property: "og:description", content: "Évaluation des capacités perceptivo-cognitives des jeunes footballeurs" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -54,7 +54,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>
