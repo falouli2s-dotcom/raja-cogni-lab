@@ -26,7 +26,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   const [allRealTrials, setAllRealTrials] = useState<SimonTrial[]>([]);
 
   const stimulusStartRef = useRef<number>(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const responded = useRef(false);
 
   const isTraining = phase === "training";
