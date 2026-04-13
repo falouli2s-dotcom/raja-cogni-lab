@@ -7,11 +7,14 @@ import { SimonTest } from "@/components/tests/SimonTest";
 import { SimonResults } from "@/components/tests/SimonResults";
 import { NBackTest } from "@/components/tests/NBackTest";
 import { NBackResults } from "@/components/tests/NBackResults";
+import { TMTTest } from "@/components/tests/TMTTest";
+import { TMTResults } from "@/components/tests/TMTResults";
 import { supabase } from "@/integrations/supabase/client";
 import type { SimonTrial } from "@/lib/simon-engine";
 import { computeSimonResults } from "@/lib/simon-engine";
 import { computeNBackResults } from "@/lib/nback-engine";
 import type { NBackTrial } from "@/lib/nback-engine";
+import type { TMTCombinedResults } from "@/lib/tmt-engine";
 
 export const Route = createFileRoute("/_app/tests/$testId")({
   component: TestPreviewPage,
@@ -81,6 +84,7 @@ function TestPreviewPage() {
   const [state, setState] = useState<TestState>("preview");
   const [simonResults, setSimonResults] = useState<ReturnType<typeof computeSimonResults> | null>(null);
   const [nbackResults, setNbackResults] = useState<ReturnType<typeof computeNBackResults> | null>(null);
+  const [tmtResults, setTmtResults] = useState<TMTCombinedResults | null>(null);
   const test = testData[testId];
 
   if (!test) {
@@ -201,6 +205,59 @@ function TestPreviewPage() {
   // N-Back results
   if (testId === "nback" && state === "results" && nbackResults) {
     return <NBackResults results={nbackResults} />;
+  }
+
+  // TMT test running
+  if (testId === "tmt" && state === "running") {
+    return (
+      <TMTTest
+        onComplete={async (results) => {
+          setTmtResults(results);
+          setState("results");
+
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data: session } = await (supabase as any)
+                .from("sessions_test")
+                .insert({
+                  user_id: user.id,
+                  test_type: "tmt",
+                  score_global: results.ratioBA,
+                  duree_totale: results.partA.completionTime + results.partB.completionTime,
+                  donnees_brutes: { partA: results.partA, partB: results.partB },
+                })
+                .select()
+                .single();
+
+              if (session) {
+                await (supabase as any).from("resultats_test").insert({
+                  session_id: (session as any).id,
+                  user_id: user.id,
+                  test_type: "tmt",
+                  metrique: "ratio_ba",
+                  valeur: results.ratioBA,
+                  unite: "ratio",
+                  details: {
+                    time_a: results.partA.completionTime,
+                    time_b: results.partB.completionTime,
+                    errors_a: results.partA.errors,
+                    errors_b: results.partB.errors,
+                  },
+                });
+              }
+            }
+          } catch (e) {
+            console.warn("Could not save TMT results:", e);
+          }
+        }}
+      />
+    );
+  }
+
+  // TMT results
+  if (testId === "tmt" && state === "results" && tmtResults) {
+    return <TMTResults results={tmtResults} />;
   }
 
   const Icon = test.icon;
