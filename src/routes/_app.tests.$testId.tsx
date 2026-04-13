@@ -207,6 +207,59 @@ function TestPreviewPage() {
     return <NBackResults results={nbackResults} />;
   }
 
+  // TMT test running
+  if (testId === "tmt" && state === "running") {
+    return (
+      <TMTTest
+        onComplete={async (results) => {
+          setTmtResults(results);
+          setState("results");
+
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data: session } = await (supabase as any)
+                .from("sessions_test")
+                .insert({
+                  user_id: user.id,
+                  test_type: "tmt",
+                  score_global: results.ratioBA,
+                  duree_totale: results.partA.completionTime + results.partB.completionTime,
+                  donnees_brutes: { partA: results.partA, partB: results.partB },
+                })
+                .select()
+                .single();
+
+              if (session) {
+                await (supabase as any).from("resultats_test").insert({
+                  session_id: (session as any).id,
+                  user_id: user.id,
+                  test_type: "tmt",
+                  metrique: "ratio_ba",
+                  valeur: results.ratioBA,
+                  unite: "ratio",
+                  details: {
+                    time_a: results.partA.completionTime,
+                    time_b: results.partB.completionTime,
+                    errors_a: results.partA.errors,
+                    errors_b: results.partB.errors,
+                  },
+                });
+              }
+            }
+          } catch (e) {
+            console.warn("Could not save TMT results:", e);
+          }
+        }}
+      />
+    );
+  }
+
+  // TMT results
+  if (testId === "tmt" && state === "results" && tmtResults) {
+    return <TMTResults results={tmtResults} />;
+  }
+
   const Icon = test.icon;
 
   return (
