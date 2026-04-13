@@ -7,11 +7,14 @@ import { SimonTest } from "@/components/tests/SimonTest";
 import { SimonResults } from "@/components/tests/SimonResults";
 import { NBackTest } from "@/components/tests/NBackTest";
 import { NBackResults } from "@/components/tests/NBackResults";
+import { TMTTest } from "@/components/tests/TMTTest";
+import { TMTResults } from "@/components/tests/TMTResults";
 import { supabase } from "@/integrations/supabase/client";
 import type { SimonTrial } from "@/lib/simon-engine";
 import { computeSimonResults } from "@/lib/simon-engine";
 import { computeNBackResults } from "@/lib/nback-engine";
 import type { NBackTrial } from "@/lib/nback-engine";
+import type { TMTCombinedResults } from "@/lib/tmt-engine";
 
 export const Route = createFileRoute("/_app/tests/$testId")({
   component: TestPreviewPage,
