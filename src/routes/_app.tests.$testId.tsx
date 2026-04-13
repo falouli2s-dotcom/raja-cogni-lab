@@ -84,6 +84,7 @@ function TestPreviewPage() {
   const [state, setState] = useState<TestState>("preview");
   const [simonResults, setSimonResults] = useState<ReturnType<typeof computeSimonResults> | null>(null);
   const [nbackResults, setNbackResults] = useState<ReturnType<typeof computeNBackResults> | null>(null);
+  const [tmtResults, setTmtResults] = useState<TMTCombinedResults | null>(null);
   const test = testData[testId];
 
   if (!test) {
