@@ -32,13 +32,15 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "CogniRaja — Évaluation Cognitive" },
-      { name: "description", content: "Application d'évaluation cognitive pour l'Académie Raja Casablanca" },
+      { name: "description", content: "Application d'évaluation cognitive" },
       { name: "author", content: "Académie Raja Casablanca" },
       { property: "og:title", content: "CogniRaja — Évaluation Cognitive" },
-      { property: "og:description", content: "Évaluation des capacités perceptivo-cognitives des jeunes footballeurs" },
+      { property: "og:description", content: "Application d'évaluation cognitive" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "CogniRaja — Évaluation Cognitive" },
+      { name: "twitter:description", content: "Application d'évaluation cognitive" },
     ],
     links: [
       {
