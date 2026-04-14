@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      exercices: {
+        Row: {
+          categorie: Database["public"]["Enums"]["exercice_categorie"]
+          created_at: string
+          description: string
+          difficulte: number
+          duree_minutes: number
+          id: string
+          image_url: string | null
+          instructions: string | null
+          titre: string
+        }
+        Insert: {
+          categorie: Database["public"]["Enums"]["exercice_categorie"]
+          created_at?: string
+          description: string
+          difficulte?: number
+          duree_minutes?: number
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          titre: string
+        }
+        Update: {
+          categorie?: Database["public"]["Enums"]["exercice_categorie"]
+          created_at?: string
+          description?: string
+          difficulte?: number
+          duree_minutes?: number
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          titre?: string
+        }
+        Relationships: []
+      }
       resultats_test: {
         Row: {
           created_at: string
@@ -96,7 +132,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      exercice_categorie:
+        | "attention"
+        | "memoire"
+        | "flexibilite"
+        | "inhibition"
+        | "vitesse"
+        | "anticipation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -223,6 +265,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      exercice_categorie: [
+        "attention",
+        "memoire",
+        "flexibilite",
+        "inhibition",
+        "vitesse",
+        "anticipation",
+      ],
+    },
   },
 } as const
