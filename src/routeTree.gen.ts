@@ -14,14 +14,12 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppResultsRouteImport } from './routes/_app.results'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
 import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
 import { Route as AppSessionsIndexRouteImport } from './routes/_app.sessions.index'
 import { Route as AppTestsSessionRouteImport } from './routes/_app.tests.session'
-import { Route as AppTestsTestIdRouteImport } from './routes/_app.tests.$testId'
 import { Route as AppSessionsSessionIdRouteImport } from './routes/_app.sessions.$sessionId'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -47,11 +45,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AppResultsRoute = AppResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
-  getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -83,11 +76,6 @@ const AppTestsSessionRoute = AppTestsSessionRouteImport.update({
   path: '/tests/session',
   getParentRoute: () => AppRoute,
 } as any)
-const AppTestsTestIdRoute = AppTestsTestIdRouteImport.update({
-  id: '/tests/$testId',
-  path: '/tests/$testId',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppSessionsSessionIdRoute = AppSessionsSessionIdRouteImport.update({
   id: '/sessions/$sessionId',
   path: '/sessions/$sessionId',
@@ -102,9 +90,7 @@ export interface FileRoutesByFullPath {
   '/exercises': typeof AppExercisesRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
-  '/results': typeof AppResultsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
-  '/tests/$testId': typeof AppTestsTestIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/sessions/': typeof AppSessionsIndexRoute
   '/tests/': typeof AppTestsIndexRoute
@@ -117,9 +103,7 @@ export interface FileRoutesByTo {
   '/exercises': typeof AppExercisesRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
-  '/results': typeof AppResultsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
-  '/tests/$testId': typeof AppTestsTestIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/sessions': typeof AppSessionsIndexRoute
   '/tests': typeof AppTestsIndexRoute
@@ -134,9 +118,7 @@ export interface FileRoutesById {
   '/_app/exercises': typeof AppExercisesRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
-  '/_app/results': typeof AppResultsRoute
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
-  '/_app/tests/$testId': typeof AppTestsTestIdRoute
   '/_app/tests/session': typeof AppTestsSessionRoute
   '/_app/sessions/': typeof AppSessionsIndexRoute
   '/_app/tests/': typeof AppTestsIndexRoute
@@ -151,9 +133,7 @@ export interface FileRouteTypes {
     | '/exercises'
     | '/home'
     | '/profile'
-    | '/results'
     | '/sessions/$sessionId'
-    | '/tests/$testId'
     | '/tests/session'
     | '/sessions/'
     | '/tests/'
@@ -166,9 +146,7 @@ export interface FileRouteTypes {
     | '/exercises'
     | '/home'
     | '/profile'
-    | '/results'
     | '/sessions/$sessionId'
-    | '/tests/$testId'
     | '/tests/session'
     | '/sessions'
     | '/tests'
@@ -182,9 +160,7 @@ export interface FileRouteTypes {
     | '/_app/exercises'
     | '/_app/home'
     | '/_app/profile'
-    | '/_app/results'
     | '/_app/sessions/$sessionId'
-    | '/_app/tests/$testId'
     | '/_app/tests/session'
     | '/_app/sessions/'
     | '/_app/tests/'
@@ -235,13 +211,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/results': {
-      id: '/_app/results'
-      path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof AppResultsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
@@ -284,13 +253,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTestsSessionRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/tests/$testId': {
-      id: '/_app/tests/$testId'
-      path: '/tests/$testId'
-      fullPath: '/tests/$testId'
-      preLoaderRoute: typeof AppTestsTestIdRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/sessions/$sessionId': {
       id: '/_app/sessions/$sessionId'
       path: '/sessions/$sessionId'
@@ -305,9 +267,7 @@ interface AppRouteChildren {
   AppExercisesRoute: typeof AppExercisesRoute
   AppHomeRoute: typeof AppHomeRoute
   AppProfileRoute: typeof AppProfileRoute
-  AppResultsRoute: typeof AppResultsRoute
   AppSessionsSessionIdRoute: typeof AppSessionsSessionIdRoute
-  AppTestsTestIdRoute: typeof AppTestsTestIdRoute
   AppTestsSessionRoute: typeof AppTestsSessionRoute
   AppSessionsIndexRoute: typeof AppSessionsIndexRoute
   AppTestsIndexRoute: typeof AppTestsIndexRoute
@@ -317,9 +277,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExercisesRoute: AppExercisesRoute,
   AppHomeRoute: AppHomeRoute,
   AppProfileRoute: AppProfileRoute,
-  AppResultsRoute: AppResultsRoute,
   AppSessionsSessionIdRoute: AppSessionsSessionIdRoute,
-  AppTestsTestIdRoute: AppTestsTestIdRoute,
   AppTestsSessionRoute: AppTestsSessionRoute,
   AppSessionsIndexRoute: AppSessionsIndexRoute,
   AppTestsIndexRoute: AppTestsIndexRoute,
