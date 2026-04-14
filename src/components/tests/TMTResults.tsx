@@ -126,7 +126,7 @@ export function TMTResults({ results }: TMTResultsProps) {
         transition={{ delay: 0.3 }}
         className="mt-6 flex flex-col gap-3"
       >
-        <Link to="/tests/$testId" params={{ testId: "tmt" }}>
+        <Link to="/tests">
           <Button className="h-12 w-full" variant="outline">
             <RotateCcw className="mr-2 h-4 w-4" /> Refaire le test
           </Button>
