@@ -14,7 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      resultats_test: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          metrique: string
+          session_id: string
+          test_type: string
+          unite: string | null
+          user_id: string
+          valeur: number | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          metrique: string
+          session_id: string
+          test_type: string
+          unite?: string | null
+          user_id: string
+          valeur?: number | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          metrique?: string
+          session_id?: string
+          test_type?: string
+          unite?: string | null
+          user_id?: string
+          valeur?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resultats_test_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions_test"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions_test: {
+        Row: {
+          created_at: string
+          donnees_brutes: Json | null
+          duree_totale: number | null
+          id: string
+          score_global: number | null
+          test_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          donnees_brutes?: Json | null
+          duree_totale?: number | null
+          id?: string
+          score_global?: number | null
+          test_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          donnees_brutes?: Json | null
+          duree_totale?: number | null
+          id?: string
+          score_global?: number | null
+          test_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
