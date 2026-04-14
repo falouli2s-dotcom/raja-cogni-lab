@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { User, LogOut, ChevronRight, Shield, Bell, Palette } from "lucide-react";
+import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -31,6 +31,7 @@ function ProfilePage() {
   }
 
   const menuItems = [
+    { icon: BarChart3, label: "Historique des sessions", action: () => navigate({ to: "/sessions" }) },
     { icon: User, label: "Informations personnelles", action: () => {} },
     { icon: Shield, label: "Sécurité", action: () => {} },
     { icon: Bell, label: "Notifications", action: () => {} },

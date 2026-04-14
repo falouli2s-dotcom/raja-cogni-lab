@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Brain, Zap, GitBranch, Clock, ChevronRight } from "lucide-react";
+import { Brain, Zap, GitBranch, Clock, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app/tests/")({
   component: TestsPage,
@@ -41,17 +42,18 @@ const tests = [
 
 function TestsPage() {
   return (
-    <div className="px-5 pt-12 pb-4">
+    <div className="px-5 pt-12 pb-24">
       <motion.div
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
-        <h1 className="text-2xl font-bold text-foreground">Tests Cognitifs</h1>
+        <h1 className="text-2xl font-bold text-foreground">Évaluation Cognitive</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choisis un test pour évaluer tes capacités
+          Passe les 3 tests en une seule session (~20 min)
         </p>
       </motion.div>
 
+      {/* Test overview */}
       <div className="mt-6 flex flex-col gap-3">
         {tests.map((test, i) => {
           const Icon = test.icon;
@@ -62,13 +64,12 @@ function TestsPage() {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.1 * (i + 1) }}
             >
-              <Link
-                to="/tests/$testId"
-                params={{ testId: test.id }}
-                className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors active:bg-muted"
-              >
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${test.bgColor}`}>
-                  <Icon className={`h-6 w-6 ${test.color}`} />
+              <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground">
+                  {i + 1}
+                </div>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${test.bgColor}`}>
+                  <Icon className={`h-5 w-5 ${test.color}`} />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground">{test.name}</p>
@@ -80,12 +81,25 @@ function TestsPage() {
                     <span className="text-xs text-muted-foreground">{test.trials}</span>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </Link>
+              </div>
             </motion.div>
           );
         })}
       </div>
+
+      {/* Start session */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="mt-8"
+      >
+        <Link to="/tests/session">
+          <Button className="h-14 w-full text-base font-semibold" size="lg">
+            <Play className="mr-2 h-5 w-5" /> Démarrer la Session
+          </Button>
+        </Link>
+      </motion.div>
     </div>
   );
 }

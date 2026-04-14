@@ -19,7 +19,10 @@ import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
 import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
+import { Route as AppSessionsIndexRouteImport } from './routes/_app.sessions.index'
+import { Route as AppTestsSessionRouteImport } from './routes/_app.tests.session'
 import { Route as AppTestsTestIdRouteImport } from './routes/_app.tests.$testId'
+import { Route as AppSessionsSessionIdRouteImport } from './routes/_app.sessions.$sessionId'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -70,9 +73,24 @@ const AppTestsIndexRoute = AppTestsIndexRouteImport.update({
   path: '/tests/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSessionsIndexRoute = AppSessionsIndexRouteImport.update({
+  id: '/sessions/',
+  path: '/sessions/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTestsSessionRoute = AppTestsSessionRouteImport.update({
+  id: '/tests/session',
+  path: '/tests/session',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTestsTestIdRoute = AppTestsTestIdRouteImport.update({
   id: '/tests/$testId',
   path: '/tests/$testId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSessionsSessionIdRoute = AppSessionsSessionIdRouteImport.update({
+  id: '/sessions/$sessionId',
+  path: '/sessions/$sessionId',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -85,7 +103,10 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/results': typeof AppResultsRoute
+  '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/$testId': typeof AppTestsTestIdRoute
+  '/tests/session': typeof AppTestsSessionRoute
+  '/sessions/': typeof AppSessionsIndexRoute
   '/tests/': typeof AppTestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -97,7 +118,10 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/results': typeof AppResultsRoute
+  '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/$testId': typeof AppTestsTestIdRoute
+  '/tests/session': typeof AppTestsSessionRoute
+  '/sessions': typeof AppSessionsIndexRoute
   '/tests': typeof AppTestsIndexRoute
 }
 export interface FileRoutesById {
@@ -111,7 +135,10 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/results': typeof AppResultsRoute
+  '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/_app/tests/$testId': typeof AppTestsTestIdRoute
+  '/_app/tests/session': typeof AppTestsSessionRoute
+  '/_app/sessions/': typeof AppSessionsIndexRoute
   '/_app/tests/': typeof AppTestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -125,7 +152,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/results'
+    | '/sessions/$sessionId'
     | '/tests/$testId'
+    | '/tests/session'
+    | '/sessions/'
     | '/tests/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,7 +167,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/results'
+    | '/sessions/$sessionId'
     | '/tests/$testId'
+    | '/tests/session'
+    | '/sessions'
     | '/tests'
   id:
     | '__root__'
@@ -150,7 +183,10 @@ export interface FileRouteTypes {
     | '/_app/home'
     | '/_app/profile'
     | '/_app/results'
+    | '/_app/sessions/$sessionId'
     | '/_app/tests/$testId'
+    | '/_app/tests/session'
+    | '/_app/sessions/'
     | '/_app/tests/'
   fileRoutesById: FileRoutesById
 }
@@ -234,11 +270,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTestsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/sessions/': {
+      id: '/_app/sessions/'
+      path: '/sessions'
+      fullPath: '/sessions/'
+      preLoaderRoute: typeof AppSessionsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/tests/session': {
+      id: '/_app/tests/session'
+      path: '/tests/session'
+      fullPath: '/tests/session'
+      preLoaderRoute: typeof AppTestsSessionRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/tests/$testId': {
       id: '/_app/tests/$testId'
       path: '/tests/$testId'
       fullPath: '/tests/$testId'
       preLoaderRoute: typeof AppTestsTestIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sessions/$sessionId': {
+      id: '/_app/sessions/$sessionId'
+      path: '/sessions/$sessionId'
+      fullPath: '/sessions/$sessionId'
+      preLoaderRoute: typeof AppSessionsSessionIdRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -249,7 +306,10 @@ interface AppRouteChildren {
   AppHomeRoute: typeof AppHomeRoute
   AppProfileRoute: typeof AppProfileRoute
   AppResultsRoute: typeof AppResultsRoute
+  AppSessionsSessionIdRoute: typeof AppSessionsSessionIdRoute
   AppTestsTestIdRoute: typeof AppTestsTestIdRoute
+  AppTestsSessionRoute: typeof AppTestsSessionRoute
+  AppSessionsIndexRoute: typeof AppSessionsIndexRoute
   AppTestsIndexRoute: typeof AppTestsIndexRoute
 }
 
@@ -258,7 +318,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppHomeRoute: AppHomeRoute,
   AppProfileRoute: AppProfileRoute,
   AppResultsRoute: AppResultsRoute,
+  AppSessionsSessionIdRoute: AppSessionsSessionIdRoute,
   AppTestsTestIdRoute: AppTestsTestIdRoute,
+  AppTestsSessionRoute: AppTestsSessionRoute,
+  AppSessionsIndexRoute: AppSessionsIndexRoute,
   AppTestsIndexRoute: AppTestsIndexRoute,
 }
 
