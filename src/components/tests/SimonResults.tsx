@@ -91,7 +91,7 @@ export function SimonResults({ results }: SimonResultsProps) {
         transition={{ delay: 0.4 }}
         className="mt-8 flex flex-col gap-3"
       >
-        <Link to="/results">
+        <Link to="/sessions">
           <Button className="h-12 w-full text-base font-semibold">
             Voir mes résultats <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
