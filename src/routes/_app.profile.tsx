@@ -241,7 +241,7 @@ function ProfilePage() {
                     disabled={(d) => d > new Date()}
                     initialFocus
                     className="p-3 pointer-events-auto"
-                    captionLayout="dropdown-buttons"
+                    captionLayout="dropdown"
                     fromYear={1980}
                     toYear={new Date().getFullYear()}
                   />
