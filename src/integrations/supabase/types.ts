@@ -16,36 +16,63 @@ export type Database = {
     Tables: {
       exercices: {
         Row: {
-          categorie: Database["public"]["Enums"]["exercice_categorie"]
+          alignement_test_digital: string
+          bloc: string
           created_at: string
-          description: string
-          difficulte: number
-          duree_minutes: number
+          duree_serie: string
           id: string
-          image_url: string | null
-          instructions: string | null
+          indicateur_cognitif: string
+          materiel: string | null
+          niveau: string
+          numero: number
+          objectif_cognitif: string
+          recuperation_secondes: number
+          regle_reponse: string | null
+          series: number
+          source_scientifique: string | null
+          stimulus_detail: Json | null
+          stimulus_type: string
+          tache_motrice: string
           titre: string
         }
         Insert: {
-          categorie: Database["public"]["Enums"]["exercice_categorie"]
+          alignement_test_digital?: string
+          bloc?: string
           created_at?: string
-          description: string
-          difficulte?: number
-          duree_minutes?: number
+          duree_serie?: string
           id?: string
-          image_url?: string | null
-          instructions?: string | null
+          indicateur_cognitif?: string
+          materiel?: string | null
+          niveau?: string
+          numero?: number
+          objectif_cognitif?: string
+          recuperation_secondes?: number
+          regle_reponse?: string | null
+          series?: number
+          source_scientifique?: string | null
+          stimulus_detail?: Json | null
+          stimulus_type?: string
+          tache_motrice?: string
           titre: string
         }
         Update: {
-          categorie?: Database["public"]["Enums"]["exercice_categorie"]
+          alignement_test_digital?: string
+          bloc?: string
           created_at?: string
-          description?: string
-          difficulte?: number
-          duree_minutes?: number
+          duree_serie?: string
           id?: string
-          image_url?: string | null
-          instructions?: string | null
+          indicateur_cognitif?: string
+          materiel?: string | null
+          niveau?: string
+          numero?: number
+          objectif_cognitif?: string
+          recuperation_secondes?: number
+          regle_reponse?: string | null
+          series?: number
+          source_scientifique?: string | null
+          stimulus_detail?: Json | null
+          stimulus_type?: string
+          tache_motrice?: string
           titre?: string
         }
         Relationships: []
@@ -132,13 +159,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      exercice_categorie:
-        | "attention"
-        | "memoire"
-        | "flexibilite"
-        | "inhibition"
-        | "vitesse"
-        | "anticipation"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -265,15 +286,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      exercice_categorie: [
-        "attention",
-        "memoire",
-        "flexibilite",
-        "inhibition",
-        "vitesse",
-        "anticipation",
-      ],
-    },
+    Enums: {},
   },
 } as const
