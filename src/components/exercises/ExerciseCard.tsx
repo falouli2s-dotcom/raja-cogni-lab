@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronRight, Clock, RotateCcw } from "lucide-react";
+import { Clock, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BLOC_COLORS, NIVEAU_COLORS, getTestIcon } from "./exercise-constants";
 import type { Exercice } from "@/routes/_app.exercises";
