@@ -1,1 +1,8 @@
 project_id = "dbabzfwftdnutoclfvnq"
+
+[auth]
+site_url = "http://localhost:3000"
+[auth.email]
+enable_confirmations = true
+otp_length = 6
+otp_expiry = 600
