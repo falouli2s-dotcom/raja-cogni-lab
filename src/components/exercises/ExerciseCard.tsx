@@ -47,7 +47,9 @@ export function ExerciseCard({ exercice: ex, index, onClick }: Props) {
             {ex.objectif_cognitif}
           </p>
         </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+        <Badge variant="outline" className="text-[10px] text-primary border-primary shrink-0 mt-1">
+          ▶ Démarrer
+        </Badge>
       </div>
 
       {/* Footer meta */}

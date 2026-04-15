@@ -1,7 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import { X, Clock, RotateCcw, BookOpen, Dumbbell, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { BLOC_COLORS, NIVEAU_COLORS, getTestIcon } from "./exercise-constants";
+import { ExercisePlayer } from "./ExercisePlayer";
 import type { Exercice } from "@/routes/_app.exercises";
 
 interface Props {
@@ -10,6 +13,14 @@ interface Props {
 }
 
 export function ExerciseModal({ exercice: ex, onClose }: Props) {
+  const [playerOpen, setPlayerOpen] = useState(false);
+
+  // Reset player state when modal closes
+  const handleClose = () => {
+    setPlayerOpen(false);
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {ex && (
@@ -19,7 +30,7 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
           />
           {/* Modal */}
@@ -34,7 +45,7 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
             <div className="sticky top-0 z-10 bg-card pt-3 pb-2 px-5 flex items-center justify-between">
               <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto absolute left-1/2 -translate-x-1/2 top-3" />
               <div />
-              <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted">
+              <button onClick={handleClose} className="p-1.5 rounded-full hover:bg-muted">
                 <X className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
@@ -111,8 +122,21 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
                   <p className="text-xs text-muted-foreground italic">{ex.source_scientifique}</p>
                 </Section>
               )}
+
+              {/* Start button */}
+              <Button
+                className="w-full h-12 text-base font-semibold mt-6"
+                onClick={() => setPlayerOpen(true)}
+              >
+                ▶ Commencer l'exercice
+              </Button>
             </div>
           </motion.div>
+
+          {/* Player overlay */}
+          {playerOpen && (
+            <ExercisePlayer exercice={ex} onClose={() => setPlayerOpen(false)} />
+          )}
         </>
       )}
     </AnimatePresence>
