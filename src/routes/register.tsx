@@ -67,7 +67,7 @@ function RegisterPage() {
       return;
     }
 
-    navigate({ to: "/home", replace: true });
+    navigate({ to: "/verify-email", search: { email }, replace: true });
   }
 
   return (
