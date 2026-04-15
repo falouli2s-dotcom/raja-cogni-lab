@@ -1,28 +1,89 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3 } from "lucide-react";
+import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_app/profile")({
   component: ProfilePage,
 });
 
+type SheetType = "personal" | "security" | "notifications" | "appearance" | null;
+
+interface NotifPrefs {
+  rappels: boolean;
+  resultats: boolean;
+  exercices: boolean;
+}
+
 function ProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ email?: string; prenom?: string; nom?: string } | null>(null);
+  const [user, setUser] = useState<{ email?: string; prenom?: string; nom?: string; date_naissance?: string; poste?: string } | null>(null);
+  const [openSheet, setOpenSheet] = useState<SheetType>(null);
+
+  // Personal info state
+  const [prenom, setPrenom] = useState("");
+  const [nom, setNom] = useState("");
+  const [dateNaissance, setDateNaissance] = useState<Date | undefined>();
+  const [poste, setPoste] = useState("");
+  const [savingPersonal, setSavingPersonal] = useState(false);
+
+  // Security state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [savingSecurity, setSavingSecurity] = useState(false);
+
+  // Notifications state
+  const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>({ rappels: true, resultats: false, exercices: false });
+  const [savingNotifs, setSavingNotifs] = useState(false);
+
+  // Theme state
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
       if (authUser) {
+        const meta = authUser.user_metadata || {};
         setUser({
           email: authUser.email,
-          prenom: authUser.user_metadata?.prenom,
-          nom: authUser.user_metadata?.nom,
+          prenom: meta.prenom,
+          nom: meta.nom,
+          date_naissance: meta.date_naissance,
+          poste: meta.poste,
         });
+        setPrenom(meta.prenom || "");
+        setNom(meta.nom || "");
+        setPoste(meta.poste || "");
+        if (meta.date_naissance) setDateNaissance(new Date(meta.date_naissance));
       }
     });
+
+    // Load notif prefs
+    try {
+      const stored = localStorage.getItem("cogni_notif_prefs");
+      if (stored) setNotifPrefs(JSON.parse(stored));
+    } catch {}
+
+    // Load theme
+    const storedTheme = localStorage.getItem("cogni_theme") as "light" | "dark" | null;
+    if (storedTheme) {
+      setTheme(storedTheme);
+    } else {
+      setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+    }
   }, []);
 
   async function handleLogout() {
@@ -30,20 +91,67 @@ function ProfilePage() {
     navigate({ to: "/login", replace: true });
   }
 
+  // Personal info save
+  async function handleSavePersonal() {
+    setSavingPersonal(true);
+    const { error } = await supabase.auth.updateUser({
+      data: { prenom, nom, date_naissance: dateNaissance?.toISOString().split("T")[0], poste },
+    });
+    setSavingPersonal(false);
+    if (error) { toast.error(error.message); return; }
+    setUser((u) => u ? { ...u, prenom, nom, poste } : u);
+    toast.success("Informations mises à jour");
+    setOpenSheet(null);
+  }
+
+  // Security save
+  async function handleSaveSecurity() {
+    if (newPassword.length < 8) { toast.error("Le mot de passe doit contenir au moins 8 caractères"); return; }
+    if (newPassword !== confirmPassword) { toast.error("Les mots de passe ne correspondent pas"); return; }
+    setSavingSecurity(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSavingSecurity(false);
+    if (error) { toast.error(error.message); return; }
+    setNewPassword(""); setConfirmPassword("");
+    toast.success("Mot de passe mis à jour");
+    setOpenSheet(null);
+  }
+
+  // Notifications save
+  function handleSaveNotifs() {
+    setSavingNotifs(true);
+    localStorage.setItem("cogni_notif_prefs", JSON.stringify(notifPrefs));
+    setTimeout(() => {
+      setSavingNotifs(false);
+      toast.success("Préférences de notifications enregistrées");
+      setOpenSheet(null);
+    }, 300);
+  }
+
+  // Theme toggle
+  function handleSetTheme(t: "light" | "dark") {
+    setTheme(t);
+    localStorage.setItem("cogni_theme", t);
+    if (t === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    toast.success(t === "dark" ? "Mode sombre activé" : "Mode clair activé");
+    setOpenSheet(null);
+  }
+
   const menuItems = [
     { icon: BarChart3, label: "Historique des sessions", action: () => navigate({ to: "/sessions" }) },
-    { icon: User, label: "Informations personnelles", action: () => {} },
-    { icon: Shield, label: "Sécurité", action: () => {} },
-    { icon: Bell, label: "Notifications", action: () => {} },
-    { icon: Palette, label: "Apparence", action: () => {} },
+    { icon: User, label: "Informations personnelles", action: () => setOpenSheet("personal") },
+    { icon: Shield, label: "Sécurité", action: () => setOpenSheet("security") },
+    { icon: Bell, label: "Notifications", action: () => setOpenSheet("notifications") },
+    { icon: Palette, label: "Apparence", action: () => setOpenSheet("appearance") },
   ];
 
   return (
     <div className="px-5 pt-12 pb-4">
-      <motion.div
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
+      <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
         <h1 className="text-2xl font-bold text-foreground">Profil</h1>
       </motion.div>
 
@@ -59,9 +167,7 @@ function ProfilePage() {
         </div>
         <div>
           <p className="font-semibold text-foreground">
-            {user?.prenom && user?.nom
-              ? `${user.prenom} ${user.nom}`
-              : "Joueur"}
+            {user?.prenom && user?.nom ? `${user.prenom} ${user.nom}` : "Joueur"}
           </p>
           <p className="text-sm text-muted-foreground">{user?.email || ""}</p>
         </div>
@@ -80,9 +186,7 @@ function ProfilePage() {
             <button
               key={i}
               onClick={item.action}
-              className={`flex items-center justify-between px-4 py-4 text-left transition-colors active:bg-muted ${
-                i !== menuItems.length - 1 ? "border-b border-border" : ""
-              }`}
+              className={`flex items-center justify-between px-4 py-4 text-left transition-colors active:bg-muted ${i !== menuItems.length - 1 ? "border-b border-border" : ""}`}
             >
               <div className="flex items-center gap-3">
                 <Icon className="h-5 w-5 text-muted-foreground" />
@@ -95,24 +199,171 @@ function ProfilePage() {
       </motion.div>
 
       {/* Logout */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="mt-6"
-      >
-        <Button
-          variant="destructive"
-          onClick={handleLogout}
-          className="h-12 w-full text-base font-semibold"
-        >
+      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="mt-6">
+        <Button variant="destructive" onClick={handleLogout} className="h-12 w-full text-base font-semibold">
           <LogOut className="mr-2 h-5 w-5" /> Se déconnecter
         </Button>
       </motion.div>
 
-      <p className="mt-8 text-center text-xs text-muted-foreground">
-        CogniRaja v1.0 — Académie Raja Casablanca
-      </p>
+      <p className="mt-8 text-center text-xs text-muted-foreground">CogniRaja v1.0 — Académie Raja Casablanca</p>
+
+      {/* === SHEETS === */}
+
+      {/* Personal Info Sheet */}
+      <Sheet open={openSheet === "personal"} onOpenChange={(o) => !o && setOpenSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Informations personnelles</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Prénom</label>
+              <Input value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="Prénom" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Nom</label>
+              <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Nom" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Date de naissance</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dateNaissance && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateNaissance ? format(dateNaissance, "d MMMM yyyy", { locale: fr }) : "Sélectionner"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateNaissance}
+                    onSelect={setDateNaissance}
+                    disabled={(d) => d > new Date()}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                    captionLayout="dropdown-buttons"
+                    fromYear={1980}
+                    toYear={new Date().getFullYear()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Poste</label>
+              <Select value={poste} onValueChange={setPoste}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner un poste" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Gardien">Gardien</SelectItem>
+                  <SelectItem value="Défenseur">Défenseur</SelectItem>
+                  <SelectItem value="Milieu">Milieu</SelectItem>
+                  <SelectItem value="Attaquant">Attaquant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleSavePersonal} disabled={savingPersonal} className="h-12 w-full text-base font-semibold mt-2">
+              {savingPersonal ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Security Sheet */}
+      <Sheet open={openSheet === "security"} onOpenChange={(o) => !o && setOpenSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Sécurité</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Nouveau mot de passe</label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 8 caractères"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Confirmer le mot de passe</label>
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirmer"
+              />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-xs text-destructive mt-1">Les mots de passe ne correspondent pas</p>
+              )}
+            </div>
+            <Button onClick={handleSaveSecurity} disabled={savingSecurity || newPassword.length < 8 || newPassword !== confirmPassword} className="h-12 w-full text-base font-semibold mt-2">
+              {savingSecurity ? "Mise à jour..." : "Mettre à jour"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Notifications Sheet */}
+      <Sheet open={openSheet === "notifications"} onOpenChange={(o) => !o && setOpenSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Notifications</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 flex flex-col gap-1">
+            {[
+              { key: "rappels" as const, label: "Rappels de session" },
+              { key: "resultats" as const, label: "Résultats de tests" },
+              { key: "exercices" as const, label: "Nouveaux exercices" },
+            ].map((item) => (
+              <div key={item.key} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                <span className="text-sm font-medium text-foreground">{item.label}</span>
+                <Switch
+                  checked={notifPrefs[item.key]}
+                  onCheckedChange={(v) => setNotifPrefs((p) => ({ ...p, [item.key]: v }))}
+                />
+              </div>
+            ))}
+            <Button onClick={handleSaveNotifs} disabled={savingNotifs} className="h-12 w-full text-base font-semibold mt-4">
+              {savingNotifs ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Appearance Sheet */}
+      <Sheet open={openSheet === "appearance"} onOpenChange={(o) => !o && setOpenSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Apparence</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleSetTheme("light")}
+              className={cn(
+                "flex flex-col items-center gap-3 rounded-2xl border-2 p-6 transition-colors",
+                theme === "light" ? "border-primary bg-primary/5" : "border-border bg-card"
+              )}
+            >
+              <Sun className={cn("h-8 w-8", theme === "light" ? "text-primary" : "text-muted-foreground")} />
+              <span className={cn("text-sm font-semibold", theme === "light" ? "text-primary" : "text-muted-foreground")}>Clair</span>
+            </button>
+            <button
+              onClick={() => handleSetTheme("dark")}
+              className={cn(
+                "flex flex-col items-center gap-3 rounded-2xl border-2 p-6 transition-colors",
+                theme === "dark" ? "border-primary bg-primary/5" : "border-border bg-card"
+              )}
+            >
+              <Moon className={cn("h-8 w-8", theme === "dark" ? "text-primary" : "text-muted-foreground")} />
+              <span className={cn("text-sm font-semibold", theme === "dark" ? "text-primary" : "text-muted-foreground")}>Sombre</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
