@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronRight, Clock, RotateCcw } from "lucide-react";
+import { Clock, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BLOC_COLORS, NIVEAU_COLORS, getTestIcon } from "./exercise-constants";
 import type { Exercice } from "@/routes/_app.exercises";
@@ -47,7 +47,9 @@ export function ExerciseCard({ exercice: ex, index, onClick }: Props) {
             {ex.objectif_cognitif}
           </p>
         </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+        <Badge variant="outline" className="text-[10px] text-primary border-primary shrink-0 mt-1">
+          ▶ Démarrer
+        </Badge>
       </div>
 
       {/* Footer meta */}
