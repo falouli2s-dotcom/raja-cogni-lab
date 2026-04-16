@@ -102,19 +102,42 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
   );
   const [stimKey, setStimKey] = useState(0);
   const [countdown, setCountdown] = useState<number | "GO">(3);
+  const [isPortrait, setIsPortrait] = useState(
+    typeof window !== "undefined" ? window.innerHeight > window.innerWidth : false,
+  );
 
-  // Force landscape orientation while mounted
+  // Force landscape orientation while mounted (fullscreen first, then lock)
   useEffect(() => {
+    const docAny = document.documentElement as any;
     const screenAny = window.screen as any;
     const orientation = screenAny?.orientation;
-    if (orientation?.lock) {
-      orientation.lock("landscape").catch(() => {});
-    }
-    const docAny = document.documentElement as any;
-    if (docAny.requestFullscreen) {
-      docAny.requestFullscreen().catch(() => {});
-    }
+
+    const enterLandscape = async () => {
+      try {
+        if (docAny.requestFullscreen) {
+          await docAny.requestFullscreen();
+        } else if (docAny.webkitRequestFullscreen) {
+          await docAny.webkitRequestFullscreen();
+        }
+      } catch { /* fullscreen denied */ }
+      try {
+        if (orientation?.lock) {
+          await orientation.lock("landscape");
+        }
+      } catch { /* orientation lock not supported (iOS Safari) */ }
+    };
+    enterLandscape();
+
+    const updateOrientation = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+    updateOrientation();
+    window.addEventListener("resize", updateOrientation);
+    window.addEventListener("orientationchange", updateOrientation);
+
     return () => {
+      window.removeEventListener("resize", updateOrientation);
+      window.removeEventListener("orientationchange", updateOrientation);
       if (orientation?.unlock) {
         try { orientation.unlock(); } catch { /* noop */ }
       }
@@ -123,6 +146,17 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
       }
     };
   }, []);
+
+  const requestLandscape = async () => {
+    const docAny = document.documentElement as any;
+    const orientation = (window.screen as any)?.orientation;
+    try {
+      if (docAny.requestFullscreen) await docAny.requestFullscreen();
+    } catch { /* noop */ }
+    try {
+      if (orientation?.lock) await orientation.lock("landscape");
+    } catch { /* noop */ }
+  };
 
   // 3-2-1-GO countdown before first serie
   useEffect(() => {
