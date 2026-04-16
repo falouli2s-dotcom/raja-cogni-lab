@@ -242,7 +242,13 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
             </div>
 
             {/* Stimulus zone */}
-            <div className="flex-1 flex items-center justify-center px-6">
+            <div className="flex-1 flex items-center justify-center px-2 relative">
+              {fullscreenColor && (
+                <div
+                  className="absolute inset-0"
+                  style={{ backgroundColor: stimulus.color.hex }}
+                />
+              )}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={stimKey}
@@ -250,39 +256,37 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.1 }}
-                  className="flex flex-col items-center justify-center gap-4"
+                  className="relative flex flex-col items-center justify-center gap-4 w-full h-full"
                 >
                   {stimulus.kind === "couleur" && (
-                    <>
-                      <div
-                        className="w-52 h-52 rounded-full"
-                        style={{ backgroundColor: stimulus.color.hex }}
-                      />
-                      <span className="text-2xl font-bold text-white tracking-wider">
-                        {stimulus.color.name}
-                      </span>
-                    </>
+                    <span className="text-5xl font-black text-white tracking-widest drop-shadow-lg">
+                      {stimulus.color.name}
+                    </span>
                   )}
                   {stimulus.kind === "fleche" && (
-                    <span className="text-[180px] leading-none text-white font-black">
+                    <span className="text-[80vw] sm:text-[60vh] leading-none text-white font-black select-none">
                       {stimulus.arrow}
                     </span>
                   )}
                   {stimulus.kind === "nombre" && (
-                    <span className="text-[200px] font-black text-white leading-none">
+                    <span className="text-[80vw] sm:text-[70vh] font-black text-white leading-none select-none">
                       {stimulus.n}
                     </span>
                   )}
                   {stimulus.kind === "flash" && (
                     <span
-                      className={`text-6xl font-black ${stimulus.white ? "text-black" : "text-white"}`}
+                      className={`text-8xl font-black ${stimulus.white ? "text-black" : "text-white"}`}
                     >
                       +
                     </span>
                   )}
-                  {stimulus.kind === "forme" && <ShapeSvg shape={stimulus.shape} />}
+                  {stimulus.kind === "forme" && (
+                    <div className="w-[80vw] h-[80vw] sm:w-[70vh] sm:h-[70vh] flex items-center justify-center">
+                      <ShapeSvgFull shape={stimulus.shape} />
+                    </div>
+                  )}
                   {stimulus.kind === "default" && (
-                    <span className="text-[200px] font-black text-white leading-none">
+                    <span className="text-[80vw] sm:text-[70vh] font-black text-white leading-none select-none">
                       {stimulus.n}
                     </span>
                   )}
