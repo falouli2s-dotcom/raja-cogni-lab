@@ -252,8 +252,32 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className={`fixed inset-0 z-[60] flex flex-col ${bgClass}`}
+        className={`fixed inset-0 z-[60] flex flex-col ${phase === "countdown" ? "bg-black" : bgClass}`}
       >
+        {phase === "countdown" && (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={String(countdown)}
+                initial={{ scale: 0.3, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.6, opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className={`font-black leading-none ${countdown === "GO" ? "text-green-400 text-[40vw] sm:text-[30vh]" : "text-white text-[50vw] sm:text-[40vh]"}`}
+              >
+                {countdown}
+              </motion.span>
+            </AnimatePresence>
+            <button
+              onClick={onClose}
+              className="absolute top-10 right-4 p-2 rounded-full bg-white/10 text-white"
+              aria-label="Quitter"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+
         {phase === "serie" && (
           <>
             {/* Discreet header */}
