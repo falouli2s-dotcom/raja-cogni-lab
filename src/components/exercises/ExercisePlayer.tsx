@@ -58,30 +58,30 @@ function generateStimulus(type: string, prevFlashWhite = false): Stimulus {
   return { kind: "default", n: 1 + Math.floor(Math.random() * 9) };
 }
 
-function ShapeSvg({ shape }: { shape: Shape }) {
-  const size = 220;
+function ShapeSvgFull({ shape }: { shape: Shape }) {
+  const common = { width: "100%", height: "100%", viewBox: "0 0 100 100", preserveAspectRatio: "xMidYMid meet" } as const;
   if (shape === "circle")
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="45" fill="white" />
+      <svg {...common}>
+        <circle cx="50" cy="50" r="48" fill="white" />
       </svg>
     );
   if (shape === "square")
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100">
-        <rect x="8" y="8" width="84" height="84" fill="white" rx="4" />
+      <svg {...common}>
+        <rect x="2" y="2" width="96" height="96" fill="white" rx="4" />
       </svg>
     );
   if (shape === "triangle")
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100">
-        <polygon points="50,8 92,88 8,88" fill="white" />
+      <svg {...common}>
+        <polygon points="50,4 96,94 4,94" fill="white" />
       </svg>
     );
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100">
+    <svg {...common}>
       <polygon
-        points="50,5 61,38 96,38 68,59 78,93 50,72 22,93 32,59 4,38 39,38"
+        points="50,2 62,38 98,38 68,60 80,96 50,74 20,96 32,60 2,38 38,38"
         fill="white"
       />
     </svg>
@@ -199,8 +199,11 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
     if (phase === "done") return "bg-background";
     if (phase === "recovery") return "bg-amber-950";
     if (flashWhite) return "bg-white";
+    if (phase === "serie" && stimulus.kind === "couleur") return "";
     return "bg-black";
-  }, [phase, flashWhite]);
+  }, [phase, flashWhite, stimulus]);
+
+  const fullscreenColor = phase === "serie" && stimulus.kind === "couleur";
 
   return (
     <AnimatePresence>
@@ -239,7 +242,13 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
             </div>
 
             {/* Stimulus zone */}
-            <div className="flex-1 flex items-center justify-center px-6">
+            <div className="flex-1 flex items-center justify-center px-2 relative">
+              {fullscreenColor && (
+                <div
+                  className="absolute inset-0"
+                  style={{ backgroundColor: stimulus.color.hex }}
+                />
+              )}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={stimKey}
@@ -247,39 +256,37 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.1 }}
-                  className="flex flex-col items-center justify-center gap-4"
+                  className="relative flex flex-col items-center justify-center gap-4 w-full h-full"
                 >
                   {stimulus.kind === "couleur" && (
-                    <>
-                      <div
-                        className="w-52 h-52 rounded-full"
-                        style={{ backgroundColor: stimulus.color.hex }}
-                      />
-                      <span className="text-2xl font-bold text-white tracking-wider">
-                        {stimulus.color.name}
-                      </span>
-                    </>
+                    <span className="text-5xl font-black text-white tracking-widest drop-shadow-lg">
+                      {stimulus.color.name}
+                    </span>
                   )}
                   {stimulus.kind === "fleche" && (
-                    <span className="text-[180px] leading-none text-white font-black">
+                    <span className="text-[80vw] sm:text-[60vh] leading-none text-white font-black select-none">
                       {stimulus.arrow}
                     </span>
                   )}
                   {stimulus.kind === "nombre" && (
-                    <span className="text-[200px] font-black text-white leading-none">
+                    <span className="text-[80vw] sm:text-[70vh] font-black text-white leading-none select-none">
                       {stimulus.n}
                     </span>
                   )}
                   {stimulus.kind === "flash" && (
                     <span
-                      className={`text-6xl font-black ${stimulus.white ? "text-black" : "text-white"}`}
+                      className={`text-8xl font-black ${stimulus.white ? "text-black" : "text-white"}`}
                     >
                       +
                     </span>
                   )}
-                  {stimulus.kind === "forme" && <ShapeSvg shape={stimulus.shape} />}
+                  {stimulus.kind === "forme" && (
+                    <div className="w-[80vw] h-[80vw] sm:w-[70vh] sm:h-[70vh] flex items-center justify-center">
+                      <ShapeSvgFull shape={stimulus.shape} />
+                    </div>
+                  )}
                   {stimulus.kind === "default" && (
-                    <span className="text-[200px] font-black text-white leading-none">
+                    <span className="text-[80vw] sm:text-[70vh] font-black text-white leading-none select-none">
                       {stimulus.n}
                     </span>
                   )}
