@@ -288,6 +288,29 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
         className={`fixed inset-0 z-[60] flex flex-col ${phase === "countdown" ? "bg-black" : bgClass}`}
       >
+        {isPortrait && phase !== "done" && (
+          <div className="absolute inset-0 z-[70] bg-black flex flex-col items-center justify-center gap-6 px-6 text-center">
+            <motion.div
+              animate={{ rotate: [0, 90, 90, 0] }}
+              transition={{ duration: 2, repeat: Infinity, times: [0, 0.4, 0.6, 1] }}
+              className="text-7xl"
+            >
+              📱
+            </motion.div>
+            <h2 className="text-2xl font-black text-white">Tournez votre téléphone</h2>
+            <p className="text-sm text-white/60">Cet exercice nécessite le mode paysage</p>
+            <Button onClick={requestLandscape} variant="secondary" className="mt-2">
+              Activer le mode paysage
+            </Button>
+            <button
+              onClick={onClose}
+              className="absolute top-6 right-4 p-2 rounded-full bg-white/10 text-white"
+              aria-label="Quitter"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
         {phase === "countdown" && (
           <div className="flex-1 flex flex-col items-center justify-center">
             <AnimatePresence mode="wait">
