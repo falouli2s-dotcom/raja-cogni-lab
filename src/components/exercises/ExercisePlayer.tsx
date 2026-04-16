@@ -199,8 +199,11 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
     if (phase === "done") return "bg-background";
     if (phase === "recovery") return "bg-amber-950";
     if (flashWhite) return "bg-white";
+    if (phase === "serie" && stimulus.kind === "couleur") return "";
     return "bg-black";
-  }, [phase, flashWhite]);
+  }, [phase, flashWhite, stimulus]);
+
+  const fullscreenColor = phase === "serie" && stimulus.kind === "couleur";
 
   return (
     <AnimatePresence>
