@@ -58,30 +58,30 @@ function generateStimulus(type: string, prevFlashWhite = false): Stimulus {
   return { kind: "default", n: 1 + Math.floor(Math.random() * 9) };
 }
 
-function ShapeSvg({ shape }: { shape: Shape }) {
-  const size = 220;
+function ShapeSvgFull({ shape }: { shape: Shape }) {
+  const common = { width: "100%", height: "100%", viewBox: "0 0 100 100", preserveAspectRatio: "xMidYMid meet" } as const;
   if (shape === "circle")
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="45" fill="white" />
+      <svg {...common}>
+        <circle cx="50" cy="50" r="48" fill="white" />
       </svg>
     );
   if (shape === "square")
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100">
-        <rect x="8" y="8" width="84" height="84" fill="white" rx="4" />
+      <svg {...common}>
+        <rect x="2" y="2" width="96" height="96" fill="white" rx="4" />
       </svg>
     );
   if (shape === "triangle")
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100">
-        <polygon points="50,8 92,88 8,88" fill="white" />
+      <svg {...common}>
+        <polygon points="50,4 96,94 4,94" fill="white" />
       </svg>
     );
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100">
+    <svg {...common}>
       <polygon
-        points="50,5 61,38 96,38 68,59 78,93 50,72 22,93 32,59 4,38 39,38"
+        points="50,2 62,38 98,38 68,60 80,96 50,74 20,96 32,60 2,38 38,38"
         fill="white"
       />
     </svg>
