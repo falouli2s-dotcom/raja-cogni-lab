@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Phase = "serie" | "recovery" | "done";
+type Phase = "countdown" | "serie" | "recovery" | "done";
 
 export function parseDuration(s: string): number {
   if (!s) return 60;
@@ -94,13 +94,53 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
   const recoveryDuration = ex.recuperation_secondes;
 
   const [currentSerie, setCurrentSerie] = useState(1);
-  const [phase, setPhase] = useState<Phase>("serie");
+  const [phase, setPhase] = useState<Phase>("countdown");
   const [timeLeft, setTimeLeft] = useState(serieDuration);
   const [paused, setPaused] = useState(false);
   const [stimulus, setStimulus] = useState<Stimulus>(() =>
     generateStimulus(ex.stimulus_type),
   );
   const [stimKey, setStimKey] = useState(0);
+  const [countdown, setCountdown] = useState<number | "GO">(3);
+
+  // Force landscape orientation while mounted
+  useEffect(() => {
+    const screenAny = window.screen as any;
+    const orientation = screenAny?.orientation;
+    if (orientation?.lock) {
+      orientation.lock("landscape").catch(() => {});
+    }
+    const docAny = document.documentElement as any;
+    if (docAny.requestFullscreen) {
+      docAny.requestFullscreen().catch(() => {});
+    }
+    return () => {
+      if (orientation?.unlock) {
+        try { orientation.unlock(); } catch { /* noop */ }
+      }
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, []);
+
+  // 3-2-1-GO countdown before first serie
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    let value: number | "GO" = 3;
+    setCountdown(3);
+    const id = setInterval(() => {
+      if (value === 3) { value = 2; setCountdown(2); }
+      else if (value === 2) { value = 1; setCountdown(1); }
+      else if (value === 1) { value = "GO"; setCountdown("GO"); }
+      else {
+        clearInterval(id);
+        setPhase("serie");
+        setTimeLeft(serieDuration);
+      }
+    }, 800);
+    return () => clearInterval(id);
+  }, [phase, serieDuration]);
 
   const phaseDuration = phase === "serie" ? serieDuration : recoveryDuration;
   const recoveryProgress =
