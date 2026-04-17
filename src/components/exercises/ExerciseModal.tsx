@@ -114,6 +114,14 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
                     <span className="font-semibold text-foreground">{ex.recuperation_secondes}s</span>
                   </div>
                 </div>
+                {(ex as any).stimulus_interval_min != null && (
+                  <div className="mt-2 text-sm">
+                    <span className="text-muted-foreground">Intervalle stimulus :</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      {(ex as any).stimulus_interval_min}–{(ex as any).stimulus_interval_max} s
+                    </span>
+                  </div>
+                )}
               </Section>
 
               {/* Source */}
