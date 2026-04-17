@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Maximize2 } from "lucide-react";
 import {
   NBackTrial,
   NBACK_CONFIG,
   generateNBackTrials,
   computeNBackResults,
 } from "@/lib/nback-engine";
+import { useFullscreen } from "@/hooks/use-fullscreen";
 
 type Phase = "training" | "transition" | "real" | "done";
 
@@ -15,6 +16,7 @@ interface NBackTestProps {
 }
 
 export function NBackTest({ onComplete }: NBackTestProps) {
+  const { supported: fsSupported, request: requestFullscreen } = useFullscreen();
   const [phase, setPhase] = useState<Phase>("training");
   const [trialIndex, setTrialIndex] = useState(0);
   const [showLetter, setShowLetter] = useState(false);
@@ -190,7 +192,7 @@ export function NBackTest({ onComplete }: NBackTestProps) {
               Cette fois, il n'y aura plus de feedback.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              80 stimuli — Appuie sur OUI si la lettre est identique à celle d'il y a 2 positions.
+              40 stimuli — Appuie sur OUI si la lettre est identique à celle d'il y a 2 positions.
             </p>
           </div>
           <button
@@ -215,16 +217,25 @@ export function NBackTest({ onComplete }: NBackTestProps) {
   return (
     <div className="flex min-h-screen flex-col bg-foreground select-none">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4">
-        <span className="rounded-full bg-card/10 px-3 py-1 text-xs font-medium text-card">
+      <div className="flex items-center justify-between gap-3 px-4 pt-4">
+        <span className="rounded-full bg-card/10 px-3 py-1 text-xs font-medium text-card whitespace-nowrap">
           {isTraining ? "Entraînement" : "Test"} — {trialIndex + 1}/{totalTrials}
         </span>
-        <div className="h-1 flex-1 mx-4 rounded-full bg-card/10">
+        <div className="h-1 flex-1 rounded-full bg-card/10">
           <div
             className="h-full rounded-full bg-primary transition-all duration-300"
             style={{ width: `${((trialIndex + 1) / totalTrials) * 100}%` }}
           />
         </div>
+        {fsSupported && (
+          <button
+            onClick={requestFullscreen}
+            aria-label="Plein écran"
+            className="text-card/70 hover:text-card"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* N-back indicator */}

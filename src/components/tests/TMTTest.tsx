@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Maximize2 } from "lucide-react";
 import {
   TMTNode,
   TMT_CONFIG,
@@ -9,6 +9,7 @@ import {
   generateNodes,
   computeTMTResults,
 } from "@/lib/tmt-engine";
+import { useFullscreen } from "@/hooks/use-fullscreen";
 
 type Phase = "training-A" | "transition-A" | "real-A" | "transition-B" | "training-B" | "transition-B2" | "real-B" | "done";
 
@@ -17,6 +18,7 @@ interface TMTTestProps {
 }
 
 export function TMTTest({ onComplete }: TMTTestProps) {
+  const { supported: fsSupported, request: requestFullscreen } = useFullscreen();
   const containerRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>("training-A");
   const [nodes, setNodes] = useState<TMTNode[]>([]);
@@ -193,13 +195,22 @@ export function TMTTest({ onComplete }: TMTTestProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background select-none">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+      <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
         <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
           {isTraining ? "Entraînement" : "Test"} — Partie {currentPart}
         </span>
         <span className="text-xs text-muted-foreground">
           {completedIndices.length}/{nodes.length}
         </span>
+        {fsSupported && (
+          <button
+            onClick={requestFullscreen}
+            aria-label="Plein écran"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Progress bar */}
