@@ -12,6 +12,13 @@ interface TMTResultsProps {
 export function TMTResults({ results }: TMTResultsProps) {
   const { partA, partB, ratioBA } = results;
   const interpretation = interpretRatioBA(ratioBA);
+  const totalErrors = partA.errors + partB.errors;
+  const verdict =
+    ratioBA <= 2.5 && totalErrors <= 3
+      ? "Bonne flexibilité cognitive"
+      : ratioBA <= 2.5
+        ? "Flexibilité correcte mais contrôle inhibiteur à renforcer"
+        : "Flexibilité cognitive à améliorer";
 
   const formatTime = (ms: number) => (ms / 1000).toFixed(1);
 
@@ -52,10 +59,8 @@ export function TMTResults({ results }: TMTResultsProps) {
         <p className={`mt-1 text-sm font-medium ${interpretation.color}`}>
           {interpretation.label}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          {ratioBA <= 2.5
-            ? "Bonne flexibilité cognitive"
-            : "La flexibilité cognitive peut être améliorée"}
+        <p className={`mt-2 text-xs font-medium ${interpretation.color}`}>
+          {verdict}
         </p>
       </motion.div>
 
@@ -126,7 +131,7 @@ export function TMTResults({ results }: TMTResultsProps) {
         transition={{ delay: 0.3 }}
         className="mt-6 flex flex-col gap-3"
       >
-        <Link to="/tests">
+        <Link to="/tests/session">
           <Button className="h-12 w-full" variant="outline">
             <RotateCcw className="mr-2 h-4 w-4" /> Refaire le test
           </Button>

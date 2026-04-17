@@ -19,10 +19,10 @@ interface NBackResultsProps {
   };
 }
 
-function getPerformanceLabel(errorRate: number): { label: string; color: string; desc: string } {
-  if (errorRate <= 15) return { label: "Excellent", color: "text-primary", desc: "Très bonne mémoire de travail" };
-  if (errorRate <= 25) return { label: "Bon", color: "text-primary", desc: "Bonne mémoire de travail" };
-  if (errorRate <= 30) return { label: "Moyen", color: "text-accent", desc: "Mémoire de travail à renforcer" };
+function getPerformanceLabel(targetErrorRate: number): { label: string; color: string; desc: string } {
+  if (targetErrorRate <= 15) return { label: "Excellent", color: "text-primary", desc: "Très bonne mémoire de travail" };
+  if (targetErrorRate <= 25) return { label: "Bon", color: "text-primary", desc: "Bonne mémoire de travail" };
+  if (targetErrorRate <= 30) return { label: "Moyen", color: "text-accent", desc: "Mémoire de travail à renforcer" };
   return { label: "À améliorer", color: "text-destructive", desc: "Erreurs > 30% — Entraînement recommandé" };
 }
 
@@ -61,6 +61,9 @@ export function NBackResults({ results }: NBackResultsProps) {
         <p className="text-4xl font-bold text-primary-foreground">{results.targetErrorRate}%</p>
         <p className="mt-1 text-sm font-semibold text-primary-foreground/80">
           {interpretation.label}
+        </p>
+        <p className="mt-1 text-xs text-primary-foreground/60">
+          Erreurs sur cibles uniquement (fausses alarmes exclues)
         </p>
       </motion.div>
 
