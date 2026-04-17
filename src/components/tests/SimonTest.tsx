@@ -15,6 +15,9 @@ interface SimonTestProps {
   onComplete: (results: ReturnType<typeof computeSimonResults>, rawTrials: SimonTrial[]) => void;
 }
 
+const GREEN = "oklch(0.637 0.177 152.535)";
+const RED = "oklch(0.577 0.245 27.325)";
+
 export function SimonTest({ onComplete }: SimonTestProps) {
   const { supported: fsSupported, request: requestFullscreen } = useFullscreen();
   const [phase, setPhase] = useState<Phase>("training");
@@ -90,14 +93,13 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     }, SIMON_CONFIG.fixationDuration);
   }, [trialIndex, currentTrials, isTraining, advanceTrial]);
 
-  // Handle response (click on a circle of a given color)
+  // Handle response: tap LEFT zone = "red", tap RIGHT zone = "green"
   const handleResponse = useCallback((chosenColor: "green" | "red") => {
     if (!showStimulus || responded.current || !currentTrial) return;
     responded.current = true;
     clearTimeout(timeoutRef.current);
 
     const rt = performance.now() - stimulusStartRef.current;
-    // Correct response = click the same color as the stimulus
     const isCorrect = chosenColor === currentTrial.color;
 
     const trial: SimonTrial = {
@@ -112,7 +114,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
         type: isCorrect ? "correct" : "wrong",
         text: isCorrect
           ? `Correct ! (${Math.round(rt)}ms)`
-          : `Erreur — clique sur la couleur affichée`,
+          : `Erreur — réponds selon la COULEUR, pas le côté`,
       });
       setTimeout(() => advanceTrial(trial), 1000);
     } else {
@@ -120,7 +122,6 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     }
   }, [showStimulus, currentTrial, isTraining, advanceTrial]);
 
-  // Start trial loop
   useEffect(() => {
     if ((phase === "training" || phase === "real") && trialIndex < totalTrials) {
       const t = setTimeout(() => showNextTrial(), 300);
@@ -154,7 +155,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
               Cette fois, il n'y aura plus de feedback.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              40 essais — Clique sur le cercle de la même couleur que le stimulus.
+              40 essais — Tape le côté correspondant à la COULEUR (gauche=Rouge, droite=Vert).
             </p>
           </div>
           <button
@@ -176,13 +177,17 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     );
   }
 
-  const GREEN = "oklch(0.637 0.177 152.535)";
-  const RED = "oklch(0.577 0.245 27.325)";
+  // Determine which side lights up: stimulus appears at currentTrial.position (left/right)
+  // with currentTrial.color (red/green). Both zones stay tappable.
+  const leftLit = showStimulus && currentTrial?.position === "left";
+  const rightLit = showStimulus && currentTrial?.position === "right";
+  const leftColor = leftLit ? (currentTrial!.color === "green" ? GREEN : RED) : RED;
+  const rightColor = rightLit ? (currentTrial!.color === "green" ? GREEN : RED) : GREEN;
 
   return (
-    <div className="flex min-h-screen flex-col bg-foreground select-none">
+    <div className="fixed inset-0 flex flex-col bg-foreground select-none overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-4 pt-4">
+      <div className="flex items-center justify-between gap-3 px-4 pt-4 z-20">
         <span className="rounded-full bg-card/10 px-3 py-1 text-xs font-medium text-card whitespace-nowrap">
           {isTraining ? "Entraînement" : "Test"} — {trialIndex + 1}/{totalTrials}
         </span>
@@ -203,8 +208,56 @@ export function SimonTest({ onComplete }: SimonTestProps) {
         )}
       </div>
 
-      {/* Stimulus area */}
-      <div className="flex flex-1 items-center justify-center relative">
+      {/* Two-zone playfield */}
+      <div className="relative flex flex-1 min-h-0">
+        {/* LEFT zone = ROUGE */}
+        <button
+          onPointerDown={() => handleResponse("red")}
+          aria-label="Zone Rouge"
+          className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
+        >
+          <motion.div
+            animate={{
+              opacity: leftLit ? 1 : 0.35,
+              scale: leftLit ? 1.05 : 1,
+            }}
+            transition={{ duration: 0.1 }}
+            className="rounded-full shadow-lg"
+            style={{
+              width: 130,
+              height: 130,
+              backgroundColor: leftColor,
+            }}
+          />
+          <span className="text-sm font-semibold tracking-widest text-card/70">ROUGE</span>
+        </button>
+
+        {/* Vertical separator */}
+        <div className="w-px bg-card/15" />
+
+        {/* RIGHT zone = VERT */}
+        <button
+          onPointerDown={() => handleResponse("green")}
+          aria-label="Zone Vert"
+          className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
+        >
+          <motion.div
+            animate={{
+              opacity: rightLit ? 1 : 0.35,
+              scale: rightLit ? 1.05 : 1,
+            }}
+            transition={{ duration: 0.1 }}
+            className="rounded-full shadow-lg"
+            style={{
+              width: 130,
+              height: 130,
+              backgroundColor: rightColor,
+            }}
+          />
+          <span className="text-sm font-semibold tracking-widest text-card/70">VERT</span>
+        </button>
+
+        {/* Fixation cross overlay */}
         <AnimatePresence>
           {showFixation && (
             <motion.div
@@ -212,30 +265,9 @@ export function SimonTest({ onComplete }: SimonTestProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-4xl font-bold text-card"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center text-4xl font-bold text-card"
             >
               +
-            </motion.div>
-          )}
-
-          {showStimulus && currentTrial && (
-            <motion.div
-              key={`stimulus-${trialIndex}`}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ duration: 0.1 }}
-              className="absolute"
-              style={{
-                [currentTrial.position === "left" ? "left" : "right"]: "15%",
-              }}
-            >
-              <div
-                className="h-20 w-20 rounded-full shadow-lg"
-                style={{
-                  backgroundColor: currentTrial.color === "green" ? GREEN : RED,
-                }}
-              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -247,11 +279,11 @@ export function SimonTest({ onComplete }: SimonTestProps) {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="absolute bottom-8 flex items-center gap-2 rounded-xl px-4 py-3"
+              className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-xl px-4 py-3"
               style={{
-                backgroundColor: feedback.type === "correct" ? "oklch(0.637 0.177 152.535 / 0.15)" :
-                  feedback.type === "wrong" ? "oklch(0.577 0.245 27.325 / 0.15)" :
-                  "oklch(0.637 0.213 41.5 / 0.15)",
+                backgroundColor: feedback.type === "correct" ? "oklch(0.637 0.177 152.535 / 0.2)" :
+                  feedback.type === "wrong" ? "oklch(0.577 0.245 27.325 / 0.2)" :
+                  "oklch(0.637 0.213 41.5 / 0.2)",
               }}
             >
               {feedback.type === "correct" && <CheckCircle className="h-5 w-5 text-primary" />}
@@ -261,22 +293,6 @@ export function SimonTest({ onComplete }: SimonTestProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* Response circles — tap directly on the color */}
-      <div className="flex items-center justify-around gap-6 px-6 pb-10 pt-4">
-        <button
-          onPointerDown={() => handleResponse("green")}
-          aria-label="Vert"
-          className="h-24 w-24 rounded-full shadow-lg transition-transform active:scale-90"
-          style={{ backgroundColor: GREEN }}
-        />
-        <button
-          onPointerDown={() => handleResponse("red")}
-          aria-label="Rouge"
-          className="h-24 w-24 rounded-full shadow-lg transition-transform active:scale-90"
-          style={{ backgroundColor: RED }}
-        />
       </div>
     </div>
   );
