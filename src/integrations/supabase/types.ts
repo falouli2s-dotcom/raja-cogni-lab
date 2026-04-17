@@ -31,6 +31,8 @@ export type Database = {
           series: number
           source_scientifique: string | null
           stimulus_detail: Json | null
+          stimulus_interval_max: number
+          stimulus_interval_min: number
           stimulus_type: string
           tache_motrice: string
           titre: string
@@ -51,6 +53,8 @@ export type Database = {
           series?: number
           source_scientifique?: string | null
           stimulus_detail?: Json | null
+          stimulus_interval_max?: number
+          stimulus_interval_min?: number
           stimulus_type?: string
           tache_motrice?: string
           titre: string
@@ -71,6 +75,8 @@ export type Database = {
           series?: number
           source_scientifique?: string | null
           stimulus_detail?: Json | null
+          stimulus_interval_max?: number
+          stimulus_interval_min?: number
           stimulus_type?: string
           tache_motrice?: string
           titre?: string

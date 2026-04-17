@@ -221,17 +221,27 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
     return () => clearInterval(id);
   }, [phase, paused, currentSerie, totalSeries, recoveryDuration, serieDuration, handleComplete]);
 
-  // Stimulus generator — only during serie
+  // Stimulus generator with dynamic randomized interval — only during serie
   useEffect(() => {
     if (phase !== "serie" || paused) return;
-    const id = setInterval(() => {
-      setStimulus((prev) =>
-        generateStimulus(ex.stimulus_type, prev.kind === "flash" ? prev.white : false),
-      );
-      setStimKey((k) => k + 1);
-    }, 1500);
-    return () => clearInterval(id);
-  }, [phase, paused, ex.stimulus_type]);
+    const minSec = (ex as any).stimulus_interval_min ?? 5;
+    const maxSec = (ex as any).stimulus_interval_max ?? 7;
+    const minMs = minSec * 1000;
+    const maxMs = maxSec * 1000;
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const scheduleNext = () => {
+      const delay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+      timeoutId = setTimeout(() => {
+        setStimulus((prev) =>
+          generateStimulus(ex.stimulus_type, prev.kind === "flash" ? prev.white : false),
+        );
+        setStimKey((k) => k + 1);
+        scheduleNext();
+      }, delay);
+    };
+    scheduleNext();
+    return () => clearTimeout(timeoutId);
+  }, [phase, paused, ex.stimulus_type, (ex as any).stimulus_interval_min, (ex as any).stimulus_interval_max]);
 
   // Reset stimulus when entering serie phase
   useEffect(() => {
