@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Maximize2 } from "lucide-react";
 import {
   SimonTrial,
-  SimonColor,
   SIMON_CONFIG,
   generateTrials,
   computeSimonResults,
 } from "@/lib/simon-engine";
+import { useFullscreen } from "@/hooks/use-fullscreen";
 
 type Phase = "training" | "transition" | "real" | "done";
 
@@ -16,12 +16,12 @@ interface SimonTestProps {
 }
 
 export function SimonTest({ onComplete }: SimonTestProps) {
+  const { supported: fsSupported, request: requestFullscreen } = useFullscreen();
   const [phase, setPhase] = useState<Phase>("training");
   const [trialIndex, setTrialIndex] = useState(0);
   const [showFixation, setShowFixation] = useState(true);
   const [showStimulus, setShowStimulus] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "correct" | "wrong" | "timeout"; text: string } | null>(null);
-  const [trials, setTrials] = useState<SimonTrial[]>([]);
   const [currentTrials, setCurrentTrials] = useState(generateTrials(SIMON_CONFIG.trainingTrials));
   const [allRealTrials, setAllRealTrials] = useState<SimonTrial[]>([]);
 
@@ -32,6 +32,31 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   const isTraining = phase === "training";
   const totalTrials = currentTrials.length;
   const currentTrial = currentTrials[trialIndex];
+
+  const advanceTrial = useCallback((trial: SimonTrial) => {
+    setShowStimulus(false);
+
+    const nextIndex = trialIndex + 1;
+
+    if (nextIndex >= totalTrials) {
+      if (phase === "training") {
+        setPhase("transition");
+      } else if (phase === "real") {
+        setAllRealTrials((prev) => {
+          const finalTrials = [...prev, trial].slice(-SIMON_CONFIG.realTrials);
+          const results = computeSimonResults(finalTrials);
+          setTimeout(() => onComplete(results, finalTrials), 100);
+          return finalTrials;
+        });
+        setPhase("done");
+      }
+    } else {
+      if (phase === "real") {
+        setAllRealTrials((prev) => [...prev, trial]);
+      }
+      setTrialIndex(nextIndex);
+    }
+  }, [trialIndex, totalTrials, phase, onComplete]);
 
   const showNextTrial = useCallback(() => {
     setFeedback(null);
@@ -44,7 +69,6 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       stimulusStartRef.current = performance.now();
       responded.current = false;
 
-      // Timeout for response
       timeoutRef.current = setTimeout(() => {
         if (!responded.current) {
           responded.current = true;
@@ -64,45 +88,17 @@ export function SimonTest({ onComplete }: SimonTestProps) {
         }
       }, SIMON_CONFIG.responseLimit);
     }, SIMON_CONFIG.fixationDuration);
-  }, [trialIndex, currentTrials, isTraining]);
+  }, [trialIndex, currentTrials, isTraining, advanceTrial]);
 
-  const advanceTrial = useCallback((trial: SimonTrial) => {
-    setShowStimulus(false);
-
-    if (phase === "real") {
-      setAllRealTrials((prev) => [...prev, trial]);
-    }
-
-    const nextIndex = trialIndex + 1;
-
-    if (nextIndex >= totalTrials) {
-      if (phase === "training") {
-        setPhase("transition");
-      } else if (phase === "real") {
-        // Will be handled in effect
-        setAllRealTrials((prev) => {
-          const finalTrials = [...prev, trial].slice(-SIMON_CONFIG.realTrials);
-          const results = computeSimonResults(finalTrials);
-          setTimeout(() => onComplete(results, finalTrials), 100);
-          return finalTrials;
-        });
-        setPhase("done");
-      }
-    } else {
-      setTrialIndex(nextIndex);
-    }
-  }, [trialIndex, totalTrials, phase, onComplete]);
-
-  // Handle response
-  const handleResponse = useCallback((chosenSide: "left" | "right") => {
+  // Handle response (click on a circle of a given color)
+  const handleResponse = useCallback((chosenColor: "green" | "red") => {
     if (!showStimulus || responded.current || !currentTrial) return;
     responded.current = true;
     clearTimeout(timeoutRef.current);
 
     const rt = performance.now() - stimulusStartRef.current;
-    // Green = left button, Red = right button
-    const correctSide: "left" | "right" = currentTrial.color === "green" ? "left" : "right";
-    const isCorrect = chosenSide === correctSide;
+    // Correct response = click the same color as the stimulus
+    const isCorrect = chosenColor === currentTrial.color;
 
     const trial: SimonTrial = {
       ...currentTrial,
@@ -116,7 +112,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
         type: isCorrect ? "correct" : "wrong",
         text: isCorrect
           ? `Correct ! (${Math.round(rt)}ms)`
-          : `Erreur — ${currentTrial.color === "green" ? "Vert = Gauche" : "Rouge = Droite"}`,
+          : `Erreur — clique sur la couleur affichée`,
       });
       setTimeout(() => advanceTrial(trial), 1000);
     } else {
@@ -124,17 +120,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     }
   }, [showStimulus, currentTrial, isTraining, advanceTrial]);
 
-  // Keyboard support
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") handleResponse("left");
-      if (e.key === "ArrowRight" || e.key === "l" || e.key === "L") handleResponse("right");
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleResponse]);
-
-  // Start first trial
+  // Start trial loop
   useEffect(() => {
     if ((phase === "training" || phase === "real") && trialIndex < totalTrials) {
       const t = setTimeout(() => showNextTrial(), 300);
@@ -142,7 +128,6 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     }
   }, [trialIndex, phase, totalTrials]);
 
-  // Start real phase
   function startRealTest() {
     const realTrials = generateTrials(SIMON_CONFIG.realTrials);
     setCurrentTrials(realTrials);
@@ -169,7 +154,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
               Cette fois, il n'y aura plus de feedback.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              30 essais — Réponds le plus vite et précisément possible.
+              40 essais — Clique sur le cercle de la même couleur que le stimulus.
             </p>
           </div>
           <button
@@ -191,19 +176,31 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     );
   }
 
+  const GREEN = "oklch(0.637 0.177 152.535)";
+  const RED = "oklch(0.577 0.245 27.325)";
+
   return (
     <div className="flex min-h-screen flex-col bg-foreground select-none">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4">
-        <span className="rounded-full bg-card/10 px-3 py-1 text-xs font-medium text-card">
+      <div className="flex items-center justify-between gap-3 px-4 pt-4">
+        <span className="rounded-full bg-card/10 px-3 py-1 text-xs font-medium text-card whitespace-nowrap">
           {isTraining ? "Entraînement" : "Test"} — {trialIndex + 1}/{totalTrials}
         </span>
-        <div className="h-1 flex-1 mx-4 rounded-full bg-card/10">
+        <div className="h-1 flex-1 rounded-full bg-card/10">
           <div
             className="h-full rounded-full bg-primary transition-all duration-300"
             style={{ width: `${((trialIndex + 1) / totalTrials) * 100}%` }}
           />
         </div>
+        {fsSupported && (
+          <button
+            onClick={requestFullscreen}
+            aria-label="Plein écran"
+            className="text-card/70 hover:text-card"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Stimulus area */}
@@ -236,7 +233,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
               <div
                 className="h-20 w-20 rounded-full shadow-lg"
                 style={{
-                  backgroundColor: currentTrial.color === "green" ? "oklch(0.637 0.177 152.535)" : "oklch(0.577 0.245 27.325)",
+                  backgroundColor: currentTrial.color === "green" ? GREEN : RED,
                 }}
               />
             </motion.div>
@@ -266,22 +263,20 @@ export function SimonTest({ onComplete }: SimonTestProps) {
         </AnimatePresence>
       </div>
 
-      {/* Response buttons */}
-      <div className="flex gap-4 px-6 pb-8">
+      {/* Response circles — tap directly on the color */}
+      <div className="flex items-center justify-around gap-6 px-6 pb-10 pt-4">
         <button
-          onPointerDown={() => handleResponse("left")}
-          className="flex h-20 flex-1 items-center justify-center rounded-2xl text-lg font-bold text-primary-foreground transition-transform active:scale-95"
-          style={{ backgroundColor: "oklch(0.637 0.177 152.535)" }}
-        >
-          VERT
-        </button>
+          onPointerDown={() => handleResponse("green")}
+          aria-label="Vert"
+          className="h-24 w-24 rounded-full shadow-lg transition-transform active:scale-90"
+          style={{ backgroundColor: GREEN }}
+        />
         <button
-          onPointerDown={() => handleResponse("right")}
-          className="flex h-20 flex-1 items-center justify-center rounded-2xl text-lg font-bold text-primary-foreground transition-transform active:scale-95"
-          style={{ backgroundColor: "oklch(0.577 0.245 27.325)" }}
-        >
-          ROUGE
-        </button>
+          onPointerDown={() => handleResponse("red")}
+          aria-label="Rouge"
+          className="h-24 w-24 rounded-full shadow-lg transition-transform active:scale-90"
+          style={{ backgroundColor: RED }}
+        />
       </div>
     </div>
   );
