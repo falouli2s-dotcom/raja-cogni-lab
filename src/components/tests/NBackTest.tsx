@@ -270,10 +270,10 @@ export function NBackTest({ onComplete }: NBackTestProps) {
           {showLetter && currentTrial && (
             <motion.div
               key={`letter-${trialIndex}`}
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.1 }}
               className="flex h-28 w-28 items-center justify-center rounded-3xl bg-card/10"
             >
               <span className="text-6xl font-bold text-card">{currentTrial.letter}</span>
