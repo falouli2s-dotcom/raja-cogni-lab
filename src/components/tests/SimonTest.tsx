@@ -93,7 +93,9 @@ export function SimonTest({ onComplete }: SimonTestProps) {
             advanceTrial(trial);
           }
         }
-      }, SIMON_CONFIG.responseLimit);
+          }, SIMON_CONFIG.responseLimit);
+        });
+      });
     }, SIMON_CONFIG.fixationDuration);
   }, [trialIndex, currentTrials, isTraining, advanceTrial]);
 
