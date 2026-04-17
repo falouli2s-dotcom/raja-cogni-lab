@@ -70,10 +70,13 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     setTimeout(() => {
       setShowFixation(false);
       setShowStimulus(true);
-      stimulusStartRef.current = performance.now();
       responded.current = false;
 
-      timeoutRef.current = setTimeout(() => {
+      // FIX 1: Double rAF — record trialStart exactly when stimulus pixels are painted
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          stimulusStartRef.current = performance.now();
+          timeoutRef.current = setTimeout(() => {
         if (!responded.current) {
           responded.current = true;
           const trial: SimonTrial = {
