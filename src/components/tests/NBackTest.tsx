@@ -29,6 +29,7 @@ export function NBackTest({ onComplete }: NBackTestProps) {
 
   const stimulusStartRef = useRef<number>(0);
   const respondedRef = useRef(false);
+  const acceptingResponseRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
