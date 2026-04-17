@@ -20,7 +20,7 @@ export interface NBackConfig {
 
 export const NBACK_CONFIG: NBackConfig = {
   trainingTrials: 10,
-  realTrials: 80,
+  realTrials: 40,
   nLevel: 2,
   targetPercentage: 0.25,
   stimulusDuration: 1500,

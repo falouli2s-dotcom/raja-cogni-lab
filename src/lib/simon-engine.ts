@@ -21,7 +21,7 @@ export interface SimonConfig {
 
 export const SIMON_CONFIG: SimonConfig = {
   trainingTrials: 10,
-  realTrials: 30,
+  realTrials: 40,
   isi: 500,
   responseLimit: 1500,
   fixationDuration: 500,
