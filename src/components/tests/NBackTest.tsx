@@ -100,19 +100,20 @@ export function NBackTest({ onComplete }: NBackTestProps) {
     setFeedback(null);
     setShowBlank(false);
     setShowLetter(true);
-    stimulusStartRef.current = performance.now();
     respondedRef.current = false;
+    acceptingResponseRef.current = true;
 
     // After stimulus duration, go to blank / ISI
     timerRef.current = setTimeout(() => {
       setShowLetter(false);
 
       if (!respondedRef.current) {
-        // Give ISI time to respond
+        // Give ISI time to respond (acceptingResponseRef stays true)
         setShowBlank(true);
         timerRef.current = setTimeout(() => {
           if (!respondedRef.current) {
             respondedRef.current = true;
+            acceptingResponseRef.current = false;
             const trial = processTrial(null, null);
             if (trial) {
               if (phaseRef.current === "training") {
@@ -127,9 +128,26 @@ export function NBackTest({ onComplete }: NBackTestProps) {
     }, NBACK_CONFIG.stimulusDuration);
   }, [processTrial, advanceTrial]);
 
+  // FIX 1: Capture stimulus onset timestamp at actual paint (double rAF)
+  useEffect(() => {
+    if (!showLetter) return;
+    let frameId1 = 0;
+    let frameId2 = 0;
+    frameId1 = requestAnimationFrame(() => {
+      frameId2 = requestAnimationFrame(() => {
+        stimulusStartRef.current = performance.now();
+      });
+    });
+    return () => {
+      cancelAnimationFrame(frameId1);
+      cancelAnimationFrame(frameId2);
+    };
+  }, [showLetter]);
+
   const handleResponse = useCallback((answer: "yes" | "no") => {
-    if (respondedRef.current || (!showLetter && !showBlank)) return;
+    if (respondedRef.current || !acceptingResponseRef.current) return;
     respondedRef.current = true;
+    acceptingResponseRef.current = false;
     clearTimeout(timerRef.current);
 
     const rt = performance.now() - stimulusStartRef.current;
@@ -146,7 +164,7 @@ export function NBackTest({ onComplete }: NBackTestProps) {
         setTimeout(() => advanceTrial(trial), NBACK_CONFIG.isiDuration);
       }
     }
-  }, [showLetter, showBlank, processTrial, isTraining, advanceTrial]);
+  }, [processTrial, isTraining, advanceTrial]);
 
   // Keyboard
   useEffect(() => {
