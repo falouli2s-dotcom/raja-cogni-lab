@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -31,6 +32,16 @@ function AppLayout() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Track fullscreen state
+  useEffect(() => {
+    const updateFullscreen = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    updateFullscreen();
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, []);
+
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -42,7 +53,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Outlet />
-      <BottomNav />
+      {!isFullscreen && <BottomNav />}
     </div>
   );
 }
