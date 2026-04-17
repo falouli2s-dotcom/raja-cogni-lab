@@ -17,6 +17,7 @@ interface SimonTestProps {
 
 const GREEN = "oklch(0.637 0.177 152.535)";
 const RED = "oklch(0.577 0.245 27.325)";
+const GREY = "oklch(0.5 0 0)";
 
 export function SimonTest({ onComplete }: SimonTestProps) {
   const { supported: fsSupported, request: requestFullscreen } = useFullscreen();
@@ -181,8 +182,8 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   // with currentTrial.color (red/green). Both zones stay tappable.
   const leftLit = showStimulus && currentTrial?.position === "left";
   const rightLit = showStimulus && currentTrial?.position === "right";
-  const leftColor = leftLit ? (currentTrial!.color === "green" ? GREEN : RED) : RED;
-  const rightColor = rightLit ? (currentTrial!.color === "green" ? GREEN : RED) : GREEN;
+  const leftColor = leftLit ? (currentTrial!.color === "green" ? GREEN : RED) : GREY;
+  const rightColor = rightLit ? (currentTrial!.color === "green" ? GREEN : RED) : GREY;
 
   return (
     <div className="fixed inset-0 flex flex-col bg-foreground select-none overflow-hidden">
