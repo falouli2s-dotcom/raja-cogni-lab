@@ -29,6 +29,7 @@ export function NBackTest({ onComplete }: NBackTestProps) {
 
   const stimulusStartRef = useRef<number>(0);
   const respondedRef = useRef(false);
+  const acceptingResponseRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -99,19 +100,20 @@ export function NBackTest({ onComplete }: NBackTestProps) {
     setFeedback(null);
     setShowBlank(false);
     setShowLetter(true);
-    stimulusStartRef.current = performance.now();
     respondedRef.current = false;
+    acceptingResponseRef.current = true;
 
     // After stimulus duration, go to blank / ISI
     timerRef.current = setTimeout(() => {
       setShowLetter(false);
 
       if (!respondedRef.current) {
-        // Give ISI time to respond
+        // Give ISI time to respond (acceptingResponseRef stays true)
         setShowBlank(true);
         timerRef.current = setTimeout(() => {
           if (!respondedRef.current) {
             respondedRef.current = true;
+            acceptingResponseRef.current = false;
             const trial = processTrial(null, null);
             if (trial) {
               if (phaseRef.current === "training") {
@@ -126,9 +128,26 @@ export function NBackTest({ onComplete }: NBackTestProps) {
     }, NBACK_CONFIG.stimulusDuration);
   }, [processTrial, advanceTrial]);
 
+  // FIX 1: Capture stimulus onset timestamp at actual paint (double rAF)
+  useEffect(() => {
+    if (!showLetter) return;
+    let frameId1 = 0;
+    let frameId2 = 0;
+    frameId1 = requestAnimationFrame(() => {
+      frameId2 = requestAnimationFrame(() => {
+        stimulusStartRef.current = performance.now();
+      });
+    });
+    return () => {
+      cancelAnimationFrame(frameId1);
+      cancelAnimationFrame(frameId2);
+    };
+  }, [showLetter]);
+
   const handleResponse = useCallback((answer: "yes" | "no") => {
-    if (respondedRef.current || (!showLetter && !showBlank)) return;
+    if (respondedRef.current || !acceptingResponseRef.current) return;
     respondedRef.current = true;
+    acceptingResponseRef.current = false;
     clearTimeout(timerRef.current);
 
     const rt = performance.now() - stimulusStartRef.current;
@@ -145,7 +164,7 @@ export function NBackTest({ onComplete }: NBackTestProps) {
         setTimeout(() => advanceTrial(trial), NBACK_CONFIG.isiDuration);
       }
     }
-  }, [showLetter, showBlank, processTrial, isTraining, advanceTrial]);
+  }, [processTrial, isTraining, advanceTrial]);
 
   // Keyboard
   useEffect(() => {
@@ -251,10 +270,10 @@ export function NBackTest({ onComplete }: NBackTestProps) {
           {showLetter && currentTrial && (
             <motion.div
               key={`letter-${trialIndex}`}
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.1 }}
               className="flex h-28 w-28 items-center justify-center rounded-3xl bg-card/10"
             >
               <span className="text-6xl font-bold text-card">{currentTrial.letter}</span>
