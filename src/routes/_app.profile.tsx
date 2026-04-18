@@ -194,9 +194,9 @@ function ProfilePage() {
         </div>
         <div>
           <p className="font-semibold text-foreground">
-            {user?.prenom && user?.nom ? `${user.prenom} ${user.nom}` : "Joueur"}
+            {profile?.full_name || "Joueur"}
           </p>
-          <p className="text-sm text-muted-foreground">{user?.email || ""}</p>
+          <p className="text-sm text-muted-foreground">{email}</p>
         </div>
       </motion.div>
 
