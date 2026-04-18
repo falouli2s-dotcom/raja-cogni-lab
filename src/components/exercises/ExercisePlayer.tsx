@@ -172,7 +172,7 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
         setPhase("serie");
         setTimeLeft(serieDuration);
       }
-    }, 800);
+    }, 1000);
     return () => clearInterval(id);
   }, [phase, serieDuration]);
 
