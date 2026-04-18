@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3, Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3, Sun, Moon, Eye, EyeOff, Camera, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
