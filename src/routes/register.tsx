@@ -37,7 +37,7 @@ function RegisterPage() {
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [dateNaissance, setDateNaissance] = useState("");
-  const [poste, setPoste] = useState("");
+  const [poste, setPoste] = useState<"Gardien" | "Défenseur" | "Milieu" | "Attaquant" | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,15 +48,19 @@ function RegisterPage() {
     setLoading(true);
     setError("");
 
-    const { error: authError } = await supabase.auth.signUp({
+    const fullName = `${prenom.trim()} ${nom.trim()}`.trim();
+
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           nom,
           prenom,
+          full_name: fullName,
           date_naissance: dateNaissance,
-          poste,
+          position: poste,
         },
       },
     });
@@ -65,6 +69,19 @@ function RegisterPage() {
       setError(authError.message);
       setLoading(false);
       return;
+    }
+
+    const userId = signUpData.user?.id;
+    if (userId) {
+      await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          full_name: fullName || null,
+          birth_date: dateNaissance || null,
+          position: poste || null,
+        },
+        { onConflict: "id" }
+      );
     }
 
     navigate({ to: "/verify-email", search: { email }, replace: true });
