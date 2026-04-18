@@ -2,6 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type PlayerCategory = Database["public"]["Enums"]["player_category"];
+type PlayerPosition = Database["public"]["Enums"]["player_position"];
+type DominantFoot = Database["public"]["Enums"]["dominant_foot"];
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
