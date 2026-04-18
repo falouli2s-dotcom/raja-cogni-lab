@@ -37,7 +37,7 @@ function RegisterPage() {
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [dateNaissance, setDateNaissance] = useState("");
-  const [poste, setPoste] = useState("");
+  const [poste, setPoste] = useState<"Gardien" | "Défenseur" | "Milieu" | "Attaquant" | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,15 +48,19 @@ function RegisterPage() {
     setLoading(true);
     setError("");
 
-    const { error: authError } = await supabase.auth.signUp({
+    const fullName = `${prenom.trim()} ${nom.trim()}`.trim();
+
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           nom,
           prenom,
+          full_name: fullName,
           date_naissance: dateNaissance,
-          poste,
+          position: poste,
         },
       },
     });
@@ -65,6 +69,19 @@ function RegisterPage() {
       setError(authError.message);
       setLoading(false);
       return;
+    }
+
+    const userId = signUpData.user?.id;
+    if (userId) {
+      await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          full_name: fullName || null,
+          birth_date: dateNaissance || null,
+          position: poste || null,
+        },
+        { onConflict: "id" }
+      );
     }
 
     navigate({ to: "/verify-email", search: { email }, replace: true });
@@ -224,15 +241,15 @@ function RegisterPage() {
 
             <div className="space-y-2">
               <Label htmlFor="poste">Poste</Label>
-              <Select value={poste} onValueChange={setPoste}>
+              <Select value={poste} onValueChange={(v) => setPoste(v as typeof poste)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choisis ton poste" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="gardien">Gardien</SelectItem>
-                  <SelectItem value="defenseur">Défenseur</SelectItem>
-                  <SelectItem value="milieu">Milieu</SelectItem>
-                  <SelectItem value="attaquant">Attaquant</SelectItem>
+                  <SelectItem value="Gardien">Gardien</SelectItem>
+                  <SelectItem value="Défenseur">Défenseur</SelectItem>
+                  <SelectItem value="Milieu">Milieu</SelectItem>
+                  <SelectItem value="Attaquant">Attaquant</SelectItem>
                 </SelectContent>
               </Select>
             </div>

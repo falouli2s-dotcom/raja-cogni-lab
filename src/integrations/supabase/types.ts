@@ -202,7 +202,7 @@ export type Database = {
     }
     Enums: {
       dominant_foot: "Droit" | "Gauche" | "Les deux"
-      player_category: "U13" | "U14" | "U15" | "U16" | "U17"
+      player_category: "U13" | "U14" | "U15" | "U16" | "U17" | "U18" | "U21"
       player_position: "Attaquant" | "Milieu" | "Défenseur" | "Gardien"
     }
     CompositeTypes: {
@@ -332,7 +332,7 @@ export const Constants = {
   public: {
     Enums: {
       dominant_foot: ["Droit", "Gauche", "Les deux"],
-      player_category: ["U13", "U14", "U15", "U16", "U17"],
+      player_category: ["U13", "U14", "U15", "U16", "U17", "U18", "U21"],
       player_position: ["Attaquant", "Milieu", "Défenseur", "Gardien"],
     },
   },
