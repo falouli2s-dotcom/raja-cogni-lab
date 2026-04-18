@@ -108,6 +108,99 @@ function ProfilePage() {
     navigate({ to: "/login", replace: true });
   }
 
+  // Extract storage path from a public URL
+  function pathFromPublicUrl(url: string | null | undefined): string | null {
+    if (!url) return null;
+    const marker = "/storage/v1/object/public/avatars/";
+    const idx = url.indexOf(marker);
+    if (idx === -1) return null;
+    return url.substring(idx + marker.length).split("?")[0];
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner une image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image trop volumineuse (max 5 Mo)");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const oldPath = pathFromPublicUrl(profile?.avatar_url);
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const newPath = `${userId}/avatar-${Date.now()}.${ext}`;
+
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(newPath, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(newPath);
+      const publicUrl = `${pub.publicUrl}?v=${Date.now()}`;
+
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", userId);
+      if (updErr) throw updErr;
+
+      // Best-effort delete old file
+      if (oldPath && oldPath !== newPath) {
+        await supabase.storage.from("avatars").remove([oldPath]);
+      }
+
+      setProfile((p) => ({
+        full_name: p?.full_name ?? null,
+        birth_date: p?.birth_date ?? null,
+        category: p?.category ?? null,
+        position: p?.position ?? null,
+        dominant_foot: p?.dominant_foot ?? null,
+        avatar_url: publicUrl,
+      }));
+      toast.success("Photo de profil mise à jour");
+    } catch (err: any) {
+      toast.error(err.message || "Échec de l'upload");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function handleAvatarDelete() {
+    if (!userId || !profile?.avatar_url) return;
+    setDeletingAvatar(true);
+    try {
+      const oldPath = pathFromPublicUrl(profile.avatar_url);
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", userId);
+      if (updErr) throw updErr;
+      if (oldPath) {
+        await supabase.storage.from("avatars").remove([oldPath]);
+      }
+      setProfile((p) => ({
+        full_name: p?.full_name ?? null,
+        birth_date: p?.birth_date ?? null,
+        category: p?.category ?? null,
+        position: p?.position ?? null,
+        dominant_foot: p?.dominant_foot ?? null,
+        avatar_url: null,
+      }));
+      toast.success("Photo supprimée");
+    } catch (err: any) {
+      toast.error(err.message || "Échec de la suppression");
+    } finally {
+      setDeletingAvatar(false);
+    }
+  }
+
   // Personal info save
   async function handleSavePersonal() {
     if (!userId) return;
