@@ -2,6 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type PlayerCategory = Database["public"]["Enums"]["player_category"];
+type PlayerPosition = Database["public"]["Enums"]["player_position"];
+type DominantFoot = Database["public"]["Enums"]["dominant_foot"];
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -30,14 +35,17 @@ interface NotifPrefs {
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ email?: string; prenom?: string; nom?: string; date_naissance?: string; poste?: string } | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [email, setEmail] = useState<string>("");
+  const [profile, setProfile] = useState<{ full_name: string | null; birth_date: string | null; category: PlayerCategory | null; position: PlayerPosition | null; dominant_foot: DominantFoot | null; avatar_url: string | null } | null>(null);
   const [openSheet, setOpenSheet] = useState<SheetType>(null);
 
   // Personal info state
-  const [prenom, setPrenom] = useState("");
-  const [nom, setNom] = useState("");
+  const [fullName, setFullName] = useState("");
   const [dateNaissance, setDateNaissance] = useState<Date | undefined>();
-  const [poste, setPoste] = useState("");
+  const [position, setPosition] = useState<PlayerPosition | "">("");
+  const [category, setCategory] = useState<PlayerCategory | "">("");
+  const [dominantFoot, setDominantFoot] = useState<DominantFoot | "">("");
   const [savingPersonal, setSavingPersonal] = useState(false);
 
   // Security state
@@ -54,22 +62,27 @@ function ProfilePage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
-      if (authUser) {
-        const meta = authUser.user_metadata || {};
-        setUser({
-          email: authUser.email,
-          prenom: meta.prenom,
-          nom: meta.nom,
-          date_naissance: meta.date_naissance,
-          poste: meta.poste,
-        });
-        setPrenom(meta.prenom || "");
-        setNom(meta.nom || "");
-        setPoste(meta.poste || "");
-        if (meta.date_naissance) setDateNaissance(new Date(meta.date_naissance));
+    (async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+      setUserId(authUser.id);
+      setEmail(authUser.email || "");
+
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, birth_date, category, position, dominant_foot, avatar_url")
+        .eq("id", authUser.id)
+        .maybeSingle();
+
+      if (prof) {
+        setProfile(prof);
+        setFullName(prof.full_name || "");
+        setPosition(prof.position || "");
+        setCategory(prof.category || "");
+        setDominantFoot(prof.dominant_foot || "");
+        if (prof.birth_date) setDateNaissance(new Date(prof.birth_date));
       }
-    });
+    })();
 
     // Load notif prefs
     try {
@@ -93,13 +106,27 @@ function ProfilePage() {
 
   // Personal info save
   async function handleSavePersonal() {
+    if (!userId) return;
     setSavingPersonal(true);
-    const { error } = await supabase.auth.updateUser({
-      data: { prenom, nom, date_naissance: dateNaissance?.toISOString().split("T")[0], poste },
-    });
+    const payload = {
+      id: userId,
+      full_name: fullName.trim() || null,
+      birth_date: dateNaissance ? dateNaissance.toISOString().split("T")[0] : null,
+      position: (position || null) as PlayerPosition | null,
+      category: (category || null) as PlayerCategory | null,
+      dominant_foot: (dominantFoot || null) as DominantFoot | null,
+    };
+    const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
     setSavingPersonal(false);
     if (error) { toast.error(error.message); return; }
-    setUser((u) => u ? { ...u, prenom, nom, poste } : u);
+    setProfile((p) => ({
+      full_name: payload.full_name,
+      birth_date: payload.birth_date,
+      position: payload.position,
+      category: payload.category,
+      dominant_foot: payload.dominant_foot,
+      avatar_url: p?.avatar_url ?? null,
+    }));
     toast.success("Informations mises à jour");
     setOpenSheet(null);
   }
@@ -167,9 +194,9 @@ function ProfilePage() {
         </div>
         <div>
           <p className="font-semibold text-foreground">
-            {user?.prenom && user?.nom ? `${user.prenom} ${user.nom}` : "Joueur"}
+            {profile?.full_name || "Joueur"}
           </p>
-          <p className="text-sm text-muted-foreground">{user?.email || ""}</p>
+          <p className="text-sm text-muted-foreground">{email}</p>
         </div>
       </motion.div>
 
@@ -217,12 +244,8 @@ function ProfilePage() {
           </SheetHeader>
           <div className="mt-4 flex flex-col gap-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Prénom</label>
-              <Input value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="Prénom" />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Nom</label>
-              <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Nom" />
+              <label className="text-sm font-medium text-foreground mb-1 block">Nom complet</label>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Prénom Nom" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Date de naissance</label>
@@ -249,14 +272,38 @@ function ProfilePage() {
               </Popover>
             </div>
             <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Catégorie</label>
+              <Select value={category} onValueChange={(v) => setCategory(v as PlayerCategory)}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner une catégorie" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="U13">U13</SelectItem>
+                  <SelectItem value="U14">U14</SelectItem>
+                  <SelectItem value="U15">U15</SelectItem>
+                  <SelectItem value="U16">U16</SelectItem>
+                  <SelectItem value="U17">U17</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Poste</label>
-              <Select value={poste} onValueChange={setPoste}>
+              <Select value={position} onValueChange={(v) => setPosition(v as PlayerPosition)}>
                 <SelectTrigger><SelectValue placeholder="Sélectionner un poste" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Gardien">Gardien</SelectItem>
                   <SelectItem value="Défenseur">Défenseur</SelectItem>
                   <SelectItem value="Milieu">Milieu</SelectItem>
                   <SelectItem value="Attaquant">Attaquant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Pied dominant</label>
+              <Select value={dominantFoot} onValueChange={(v) => setDominantFoot(v as DominantFoot)}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner un pied" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Droit">Droit</SelectItem>
+                  <SelectItem value="Gauche">Gauche</SelectItem>
+                  <SelectItem value="Les deux">Les deux</SelectItem>
                 </SelectContent>
               </Select>
             </div>
