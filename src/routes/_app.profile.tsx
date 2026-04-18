@@ -286,14 +286,45 @@ function ProfilePage() {
         transition={{ delay: 0.1 }}
         className="mt-6 flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
       >
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-          <User className="h-7 w-7 text-primary" />
+        <div className="relative">
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-primary/10">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+            ) : (
+              <User className="h-7 w-7 text-primary" />
+            )}
+          </div>
+          <label
+            htmlFor="avatar-upload"
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform active:scale-95"
+            aria-label="Changer la photo"
+          >
+            {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+          </label>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+            disabled={uploadingAvatar || deletingAvatar}
+          />
         </div>
-        <div>
-          <p className="font-semibold text-foreground">
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-foreground">
             {profile?.full_name || "Joueur"}
           </p>
-          <p className="text-sm text-muted-foreground">{email}</p>
+          <p className="truncate text-sm text-muted-foreground">{email}</p>
+          {profile?.avatar_url && (
+            <button
+              type="button"
+              onClick={handleAvatarDelete}
+              disabled={deletingAvatar || uploadingAvatar}
+              className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-destructive transition-opacity active:opacity-70 disabled:opacity-50"
+            >
+              <Trash2 className="h-3 w-3" /> Supprimer la photo
+            </button>
+          )}
         </div>
       </motion.div>
 
