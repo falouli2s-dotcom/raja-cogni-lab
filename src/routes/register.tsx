@@ -1,12 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Eye, EyeOff, Mail, Lock, User, Calendar, ChevronRight, ChevronLeft } from "lucide-react";
+import { Brain, Eye, EyeOff, Mail, Lock, User, Calendar, ChevronRight, ChevronLeft, Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
+type PlayerCategory = Database["public"]["Enums"]["player_category"];
+type PlayerPosition = Database["public"]["Enums"]["player_position"];
+type DominantFoot = Database["public"]["Enums"]["dominant_foot"];
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
@@ -28,8 +34,12 @@ function getPasswordStrength(pw: string): { score: number; label: string; color:
   return { score, ...levels[score] };
 }
 
+const TOTAL_STEPS = 3;
+
 function RegisterPage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,11 +47,32 @@ function RegisterPage() {
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [dateNaissance, setDateNaissance] = useState("");
-  const [poste, setPoste] = useState<"Gardien" | "Défenseur" | "Milieu" | "Attaquant" | "">("");
+  const [poste, setPoste] = useState<PlayerPosition | "">("");
+  const [category, setCategory] = useState<PlayerCategory | "">("");
+  const [dominantFoot, setDominantFoot] = useState<DominantFoot | "">("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const strength = getPasswordStrength(password);
+
+  function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image doit faire moins de 5 Mo");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Format d'image invalide");
+      return;
+    }
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  }
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -72,13 +103,32 @@ function RegisterPage() {
     }
 
     const userId = signUpData.user?.id;
+    let avatarUrl: string | null = null;
+
+    if (userId && avatarFile) {
+      const ext = avatarFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${userId}/avatar.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+      if (!uploadError) {
+        const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+        avatarUrl = pub.publicUrl;
+      } else {
+        toast.error("Avatar non uploadé : " + uploadError.message);
+      }
+    }
+
     if (userId) {
       await supabase.from("profiles").upsert(
         {
           id: userId,
           full_name: fullName || null,
           birth_date: dateNaissance || null,
-          position: poste || null,
+          position: (poste || null) as PlayerPosition | null,
+          category: (category || null) as PlayerCategory | null,
+          dominant_foot: (dominantFoot || null) as DominantFoot | null,
+          avatar_url: avatarUrl,
         },
         { onConflict: "id" }
       );
@@ -98,13 +148,17 @@ function RegisterPage() {
           <Brain className="h-9 w-9 text-primary-foreground" />
         </div>
         <h1 className="text-2xl font-bold text-foreground">Créer un compte</h1>
-        <p className="text-sm text-muted-foreground">Étape {step} sur 2</p>
+        <p className="text-sm text-muted-foreground">Étape {step} sur {TOTAL_STEPS}</p>
       </motion.div>
 
       {/* Progress bar */}
       <div className="mb-6 flex gap-2">
-        <div className={`h-1 flex-1 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
-        <div className={`h-1 flex-1 rounded-full ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
+        {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full ${step >= i + 1 ? "bg-primary" : "bg-muted"}`}
+          />
+        ))}
       </div>
 
       {error && (
@@ -189,12 +243,11 @@ function RegisterPage() {
         )}
 
         {step === 2 && (
-          <motion.form
+          <motion.div
             key="step2"
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -20, opacity: 0 }}
-            onSubmit={handleRegister}
             className="flex flex-col gap-4"
           >
             <div className="grid grid-cols-2 gap-3">
@@ -239,17 +292,47 @@ function RegisterPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="poste">Poste</Label>
+                <Select value={poste} onValueChange={(v) => setPoste(v as PlayerPosition)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Gardien">Gardien</SelectItem>
+                    <SelectItem value="Défenseur">Défenseur</SelectItem>
+                    <SelectItem value="Milieu">Milieu</SelectItem>
+                    <SelectItem value="Attaquant">Attaquant</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="categorie">Catégorie</Label>
+                <Select value={category} onValueChange={(v) => setCategory(v as PlayerCategory)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(["U13", "U14", "U15", "U16", "U17", "U18", "U21"] as PlayerCategory[]).map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="poste">Poste</Label>
-              <Select value={poste} onValueChange={(v) => setPoste(v as typeof poste)}>
+              <Label htmlFor="pied">Pied dominant</Label>
+              <Select value={dominantFoot} onValueChange={(v) => setDominantFoot(v as DominantFoot)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choisis ton poste" />
+                  <SelectValue placeholder="Choisis ton pied dominant" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Gardien">Gardien</SelectItem>
-                  <SelectItem value="Défenseur">Défenseur</SelectItem>
-                  <SelectItem value="Milieu">Milieu</SelectItem>
-                  <SelectItem value="Attaquant">Attaquant</SelectItem>
+                  <SelectItem value="Droit">Droit</SelectItem>
+                  <SelectItem value="Gauche">Gauche</SelectItem>
+                  <SelectItem value="Les deux">Les deux</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -263,8 +346,78 @@ function RegisterPage() {
               >
                 <ChevronLeft className="mr-1 h-4 w-4" /> Retour
               </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (!prenom || !nom || !dateNaissance) return;
+                  setStep(3);
+                }}
+                className="h-12 flex-1 text-base font-semibold"
+              >
+                Suivant <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 3 && (
+          <motion.form
+            key="step3"
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -20, opacity: 0 }}
+            onSubmit={handleRegister}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-foreground">Photo de profil (optionnel)</p>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-border bg-muted transition hover:border-primary"
+              >
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Aperçu avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <Camera className="h-8 w-8 text-muted-foreground" />
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-primary/80 py-1 text-center text-xs font-medium text-primary-foreground">
+                  {avatarPreview ? "Changer" : "Ajouter"}
+                </div>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarSelect}
+                className="hidden"
+              />
+              <p className="text-xs text-muted-foreground">JPG, PNG • max 5 Mo</p>
+            </div>
+
+            <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+              <p className="font-semibold text-foreground mb-2">Récapitulatif</p>
+              <ul className="space-y-1 text-muted-foreground">
+                <li><span className="text-foreground">{prenom} {nom}</span></li>
+                <li>{email}</li>
+                {poste && <li>Poste : <span className="text-foreground">{poste}</span></li>}
+                {category && <li>Catégorie : <span className="text-foreground">{category}</span></li>}
+                {dominantFoot && <li>Pied : <span className="text-foreground">{dominantFoot}</span></li>}
+              </ul>
+            </div>
+
+            <div className="mt-2 flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(2)}
+                disabled={loading}
+                className="h-12 flex-1"
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" /> Retour
+              </Button>
               <Button type="submit" disabled={loading} className="h-12 flex-1 text-base font-semibold">
-                {loading ? "Inscription..." : "S'inscrire"}
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Inscription...</> : "S'inscrire"}
               </Button>
             </div>
           </motion.form>
