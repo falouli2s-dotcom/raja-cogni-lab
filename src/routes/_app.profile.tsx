@@ -281,6 +281,8 @@ function ProfilePage() {
                   <SelectItem value="U15">U15</SelectItem>
                   <SelectItem value="U16">U16</SelectItem>
                   <SelectItem value="U17">U17</SelectItem>
+                  <SelectItem value="U18">U18</SelectItem>
+                  <SelectItem value="U21">U21</SelectItem>
                 </SelectContent>
               </Select>
             </div>
