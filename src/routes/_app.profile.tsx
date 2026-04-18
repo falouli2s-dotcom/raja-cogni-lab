@@ -61,6 +61,10 @@ function ProfilePage() {
   // Theme state
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
+  // Avatar state
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deletingAvatar, setDeletingAvatar] = useState(false);
+
   useEffect(() => {
     (async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
