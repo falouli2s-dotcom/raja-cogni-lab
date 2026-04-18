@@ -241,15 +241,15 @@ function RegisterPage() {
 
             <div className="space-y-2">
               <Label htmlFor="poste">Poste</Label>
-              <Select value={poste} onValueChange={setPoste}>
+              <Select value={poste} onValueChange={(v) => setPoste(v as typeof poste)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choisis ton poste" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="gardien">Gardien</SelectItem>
-                  <SelectItem value="defenseur">Défenseur</SelectItem>
-                  <SelectItem value="milieu">Milieu</SelectItem>
-                  <SelectItem value="attaquant">Attaquant</SelectItem>
+                  <SelectItem value="Gardien">Gardien</SelectItem>
+                  <SelectItem value="Défenseur">Défenseur</SelectItem>
+                  <SelectItem value="Milieu">Milieu</SelectItem>
+                  <SelectItem value="Attaquant">Attaquant</SelectItem>
                 </SelectContent>
               </Select>
             </div>
