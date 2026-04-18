@@ -83,6 +83,42 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          birth_date: string | null
+          category: Database["public"]["Enums"]["player_category"] | null
+          created_at: string
+          dominant_foot: Database["public"]["Enums"]["dominant_foot"] | null
+          full_name: string | null
+          id: string
+          position: Database["public"]["Enums"]["player_position"] | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          category?: Database["public"]["Enums"]["player_category"] | null
+          created_at?: string
+          dominant_foot?: Database["public"]["Enums"]["dominant_foot"] | null
+          full_name?: string | null
+          id: string
+          position?: Database["public"]["Enums"]["player_position"] | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          category?: Database["public"]["Enums"]["player_category"] | null
+          created_at?: string
+          dominant_foot?: Database["public"]["Enums"]["dominant_foot"] | null
+          full_name?: string | null
+          id?: string
+          position?: Database["public"]["Enums"]["player_position"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       resultats_test: {
         Row: {
           created_at: string
@@ -165,7 +201,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      dominant_foot: "Droit" | "Gauche" | "Les deux"
+      player_category: "U13" | "U14" | "U15" | "U16" | "U17"
+      player_position: "Attaquant" | "Milieu" | "Défenseur" | "Gardien"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -292,6 +330,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      dominant_foot: ["Droit", "Gauche", "Les deux"],
+      player_category: ["U13", "U14", "U15", "U16", "U17"],
+      player_position: ["Attaquant", "Milieu", "Défenseur", "Gardien"],
+    },
   },
 } as const
