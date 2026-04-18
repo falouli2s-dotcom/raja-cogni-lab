@@ -244,12 +244,8 @@ function ProfilePage() {
           </SheetHeader>
           <div className="mt-4 flex flex-col gap-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Prénom</label>
-              <Input value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="Prénom" />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Nom</label>
-              <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Nom" />
+              <label className="text-sm font-medium text-foreground mb-1 block">Nom complet</label>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Prénom Nom" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Date de naissance</label>
@@ -276,14 +272,38 @@ function ProfilePage() {
               </Popover>
             </div>
             <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Catégorie</label>
+              <Select value={category} onValueChange={(v) => setCategory(v as PlayerCategory)}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner une catégorie" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="U13">U13</SelectItem>
+                  <SelectItem value="U14">U14</SelectItem>
+                  <SelectItem value="U15">U15</SelectItem>
+                  <SelectItem value="U16">U16</SelectItem>
+                  <SelectItem value="U17">U17</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Poste</label>
-              <Select value={poste} onValueChange={setPoste}>
+              <Select value={position} onValueChange={(v) => setPosition(v as PlayerPosition)}>
                 <SelectTrigger><SelectValue placeholder="Sélectionner un poste" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Gardien">Gardien</SelectItem>
                   <SelectItem value="Défenseur">Défenseur</SelectItem>
                   <SelectItem value="Milieu">Milieu</SelectItem>
                   <SelectItem value="Attaquant">Attaquant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Pied dominant</label>
+              <Select value={dominantFoot} onValueChange={(v) => setDominantFoot(v as DominantFoot)}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner un pied" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Droit">Droit</SelectItem>
+                  <SelectItem value="Gauche">Gauche</SelectItem>
+                  <SelectItem value="Les deux">Les deux</SelectItem>
                 </SelectContent>
               </Select>
             </div>
