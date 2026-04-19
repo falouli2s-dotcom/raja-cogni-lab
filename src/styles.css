@@ -69,7 +69,7 @@
   --raja-dark-foreground: oklch(1 0 0);
 
   /* Map to semantic tokens */
-  --background: oklch(0.95 0.008 240);
+  --background: oklch(1 0 0);
   --foreground: oklch(0.15 0.02 240);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.02 240);
