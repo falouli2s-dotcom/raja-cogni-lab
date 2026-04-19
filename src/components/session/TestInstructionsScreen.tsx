@@ -50,7 +50,7 @@ export function TestInstructionsScreen({ onStart }: Props) {
     return (
       <div
         dir={dir}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-[oklch(0.18_0.04_220)]"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-background"
         style={{ fontFamily: lang === "ar" ? "'Cairo', 'Tajawal', sans-serif" : undefined }}
       >
         <AnimatePresence mode="wait">
@@ -62,10 +62,10 @@ export function TestInstructionsScreen({ onStart }: Props) {
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <p className="mb-4 text-sm uppercase tracking-widest text-white/60">
+            <p className="mb-4 text-sm uppercase tracking-widest text-muted-foreground">
               {content.countdownLabel}
             </p>
-            <p className="text-[160px] font-bold leading-none text-white">
+            <p className="text-[160px] font-bold leading-none text-primary">
               {countdown === 0 ? "GO" : countdown}
             </p>
           </motion.div>
@@ -78,23 +78,23 @@ export function TestInstructionsScreen({ onStart }: Props) {
     <div
       dir={dir}
       ref={scrollRef}
-      className="min-h-screen overflow-y-auto bg-[oklch(0.18_0.04_220)] text-white"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-background text-foreground"
       style={{ fontFamily: lang === "ar" ? "'Cairo', 'Tajawal', sans-serif" : undefined }}
     >
       {/* Top bar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[oklch(0.18_0.04_220)]/95 px-5 py-3 backdrop-blur">
-        <div className="flex items-center gap-2 text-xs font-medium text-white/70">
-          <span className="rounded-full bg-white/10 px-3 py-1">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 px-5 py-3 backdrop-blur">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+          <span className="rounded-full bg-muted px-3 py-1">
             {content.progressLabel(currentTestIndex + 1, SESSION_TESTS.length)}
           </span>
         </div>
         <LanguageToggle lang={lang} onChange={setLang} />
       </div>
 
-      <div className="mx-auto max-w-xl px-5 pb-32 pt-6">
+      <div className="mx-auto max-w-xl px-5 pb-40 pt-6">
         {/* Title */}
         <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-          <p className="text-xs font-semibold uppercase tracking-widest text-[oklch(0.7_0.18_152)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
             {content.subtitle}
           </p>
           <h1 className="mt-2 text-3xl font-bold">{content.title}</h1>
@@ -106,7 +106,7 @@ export function TestInstructionsScreen({ onStart }: Props) {
           label={content.objectiveLabel}
           delay={0.1}
         >
-          <p className="text-base leading-relaxed text-white/90">{content.objective}</p>
+          <p className="text-base leading-relaxed text-foreground/90">{content.objective}</p>
         </Section>
 
         {/* Simon-only diagram */}
@@ -115,21 +115,21 @@ export function TestInstructionsScreen({ onStart }: Props) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mt-4 overflow-hidden rounded-2xl border border-white/10"
+            className="mt-4 overflow-hidden rounded-2xl border border-border"
           >
             <div className="grid grid-cols-2 gap-1">
-              <div className="flex h-28 items-center justify-center bg-[oklch(0.55_0.22_27)]">
+              <div className="flex h-28 items-center justify-center bg-destructive">
                 <div className="text-center">
                   <div className="mx-auto h-10 w-10 rounded-full bg-white/95" />
-                  <p className="mt-2 text-xs font-bold uppercase tracking-wider text-white">
+                  <p className="mt-2 text-xs font-bold uppercase tracking-wider text-destructive-foreground">
                     {lang === "ar" ? "يسار · أحمر" : "Gauche · Rouge"}
                   </p>
                 </div>
               </div>
-              <div className="flex h-28 items-center justify-center bg-[oklch(0.55_0.17_152)]">
+              <div className="flex h-28 items-center justify-center bg-primary">
                 <div className="text-center">
                   <div className="mx-auto h-10 w-10 rounded-full bg-white/95" />
-                  <p className="mt-2 text-xs font-bold uppercase tracking-wider text-white">
+                  <p className="mt-2 text-xs font-bold uppercase tracking-wider text-primary-foreground">
                     {lang === "ar" ? "يمين · أخضر" : "Droite · Vert"}
                   </p>
                 </div>
@@ -147,10 +147,10 @@ export function TestInstructionsScreen({ onStart }: Props) {
           <ol className="flex flex-col gap-3">
             {content.steps.map((step, i) => (
               <li key={i} className="flex gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[oklch(0.7_0.18_152)] text-sm font-bold text-[oklch(0.18_0.04_220)]">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                   {i + 1}
                 </span>
-                <p className="pt-0.5 text-sm leading-relaxed text-white/90">{step}</p>
+                <p className="pt-0.5 text-sm leading-relaxed text-foreground/90">{step}</p>
               </li>
             ))}
           </ol>
@@ -162,9 +162,9 @@ export function TestInstructionsScreen({ onStart }: Props) {
           label={content.exampleLabel}
           delay={0.3}
         >
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-xl border border-border bg-muted/50 p-4">
             {content.example.map((line, i) => (
-              <p key={i} className="text-sm leading-relaxed text-white/90">
+              <p key={i} className="text-sm leading-relaxed text-foreground/90">
                 {line}
               </p>
             ))}
@@ -173,7 +173,7 @@ export function TestInstructionsScreen({ onStart }: Props) {
 
         {/* Duration */}
         <Section icon={<Clock className="h-5 w-5" />} label={content.durationLabel} delay={0.4}>
-          <p className="text-sm text-white/90">{content.duration}</p>
+          <p className="text-sm text-foreground/90">{content.duration}</p>
         </Section>
 
         {/* Reread */}
@@ -182,7 +182,7 @@ export function TestInstructionsScreen({ onStart }: Props) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           onClick={handleReread}
-          className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-white/70 underline-offset-4 hover:underline"
+          className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
         >
           <ArrowUp className="h-4 w-4" />
           {content.rereadButton}
@@ -192,13 +192,13 @@ export function TestInstructionsScreen({ onStart }: Props) {
       {/* Sticky CTA */}
       <div
         dir={dir}
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[oklch(0.16_0.04_220)]/95 px-5 py-4 backdrop-blur safe-area-bottom"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 px-5 py-4 backdrop-blur safe-area-bottom"
       >
         <div className="mx-auto max-w-xl">
           <Button
             onClick={() => setCountdown(3)}
             disabled={!canStart}
-            className="h-14 w-full bg-[oklch(0.7_0.18_152)] text-base font-semibold text-[oklch(0.18_0.04_220)] hover:bg-[oklch(0.75_0.18_152)] disabled:opacity-60"
+            className="h-14 w-full text-base font-semibold"
             size="lg"
           >
             <Play className="h-5 w-5" />
@@ -228,7 +228,7 @@ function Section({
       transition={{ delay }}
       className="mt-6"
     >
-      <div className="mb-2 flex items-center gap-2 text-[oklch(0.7_0.18_152)]">
+      <div className="mb-2 flex items-center gap-2 text-primary">
         {icon}
         <h2 className="text-xs font-bold uppercase tracking-widest">{label}</h2>
       </div>
@@ -239,12 +239,12 @@ function Section({
 
 function LanguageToggle({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
   return (
-    <div className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1">
-      <Languages className="ms-2 h-3.5 w-3.5 text-white/60" />
+    <div className="flex items-center gap-1 rounded-full border border-border bg-muted p-1">
+      <Languages className="ms-2 h-3.5 w-3.5 text-muted-foreground" />
       <button
         onClick={() => onChange("fr")}
         className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
-          lang === "fr" ? "bg-white text-[oklch(0.18_0.04_220)]" : "text-white/70"
+          lang === "fr" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
         }`}
       >
         FR
@@ -252,7 +252,7 @@ function LanguageToggle({ lang, onChange }: { lang: Lang; onChange: (l: Lang) =>
       <button
         onClick={() => onChange("ar")}
         className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
-          lang === "ar" ? "bg-white text-[oklch(0.18_0.04_220)]" : "text-white/70"
+          lang === "ar" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
         }`}
         style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif" }}
       >
