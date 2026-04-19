@@ -20,7 +20,7 @@ export const SESSION_TESTS: TestDefinition[] = [
 ];
 
 export type SessionStatus = "idle" | "in-progress" | "completed";
-export type SessionStep = "start" | "running-test" | "transition" | "final-results";
+export type SessionStep = "start" | "instructions" | "running-test" | "transition" | "final-results";
 
 export interface SimonResultData {
   avgRT: number;
@@ -71,6 +71,7 @@ interface SessionContextValue {
   startSession: () => void;
   completeTest: (result: TestResult) => void;
   proceedToNextTest: () => void;
+  startCurrentTest: () => void;
   finishSession: () => SGSResult;
   resetSession: () => void;
   getCurrentTest: () => TestDefinition | null;
@@ -94,6 +95,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
     setSession(newSession);
     setCurrentTestIndex(0);
+    setStep("instructions");
+  }, []);
+
+  const startCurrentTest = useCallback(() => {
     setStep("running-test");
   }, []);
 
@@ -111,7 +116,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const proceedToNextTest = useCallback(() => {
     setCurrentTestIndex(prev => prev + 1);
-    setStep("running-test");
+    setStep("instructions");
   }, []);
 
   const finishSession = useCallback((): SGSResult => {
@@ -183,6 +188,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       startSession,
       completeTest,
       proceedToNextTest,
+      startCurrentTest,
       finishSession,
       resetSession,
       getCurrentTest,

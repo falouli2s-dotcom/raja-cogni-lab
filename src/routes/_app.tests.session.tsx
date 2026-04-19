@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SessionProvider, useSession } from "@/lib/session-manager";
+import { LanguageProvider } from "@/lib/language-context";
 import { SessionStartScreen } from "@/components/session/SessionStartScreen";
 import { TestTransitionScreen } from "@/components/session/TestTransitionScreen";
+import { TestInstructionsScreen } from "@/components/session/TestInstructionsScreen";
 import { SessionResultsScreen } from "@/components/session/SessionResultsScreen";
 import { SimonTest } from "@/components/tests/SimonTest";
 import { NBackTest } from "@/components/tests/NBackTest";
@@ -15,14 +17,16 @@ import type { TestResult } from "@/lib/session-manager";
 
 export const Route = createFileRoute("/_app/tests/session")({
   component: () => (
-    <SessionProvider>
-      <SessionOrchestrator />
-    </SessionProvider>
+    <LanguageProvider>
+      <SessionProvider>
+        <SessionOrchestrator />
+      </SessionProvider>
+    </LanguageProvider>
   ),
 });
 
 function SessionOrchestrator() {
-  const { step, getCurrentTest, completeTest } = useSession();
+  const { step, getCurrentTest, completeTest, startCurrentTest } = useSession();
 
   if (step === "start") {
     return <SessionStartScreen />;
@@ -34,6 +38,10 @@ function SessionOrchestrator() {
 
   if (step === "final-results") {
     return <SessionResultsScreen />;
+  }
+
+  if (step === "instructions") {
+    return <TestInstructionsScreen onStart={startCurrentTest} />;
   }
 
   // step === "running-test"
