@@ -39,7 +39,7 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card border-t border-border"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card border-t border-border pb-[calc(env(safe-area-inset-bottom)+5rem)]"
           >
             {/* Handle */}
             <div className="sticky top-0 z-10 bg-card pt-3 pb-2 px-5 flex items-center justify-between">
