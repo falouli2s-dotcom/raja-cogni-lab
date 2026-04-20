@@ -437,7 +437,7 @@ function HistoryPage() {
           </p>
         </div>
       ) : (
-        <div ref={exportRef} className="bg-background">
+        <div className="bg-background">
           {/* Section 1 — Evolution */}
           <motion.section
             initial={{ y: 20, opacity: 0 }}
