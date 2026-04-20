@@ -161,6 +161,7 @@ function HistoryPage() {
   const [allGroups, setAllGroups] = useState<SessionGroup[]>([]);
   const [selected, setSelected] = useState<SessionGroup | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [userName, setUserName] = useState<string | undefined>(undefined);
   const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
