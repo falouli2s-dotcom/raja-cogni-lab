@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Pause, Play, SkipForward, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 import type { Exercice } from "@/routes/_app.exercises";
 
 interface Props {
@@ -92,6 +93,9 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
   const totalSeries = ex.series;
   const serieDuration = parseDuration(ex.duree_serie);
   const recoveryDuration = ex.recuperation_secondes;
+
+  // Keep the screen awake during the entire exercise (countdown → series → recovery)
+  useWakeLock(true);
 
   const [currentSerie, setCurrentSerie] = useState(1);
   const [phase, setPhase] = useState<Phase>("countdown");
