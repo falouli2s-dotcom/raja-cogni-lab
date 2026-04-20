@@ -2,7 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { z } from "zod";
+import { PDFExportTemplate } from "@/components/history/PDFExportTemplate";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import {
   TrendingUp,
