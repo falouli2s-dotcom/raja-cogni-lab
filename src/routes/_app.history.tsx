@@ -2,7 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { z } from "zod";
+import { PDFExportTemplate } from "@/components/history/PDFExportTemplate";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import {
   TrendingUp,
@@ -159,6 +161,7 @@ function HistoryPage() {
   const [allGroups, setAllGroups] = useState<SessionGroup[]>([]);
   const [selected, setSelected] = useState<SessionGroup | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [userName, setUserName] = useState<string | undefined>(undefined);
   const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -173,6 +176,17 @@ function HistoryPage() {
           }
           return;
         }
+
+        // Try to fetch a friendly display name from profiles
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        const displayName =
+          (profile?.full_name && profile.full_name.trim()) ||
+          (user.email ? user.email.split("@")[0] : undefined);
+        if (!cancelled) setUserName(displayName);
 
         const { data: sessions, error: sErr } = await supabase
           .from("sessions_test")
@@ -214,7 +228,7 @@ function HistoryPage() {
     return allGroups.filter((g) => new Date(g.date).getTime() >= cutoff);
   })();
 
-  // PDF export
+  // PDF export — uses dedicated off-screen template for clean A4 layout
   async function handleExportPDF() {
     if (!exportRef.current || groups.length === 0) return;
     setExporting(true);
@@ -225,15 +239,13 @@ function HistoryPage() {
       ]);
 
       const node = exportRef.current;
-      const bgColor = getComputedStyle(document.body).backgroundColor || "#ffffff";
-
       const imgData = await toPng(node, {
-        backgroundColor: bgColor,
+        backgroundColor: "#ffffff",
         pixelRatio: 2,
         cacheBust: true,
+        style: { fontFamily: "Inter, Arial, sans-serif" },
       });
 
-      // Get rendered image dimensions
       const img = new Image();
       img.src = imgData;
       await new Promise<void>((res, rej) => {
@@ -241,30 +253,41 @@ function HistoryPage() {
         img.onerror = () => rej(new Error("Image load failed"));
       });
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
+
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 20;
+      const margin = 10;
+      const imgWidth = pageWidth - margin * 2;
       const imgHeight = (img.height * imgWidth) / img.width;
 
-      let heightLeft = imgHeight;
-      let position = 10;
-
-      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight - 20;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight - 20;
+      let remainingHeight = imgHeight;
+      let yOffset = 0;
+      while (remainingHeight > 0) {
+        if (yOffset > 0) pdf.addPage();
+        pdf.addImage(
+          imgData,
+          "PNG",
+          margin,
+          margin - yOffset,
+          imgWidth,
+          imgHeight
+        );
+        yOffset += pageHeight - margin * 2;
+        remainingHeight -= pageHeight - margin * 2;
       }
 
-      pdf.save(`cognitive-history-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-      toast.success("Historique exporté en PDF");
+      const playerSlug = userName?.replace(/\s+/g, "-").toLowerCase() ?? "joueur";
+      pdf.save(`cognilab-rapport-${playerSlug}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      toast.success("Rapport PDF exporté avec succès");
     } catch (e: any) {
       console.error("PDF export failed:", e);
-      toast.error(e?.message ?? "Échec de l'export PDF");
+      toast.error("Échec de l'export : " + (e?.message ?? "erreur inconnue"));
     } finally {
       setExporting(false);
     }
@@ -414,7 +437,7 @@ function HistoryPage() {
           </p>
         </div>
       ) : (
-        <div ref={exportRef} className="bg-background">
+        <div className="bg-background">
           {/* Section 1 — Evolution */}
           <motion.section
             initial={{ y: 20, opacity: 0 }}
@@ -611,6 +634,27 @@ function HistoryPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Hidden PDF export template — off-screen, only used during export */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: 0,
+          width: 794,
+          pointerEvents: "none",
+        }}
+      >
+        <PDFExportTemplate
+          ref={exportRef}
+          groups={groups}
+          dimStats={dimStats}
+          latestRadar={latestRadar}
+          userName={userName}
+          exportDate={format(new Date(), "dd MMMM yyyy", { locale: fr })}
+        />
+      </div>
     </div>
   );
 }
