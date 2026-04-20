@@ -228,7 +228,7 @@ function HistoryPage() {
     return allGroups.filter((g) => new Date(g.date).getTime() >= cutoff);
   })();
 
-  // PDF export
+  // PDF export — uses dedicated off-screen template for clean A4 layout
   async function handleExportPDF() {
     if (!exportRef.current || groups.length === 0) return;
     setExporting(true);
@@ -239,15 +239,13 @@ function HistoryPage() {
       ]);
 
       const node = exportRef.current;
-      const bgColor = getComputedStyle(document.body).backgroundColor || "#ffffff";
-
       const imgData = await toPng(node, {
-        backgroundColor: bgColor,
+        backgroundColor: "#ffffff",
         pixelRatio: 2,
         cacheBust: true,
+        style: { fontFamily: "Inter, Arial, sans-serif" },
       });
 
-      // Get rendered image dimensions
       const img = new Image();
       img.src = imgData;
       await new Promise<void>((res, rej) => {
@@ -255,30 +253,41 @@ function HistoryPage() {
         img.onerror = () => rej(new Error("Image load failed"));
       });
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
+
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 20;
+      const margin = 10;
+      const imgWidth = pageWidth - margin * 2;
       const imgHeight = (img.height * imgWidth) / img.width;
 
-      let heightLeft = imgHeight;
-      let position = 10;
-
-      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight - 20;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight - 20;
+      let remainingHeight = imgHeight;
+      let yOffset = 0;
+      while (remainingHeight > 0) {
+        if (yOffset > 0) pdf.addPage();
+        pdf.addImage(
+          imgData,
+          "PNG",
+          margin,
+          margin - yOffset,
+          imgWidth,
+          imgHeight
+        );
+        yOffset += pageHeight - margin * 2;
+        remainingHeight -= pageHeight - margin * 2;
       }
 
-      pdf.save(`cognitive-history-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-      toast.success("Historique exporté en PDF");
+      const playerSlug = userName?.replace(/\s+/g, "-").toLowerCase() ?? "joueur";
+      pdf.save(`cognilab-rapport-${playerSlug}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      toast.success("Rapport PDF exporté avec succès");
     } catch (e: any) {
       console.error("PDF export failed:", e);
-      toast.error(e?.message ?? "Échec de l'export PDF");
+      toast.error("Échec de l'export : " + (e?.message ?? "erreur inconnue"));
     } finally {
       setExporting(false);
     }
