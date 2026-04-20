@@ -17,6 +17,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
+import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
 import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
 import { Route as AppSessionsIndexRouteImport } from './routes/_app.sessions.index'
@@ -62,6 +63,11 @@ const AppHomeRoute = AppHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHistoryRoute = AppHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExercisesRoute = AppExercisesRouteImport.update({
   id: '/exercises',
   path: '/exercises',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/exercises': typeof AppExercisesRoute
+  '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/exercises': typeof AppExercisesRoute
+  '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/exercises': typeof AppExercisesRoute
+  '/_app/history': typeof AppHistoryRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/verify-email'
     | '/exercises'
+    | '/history'
     | '/home'
     | '/profile'
     | '/sessions/$sessionId'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/verify-email'
     | '/exercises'
+    | '/history'
     | '/home'
     | '/profile'
     | '/sessions/$sessionId'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/verify-email'
     | '/_app/exercises'
+    | '/_app/history'
     | '/_app/home'
     | '/_app/profile'
     | '/_app/sessions/$sessionId'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/history': {
+      id: '/_app/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AppHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/exercises': {
       id: '/_app/exercises'
       path: '/exercises'
@@ -285,6 +304,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppExercisesRoute: typeof AppExercisesRoute
+  AppHistoryRoute: typeof AppHistoryRoute
   AppHomeRoute: typeof AppHomeRoute
   AppProfileRoute: typeof AppProfileRoute
   AppSessionsSessionIdRoute: typeof AppSessionsSessionIdRoute
@@ -295,6 +315,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppExercisesRoute: AppExercisesRoute,
+  AppHistoryRoute: AppHistoryRoute,
   AppHomeRoute: AppHomeRoute,
   AppProfileRoute: AppProfileRoute,
   AppSessionsSessionIdRoute: AppSessionsSessionIdRoute,
