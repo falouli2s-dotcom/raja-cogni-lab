@@ -1,10 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Brain, Dumbbell, User, BarChart3 } from "lucide-react";
+import { Home, Brain, Dumbbell, User, TrendingUp } from "lucide-react";
 
 const tabs = [
   { to: "/home", label: "Accueil", icon: Home },
   { to: "/tests", label: "Tests", icon: Brain },
-  { to: "/sessions", label: "Sessions", icon: BarChart3 },
+  { to: "/history", label: "Historique", icon: TrendingUp },
   { to: "/exercises", label: "Exercices", icon: Dumbbell },
   { to: "/profile", label: "Profil", icon: User },
 ] as const;
