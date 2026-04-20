@@ -28,7 +28,8 @@ function HomePage() {
         .eq("id", user.id)
         .maybeSingle();
       if (!prof?.position) {
-        setShowProfileBanner(true);
+        const dismissed = localStorage.getItem(PROFILE_BANNER_DISMISS_KEY) === "1";
+        if (!dismissed) setShowProfileBanner(true);
       } else {
         localStorage.removeItem(PROFILE_BANNER_DISMISS_KEY);
       }
