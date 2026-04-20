@@ -349,6 +349,42 @@ function ProfilePage() {
         </div>
       </motion.div>
 
+      {/* Stats summary card */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.15 }}
+        className="mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-border bg-card p-3"
+      >
+        <div className="flex flex-col items-center gap-1 px-1 text-center">
+          <FlaskConical className="h-4 w-4 text-primary" />
+          {stats === null ? (
+            <Skeleton className="h-5 w-8" />
+          ) : (
+            <p className="text-base font-bold text-foreground">{stats.count > 0 ? stats.count : "—"}</p>
+          )}
+          <p className="text-[10px] leading-tight text-muted-foreground">Sessions</p>
+        </div>
+        <div className="flex flex-col items-center gap-1 border-x border-border px-1 text-center">
+          <Trophy className="h-4 w-4 text-accent" />
+          {stats === null ? (
+            <Skeleton className="h-5 w-8" />
+          ) : (
+            <p className="text-base font-bold text-foreground">{stats.bestSGS !== null ? Math.round(stats.bestSGS) : "—"}</p>
+          )}
+          <p className="text-[10px] leading-tight text-muted-foreground">Meilleur SGS</p>
+        </div>
+        <div className="flex flex-col items-center gap-1 px-1 text-center">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          {stats === null ? (
+            <Skeleton className="h-5 w-12" />
+          ) : (
+            <p className="text-xs font-bold text-foreground">{stats.lastDate ? format(new Date(stats.lastDate), "dd MMM yyyy", { locale: fr }) : "—"}</p>
+          )}
+          <p className="text-[10px] leading-tight text-muted-foreground">Dernière</p>
+        </div>
+      </motion.div>
+
       {/* Menu */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
