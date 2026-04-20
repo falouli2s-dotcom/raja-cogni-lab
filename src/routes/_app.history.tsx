@@ -152,7 +152,8 @@ function groupSessions(sessions: DbSession[], results: DbResult[]): SessionGroup
 // ───────── Page ─────────
 function HistoryPage() {
   const navigate = useNavigate();
-  const { period } = Route.useSearch();
+  const search = Route.useSearch();
+  const period = search.period as "7d" | "30d" | "all";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allGroups, setAllGroups] = useState<SessionGroup[]>([]);
