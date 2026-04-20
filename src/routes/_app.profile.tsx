@@ -90,6 +90,23 @@ function ProfilePage() {
         setDominantFoot(prof.dominant_foot || "");
         if (prof.birth_date) setDateNaissance(new Date(prof.birth_date));
       }
+
+      // Load stats
+      const { data: sessions } = await supabase
+        .from("sessions_test")
+        .select("score_global, created_at")
+        .eq("user_id", authUser.id)
+        .order("created_at", { ascending: false });
+      if (sessions) {
+        const scores = sessions.map((s) => s.score_global).filter((v): v is number => v !== null);
+        setStats({
+          count: sessions.length,
+          bestSGS: scores.length ? Math.max(...scores) : null,
+          lastDate: sessions[0]?.created_at ?? null,
+        });
+      } else {
+        setStats({ count: 0, bestSGS: null, lastDate: null });
+      }
     })();
 
     // Load notif prefs
