@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3, Sun, Moon, Eye, EyeOff, Camera, Trash2, Loader2 } from "lucide-react";
+import { User, LogOut, ChevronRight, Shield, Bell, Palette, BarChart3, Sun, Moon, Eye, EyeOff, Camera, Trash2, Loader2, FlaskConical, Trophy, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type PlayerCategory = Database["public"]["Enums"]["player_category"];
@@ -65,6 +66,9 @@ function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [deletingAvatar, setDeletingAvatar] = useState(false);
 
+  // Stats state
+  const [stats, setStats] = useState<{ count: number; bestSGS: number | null; lastDate: string | null } | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -85,6 +89,23 @@ function ProfilePage() {
         setCategory(prof.category || "");
         setDominantFoot(prof.dominant_foot || "");
         if (prof.birth_date) setDateNaissance(new Date(prof.birth_date));
+      }
+
+      // Load stats
+      const { data: sessions } = await supabase
+        .from("sessions_test")
+        .select("score_global, created_at")
+        .eq("user_id", authUser.id)
+        .order("created_at", { ascending: false });
+      if (sessions) {
+        const scores = sessions.map((s) => s.score_global).filter((v): v is number => v !== null);
+        setStats({
+          count: sessions.length,
+          bestSGS: scores.length ? Math.max(...scores) : null,
+          lastDate: sessions[0]?.created_at ?? null,
+        });
+      } else {
+        setStats({ count: 0, bestSGS: null, lastDate: null });
       }
     })();
 
@@ -325,6 +346,42 @@ function ProfilePage() {
               <Trash2 className="h-3 w-3" /> Supprimer la photo
             </button>
           )}
+        </div>
+      </motion.div>
+
+      {/* Stats summary card */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.15 }}
+        className="mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-border bg-card p-3"
+      >
+        <div className="flex flex-col items-center gap-1 px-1 text-center">
+          <FlaskConical className="h-4 w-4 text-primary" />
+          {stats === null ? (
+            <Skeleton className="h-5 w-8" />
+          ) : (
+            <p className="text-base font-bold text-foreground">{stats.count > 0 ? stats.count : "—"}</p>
+          )}
+          <p className="text-[10px] leading-tight text-muted-foreground">Sessions</p>
+        </div>
+        <div className="flex flex-col items-center gap-1 border-x border-border px-1 text-center">
+          <Trophy className="h-4 w-4 text-accent" />
+          {stats === null ? (
+            <Skeleton className="h-5 w-8" />
+          ) : (
+            <p className="text-base font-bold text-foreground">{stats.bestSGS !== null ? Math.round(stats.bestSGS) : "—"}</p>
+          )}
+          <p className="text-[10px] leading-tight text-muted-foreground">Meilleur SGS</p>
+        </div>
+        <div className="flex flex-col items-center gap-1 px-1 text-center">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          {stats === null ? (
+            <Skeleton className="h-5 w-12" />
+          ) : (
+            <p className="text-xs font-bold text-foreground">{stats.lastDate ? format(new Date(stats.lastDate), "dd MMM yyyy", { locale: fr }) : "—"}</p>
+          )}
+          <p className="text-[10px] leading-tight text-muted-foreground">Dernière</p>
         </div>
       </motion.div>
 

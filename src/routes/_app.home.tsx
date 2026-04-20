@@ -1,20 +1,45 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { Brain, TrendingUp, Zap, ChevronRight, BarChart3 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Brain, TrendingUp, Zap, ChevronRight, BarChart3, ClipboardList, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getLastSession, type SessionData } from "@/lib/session-manager";
 import { getGlobalStatus } from "@/lib/sgs-engine";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
 });
 
+const PROFILE_BANNER_DISMISS_KEY = "cogni_profile_banner_dismissed";
+
 function HomePage() {
   const [lastSession, setLastSession] = useState<SessionData | null>(null);
+  const [showProfileBanner, setShowProfileBanner] = useState(false);
 
   useEffect(() => {
     setLastSession(getLastSession());
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("position")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!prof?.position) {
+        const dismissed = localStorage.getItem(PROFILE_BANNER_DISMISS_KEY) === "1";
+        if (!dismissed) setShowProfileBanner(true);
+      } else {
+        localStorage.removeItem(PROFILE_BANNER_DISMISS_KEY);
+      }
+    })();
   }, []);
+
+  function dismissBanner() {
+    setShowProfileBanner(false);
+    localStorage.setItem(PROFILE_BANNER_DISMISS_KEY, "1");
+  }
 
   const sgs = lastSession?.sgs;
   const weakDimensions = sgs?.dimensions
@@ -34,7 +59,42 @@ function HomePage() {
         <h1 className="text-2xl font-bold text-foreground">CogniRaja</h1>
       </motion.div>
 
-      {/* Last session SGS Card */}
+      {/* First-time profile completion banner */}
+      <AnimatePresence>
+        {showProfileBanner && (
+          <motion.div
+            initial={{ y: -10, opacity: 0, height: 0 }}
+            animate={{ y: 0, opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            className="mb-4 overflow-hidden rounded-2xl border border-accent/30 bg-accent/10 p-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/20">
+                <ClipboardList className="h-4 w-4 text-accent" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  Complète ton profil joueur pour des recommandations personnalisées selon ton poste !
+                </p>
+                <Link
+                  to="/profile"
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-accent"
+                >
+                  → Compléter le profil
+                </Link>
+              </div>
+              <button
+                onClick={dismissBanner}
+                aria-label="Fermer"
+                className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors active:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
