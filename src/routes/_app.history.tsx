@@ -219,24 +219,33 @@ function HistoryPage() {
     if (!exportRef.current || groups.length === 0) return;
     setExporting(true);
     try {
-      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+      const [{ default: jsPDF }, { toPng }] = await Promise.all([
         import("jspdf"),
-        import("html2canvas"),
+        import("html-to-image"),
       ]);
 
-      const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: getComputedStyle(document.body).backgroundColor || "#ffffff",
-        scale: 2,
-        useCORS: true,
-        logging: false,
+      const node = exportRef.current;
+      const bgColor = getComputedStyle(document.body).backgroundColor || "#ffffff";
+
+      const imgData = await toPng(node, {
+        backgroundColor: bgColor,
+        pixelRatio: 2,
+        cacheBust: true,
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      // Get rendered image dimensions
+      const img = new Image();
+      img.src = imgData;
+      await new Promise<void>((res, rej) => {
+        img.onload = () => res();
+        img.onerror = () => rej(new Error("Image load failed"));
+      });
+
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = pageWidth - 20;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgHeight = (img.height * imgWidth) / img.width;
 
       let heightLeft = imgHeight;
       let position = 10;
@@ -254,6 +263,7 @@ function HistoryPage() {
       pdf.save(`cognitive-history-${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Historique exporté en PDF");
     } catch (e: any) {
+      console.error("PDF export failed:", e);
       toast.error(e?.message ?? "Échec de l'export PDF");
     } finally {
       setExporting(false);
