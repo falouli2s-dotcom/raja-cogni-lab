@@ -16,14 +16,14 @@ export interface SGSResult {
   date: string;
 }
 
-// Weights for each dimension in the global score
+// Scientific weights (sum = 1.0) — based on cognitive synthesis for football
 const WEIGHTS: Record<string, number> = {
-  reactionTime: 0.15,
-  inhibition: 0.20,
-  workingMemory: 0.25,
-  flexibility: 0.20,
-  perception: 0.10,
-  dualTask: 0.10,
+  flexibility: 0.25,
+  attention: 0.20,
+  workingMemory: 0.20,
+  inhibition: 0.15,
+  reactionTime: 0.10,
+  anticipation: 0.10,
 };
 
 /**
@@ -95,64 +95,78 @@ export interface TestScores {
 export function computeSGS(scores: TestScores): SGSResult {
   const dimensions: CognitiveDimension[] = [];
 
-  // 1. Temps de réaction
+  // 1. Temps de Réaction (Simon avgRT)
   const rtScore = scores.simon ? normalizeRT(scores.simon.avgRT) : 50;
   dimensions.push({
     key: "reactionTime",
-    label: "Temps de réaction",
+    label: "Temps de Réaction",
     score: rtScore,
     raw: scores.simon?.avgRT,
     unit: "ms",
     status: getStatus(rtScore),
   });
 
-  // 2. Inhibition (Simon effect)
+  // 2. Contrôle Inhibiteur (Simon effect)
   const inhibScore = scores.simon ? normalizeSimonEffect(scores.simon.simonEffect) : 50;
   dimensions.push({
     key: "inhibition",
-    label: "Inhibition",
+    label: "Contrôle Inhibiteur",
     score: inhibScore,
     raw: scores.simon?.simonEffect,
-    unit: "ms",
+    unit: "ms (effet Simon)",
     status: getStatus(inhibScore),
   });
 
-  // 3. Mémoire de travail (N-Back)
+  // 3. Mémoire de Travail (N-Back accuracy)
   const memScore = scores.nback ? normalizeNBackAccuracy(scores.nback.accuracy) : 50;
   dimensions.push({
     key: "workingMemory",
-    label: "Mémoire de travail",
+    label: "Mémoire de Travail",
     score: memScore,
     raw: scores.nback?.accuracy,
     unit: "%",
     status: getStatus(memScore),
   });
 
-  // 4. Flexibilité cognitive (TMT)
+  // 4. Flexibilité Cognitive (TMT ratio B/A)
   const flexScore = scores.tmt ? normalizeRatioBA(scores.tmt.ratioBA) : 50;
   dimensions.push({
     key: "flexibility",
-    label: "Flexibilité",
+    label: "Flexibilité Cognitive",
     score: flexScore,
     raw: scores.tmt?.ratioBA,
-    unit: "ratio",
+    unit: "ratio B/A",
     status: getStatus(flexScore),
   });
 
-  // 5. Anticipation perceptuelle (non mesurée MVP → 50)
+  // 5. Attention Sélective — proxy: TMT Part A speed (faster = more focused attention)
+  // Normalize TMT-A time: 30s → 100, 120s+ → 0
+  let attentionScore = 50;
+  let attentionRaw: number | undefined;
+  if (scores.tmt) {
+    attentionRaw = Math.round((1 - Math.min(1, Math.max(0, (scores.tmt.timeA - 30) / 90))) * 100);
+    attentionScore = Math.max(0, Math.min(100, attentionRaw));
+  }
   dimensions.push({
-    key: "perception",
-    label: "Anticipation",
-    score: 50,
-    status: "normal",
+    key: "attention",
+    label: "Attention Sélective",
+    score: attentionScore,
+    raw: scores.tmt ? attentionScore : undefined,
+    unit: "%",
+    status: getStatus(attentionScore),
   });
 
-  // 6. Double tâche (non mesurée MVP → 50)
+  // 6. Anticipation Perceptuelle — proxy: N-Back hit rate (no dedicated test yet)
+  const anticipationScore = scores.nback
+    ? normalizeNBackAccuracy(scores.nback.accuracy)
+    : 50;
   dimensions.push({
-    key: "dualTask",
-    label: "Double tâche",
-    score: 50,
-    status: "normal",
+    key: "anticipation",
+    label: "Anticipation Perceptuelle",
+    score: anticipationScore,
+    raw: scores.nback?.accuracy,
+    unit: "%",
+    status: getStatus(anticipationScore),
   });
 
   // Weighted global score

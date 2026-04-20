@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Brain, Clock, Zap, GitBranch, Eye, Layers, TrendingUp, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { ArrowLeft, Brain, Clock, Zap, GitBranch, Eye, Crosshair, TrendingUp, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { RadarChart } from "@/components/RadarChart";
 import { getSessionHistory, type SessionData } from "@/lib/session-manager";
 import { getGlobalStatus, getStatusColor, type SGSResult } from "@/lib/sgs-engine";
@@ -15,8 +15,8 @@ const dimensionIcons: Record<string, typeof Brain> = {
   inhibition: Zap,
   workingMemory: Brain,
   flexibility: GitBranch,
-  perception: Eye,
-  dualTask: Layers,
+  attention: Eye,
+  anticipation: Crosshair,
 };
 
 function getRecommendations(sgs: SGSResult): string[] {
