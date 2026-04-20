@@ -1,20 +1,44 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { Brain, TrendingUp, Zap, ChevronRight, BarChart3 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Brain, TrendingUp, Zap, ChevronRight, BarChart3, ClipboardList, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getLastSession, type SessionData } from "@/lib/session-manager";
 import { getGlobalStatus } from "@/lib/sgs-engine";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
 });
 
+const PROFILE_BANNER_DISMISS_KEY = "cogni_profile_banner_dismissed";
+
 function HomePage() {
   const [lastSession, setLastSession] = useState<SessionData | null>(null);
+  const [showProfileBanner, setShowProfileBanner] = useState(false);
 
   useEffect(() => {
     setLastSession(getLastSession());
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("position")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!prof?.position) {
+        setShowProfileBanner(true);
+      } else {
+        localStorage.removeItem(PROFILE_BANNER_DISMISS_KEY);
+      }
+    })();
   }, []);
+
+  function dismissBanner() {
+    setShowProfileBanner(false);
+    localStorage.setItem(PROFILE_BANNER_DISMISS_KEY, "1");
+  }
 
   const sgs = lastSession?.sgs;
   const weakDimensions = sgs?.dimensions
