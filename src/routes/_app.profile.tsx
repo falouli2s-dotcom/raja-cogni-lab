@@ -66,6 +66,9 @@ function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [deletingAvatar, setDeletingAvatar] = useState(false);
 
+  // Stats state
+  const [stats, setStats] = useState<{ count: number; bestSGS: number | null; lastDate: string | null } | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
