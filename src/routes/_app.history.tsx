@@ -634,6 +634,27 @@ function HistoryPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Hidden PDF export template — off-screen, only used during export */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: 0,
+          width: 794,
+          pointerEvents: "none",
+        }}
+      >
+        <PDFExportTemplate
+          ref={exportRef}
+          groups={groups}
+          dimStats={dimStats}
+          latestRadar={latestRadar}
+          userName={userName}
+          exportDate={format(new Date(), "dd MMMM yyyy", { locale: fr })}
+        />
+      </div>
     </div>
   );
 }
