@@ -177,6 +177,17 @@ function HistoryPage() {
           return;
         }
 
+        // Try to fetch a friendly display name from profiles
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        const displayName =
+          (profile?.full_name && profile.full_name.trim()) ||
+          (user.email ? user.email.split("@")[0] : undefined);
+        if (!cancelled) setUserName(displayName);
+
         const { data: sessions, error: sErr } = await supabase
           .from("sessions_test")
           .select("id, created_at, test_type, donnees_brutes")
