@@ -263,6 +263,7 @@ function HistoryPage() {
       pdf.save(`cognitive-history-${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Historique exporté en PDF");
     } catch (e: any) {
+      console.error("PDF export failed:", e);
       toast.error(e?.message ?? "Échec de l'export PDF");
     } finally {
       setExporting(false);
