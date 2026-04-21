@@ -45,8 +45,32 @@ export function RadarChart({ dimensions, size = 280 }: RadarChartProps) {
     return { ...p, label: d.label, score: d.score };
   });
 
+  // Grid level labels (top-right of each ring, along axis at -45° from top)
+  const levelLabelAngle = 45;
+  const levelLabels = levels.map((level) => {
+    const r = (level / 100) * radius;
+    const p = polarToCartesian(levelLabelAngle, r);
+    return { ...p, level };
+  });
+
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
+      <defs>
+        <radialGradient id="radarGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="hsl(var(--primary) / 0.35)" />
+          <stop offset="100%" stopColor="hsl(var(--primary) / 0.05)" />
+        </radialGradient>
+        <filter id="radarShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow
+            dx="0"
+            dy="2"
+            stdDeviation="3"
+            floodColor="hsl(var(--primary))"
+            floodOpacity="0.4"
+          />
+        </filter>
+      </defs>
+
       {/* Grid */}
       {gridPolygons.map((points, i) => (
         <polygon
@@ -71,51 +95,100 @@ export function RadarChart({ dimensions, size = 280 }: RadarChartProps) {
             y2={p.y}
             stroke="hsl(var(--border))"
             strokeWidth={0.5}
-            opacity={0.5}
+            strokeDasharray="4 3"
+            opacity={0.3}
           />
         );
       })}
 
-      {/* Data area */}
-      <motion.polygon
-        points={dataPolygon}
-        fill="hsl(var(--primary) / 0.15)"
-        stroke="hsl(var(--primary))"
-        strokeWidth={2}
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        style={{ transformOrigin: `${cx}px ${cy}px` }}
-      />
-
-      {/* Data points */}
-      {dataPoints.map((p, i) => (
-        <motion.circle
-          key={i}
-          cx={p.x}
-          cy={p.y}
-          r={4}
-          fill="hsl(var(--primary))"
-          stroke="hsl(var(--background))"
-          strokeWidth={2}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 + i * 0.05 }}
-        />
-      ))}
-
-      {/* Labels */}
-      {labels.map((l, i) => (
+      {/* Grid level labels */}
+      {levelLabels.map((l, i) => (
         <text
           key={i}
-          x={l.x}
-          y={l.y}
-          textAnchor="middle"
+          x={l.x + 4}
+          y={l.y - 2}
+          textAnchor="start"
           dominantBaseline="central"
-          className="fill-muted-foreground text-[10px] font-medium"
+          className="fill-muted-foreground"
+          style={{ fontSize: "8px" }}
+          opacity={0.6}
         >
-          {l.label}
+          {l.level}
         </text>
+      ))}
+
+      {/* Data area group with entrance animation */}
+      <motion.g
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <polygon
+          points={dataPolygon}
+          fill="url(#radarGradient)"
+          stroke="hsl(var(--primary))"
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+          filter="url(#radarShadow)"
+        />
+
+        {/* Data points with halo */}
+        {dataPoints.map((p, i) => (
+          <g key={i}>
+            <motion.circle
+              cx={p.x}
+              cy={p.y}
+              r={9}
+              fill="hsl(var(--primary) / 0.15)"
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.2,
+                ease: "easeInOut",
+              }}
+              style={{ transformOrigin: `${p.x}px ${p.y}px` }}
+            />
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r={5}
+              fill="hsl(var(--primary))"
+              stroke="hsl(var(--background))"
+              strokeWidth={2}
+            />
+          </g>
+        ))}
+
+        {/* Center dot */}
+        <circle cx={cx} cy={cy} r={3} fill="hsl(var(--primary) / 0.4)" />
+      </motion.g>
+
+      {/* Labels — name + score */}
+      {labels.map((l, i) => (
+        <g key={i}>
+          <text
+            x={l.x}
+            y={l.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            className="fill-muted-foreground font-medium"
+            style={{ fontSize: "10px" }}
+          >
+            {l.label}
+          </text>
+          <text
+            x={l.x}
+            y={l.y}
+            dy={13}
+            textAnchor="middle"
+            dominantBaseline="central"
+            className="fill-primary font-bold"
+            style={{ fontSize: "11px" }}
+          >
+            {l.score}
+          </text>
+        </g>
       ))}
     </svg>
   );
