@@ -144,15 +144,21 @@ export function computeSGS(scores: TestScores): SGSResult {
   let attentionScore = 50;
   let attentionRaw: number | undefined;
   if (scores.tmt) {
-    attentionRaw = Math.round((1 - Math.min(1, Math.max(0, (scores.tmt.timeA - 30) / 90))) * 100);
-    attentionScore = Math.max(0, Math.min(100, attentionRaw));
+    // Convert ms → seconds if needed (TMT returns ms)
+    const timeASeconds = scores.tmt.timeA > 1000
+      ? scores.tmt.timeA / 1000
+      : scores.tmt.timeA;
+    attentionScore = Math.round(
+      (1 - Math.min(1, Math.max(0, (timeASeconds - 30) / 90))) * 100
+    );
+    attentionRaw = scores.tmt.timeA; // keep original raw value for display
   }
   dimensions.push({
     key: "attention",
     label: "Attention Sélective",
     score: attentionScore,
-    raw: scores.tmt ? attentionScore : undefined,
-    unit: "%",
+    raw: attentionRaw,
+    unit: "s",
     status: getStatus(attentionScore),
   });
 
