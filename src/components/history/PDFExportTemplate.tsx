@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { RadarChart } from "@/components/RadarChart";
+import { RadarChart, type RadarOverlay } from "@/components/RadarChart";
 import type { SGSResult, CognitiveDimension } from "@/lib/sgs-engine";
 
 export interface SessionGroup {
@@ -34,10 +34,18 @@ interface PDFExportTemplateProps {
   latestRadar: CognitiveDimension[];
   userName?: string;
   exportDate: string;
+  // New optional props
+  exportMode?: "single" | "comparison";
+  selectedSession?: SessionGroup;
+  sessionA?: SessionGroup;
+  sessionB?: SessionGroup;
+  radarA?: CognitiveDimension[];
+  radarB?: CognitiveDimension[];
 }
 
 // Hex-only colors for print (no oklch)
 const RAJA_RED = "#c8102e";
+const COMPARE_BLUE = "#2563eb";
 const TEXT = "#1a1a1a";
 const MUTED = "#666666";
 const BORDER = "#e5e5e5";
@@ -68,9 +76,27 @@ const sectionTitleStyle: React.CSSProperties = {
 };
 
 export const PDFExportTemplate = forwardRef<HTMLDivElement, PDFExportTemplateProps>(
-  function PDFExportTemplate({ groups, dimStats, latestRadar, userName, exportDate }, ref) {
-    const latest = groups[0];
-    const sgsValue = latest?.sgs.global ?? 0;
+  function PDFExportTemplate(
+    {
+      groups,
+      dimStats,
+      latestRadar,
+      userName,
+      exportDate,
+      exportMode = "single",
+      selectedSession,
+      sessionA,
+      sessionB,
+      radarA,
+      radarB,
+    },
+    ref
+  ) {
+    const isCompare = exportMode === "comparison" && !!sessionA && !!sessionB && !!radarA && !!radarB;
+
+    // SGS shown in section 1: most recent session (Session A in compare mode)
+    const headlineSession = isCompare ? sessionA! : (selectedSession ?? groups[0]);
+    const sgsValue = headlineSession?.sgs.global ?? 0;
 
     const chartData = [...groups]
       .slice(0, 10)
@@ -79,6 +105,90 @@ export const PDFExportTemplate = forwardRef<HTMLDivElement, PDFExportTemplatePro
         date: format(new Date(g.date), "dd/MM"),
         score: g.sgs.global,
       }));
+
+    // Build Section 3 title and radar element
+    let radarTitle = "Profil Cognitif — Dernière session";
+    let radarElement: React.ReactNode = null;
+
+    if (isCompare) {
+      radarTitle = "Comparaison des Profils Cognitifs";
+      const overlays: RadarOverlay[] = [
+        { dimensions: radarA!, color: RAJA_RED, label: "Session A" },
+        { dimensions: radarB!, color: COMPARE_BLUE, label: "Session B" },
+      ];
+      radarElement = (
+        <>
+          <div style={{ display: "flex", justifyContent: "center", padding: "8px 0" }}>
+            <RadarChart overlays={overlays} size={260} />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: 24,
+              fontSize: 11,
+              color: TEXT,
+              marginTop: 4,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 12,
+                  height: 12,
+                  background: RAJA_RED,
+                  borderRadius: 2,
+                }}
+              />
+              <span>
+                Session A — {format(new Date(sessionA!.date), "dd MMM yyyy", { locale: fr })} (SGS:{" "}
+                {sessionA!.sgs.global})
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 12,
+                  height: 12,
+                  background: COMPARE_BLUE,
+                  borderRadius: 2,
+                }}
+              />
+              <span>
+                Session B — {format(new Date(sessionB!.date), "dd MMM yyyy", { locale: fr })} (SGS:{" "}
+                {sessionB!.sgs.global})
+              </span>
+            </div>
+          </div>
+        </>
+      );
+    } else {
+      const dims = selectedSession
+        ? selectedSession.sgs.dimensions.map((d) => {
+            const match = latestRadar.find((r) => r.key === d.key);
+            return { ...d, label: match?.label ?? d.label };
+          })
+        : latestRadar;
+      const dateLabel = selectedSession
+        ? format(new Date(selectedSession.date), "dd MMMM yyyy", { locale: fr })
+        : null;
+      radarTitle = dateLabel
+        ? `Profil Cognitif — Session du ${dateLabel}`
+        : "Profil Cognitif — Dernière session";
+      if (dims.length > 0) {
+        radarElement = (
+          <div style={{ display: "flex", justifyContent: "center", padding: "8px 0" }}>
+            <RadarChart dimensions={dims} size={260} />
+          </div>
+        );
+      }
+    }
+
+    // Section 4 — comparison dim values (lookup A/B)
+    const dimValue = (s: SessionGroup | undefined, key: string) =>
+      s?.sgs.dimensions.find((d) => d.key === key)?.score ?? 0;
 
     return (
       <div
@@ -220,12 +330,10 @@ export const PDFExportTemplate = forwardRef<HTMLDivElement, PDFExportTemplatePro
         </div>
 
         {/* SECTION 3 — Profil cognitif */}
-        {latestRadar.length > 0 && (
+        {radarElement && (
           <>
-            <div style={sectionTitleStyle}>Profil Cognitif — Dernière session</div>
-            <div style={{ display: "flex", justifyContent: "center", padding: "8px 0" }}>
-              <RadarChart dimensions={latestRadar} size={260} />
-            </div>
+            <div style={sectionTitleStyle}>{radarTitle}</div>
+            {radarElement}
           </>
         )}
 
@@ -242,8 +350,39 @@ export const PDFExportTemplate = forwardRef<HTMLDivElement, PDFExportTemplatePro
             <tr style={{ background: RAJA_RED, color: "#ffffff" }}>
               <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700 }}>Dimension</th>
               <th style={{ textAlign: "center", padding: "8px 12px", fontWeight: 700 }}>Meilleur</th>
-              <th style={{ textAlign: "center", padding: "8px 12px", fontWeight: 700 }}>Dernière</th>
-              <th style={{ textAlign: "center", padding: "8px 12px", fontWeight: 700 }}>Tendance</th>
+              {isCompare ? (
+                <>
+                  <th
+                    style={{
+                      textAlign: "center",
+                      padding: "8px 12px",
+                      fontWeight: 700,
+                      background: RAJA_RED,
+                    }}
+                  >
+                    Session A
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "center",
+                      padding: "8px 12px",
+                      fontWeight: 700,
+                      background: COMPARE_BLUE,
+                    }}
+                  >
+                    Session B
+                  </th>
+                </>
+              ) : (
+                <>
+                  <th style={{ textAlign: "center", padding: "8px 12px", fontWeight: 700 }}>
+                    Dernière
+                  </th>
+                  <th style={{ textAlign: "center", padding: "8px 12px", fontWeight: 700 }}>
+                    Tendance
+                  </th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -263,20 +402,47 @@ export const PDFExportTemplate = forwardRef<HTMLDivElement, PDFExportTemplatePro
                   <td style={{ padding: "10px 12px", textAlign: "center", color: TEXT }}>
                     {d.best}/100
                   </td>
-                  <td style={{ padding: "10px 12px", textAlign: "center", color: TEXT }}>
-                    {d.last}/100
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 12px",
-                      textAlign: "center",
-                      color: arrowColor,
-                      fontWeight: 700,
-                      fontSize: 14,
-                    }}
-                  >
-                    {arrow}
-                  </td>
+                  {isCompare ? (
+                    <>
+                      <td
+                        style={{
+                          padding: "10px 12px",
+                          textAlign: "center",
+                          color: TEXT,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {dimValue(sessionA, d.key)}/100
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 12px",
+                          textAlign: "center",
+                          color: TEXT,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {dimValue(sessionB, d.key)}/100
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td style={{ padding: "10px 12px", textAlign: "center", color: TEXT }}>
+                        {d.last}/100
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 12px",
+                          textAlign: "center",
+                          color: arrowColor,
+                          fontWeight: 700,
+                          fontSize: 14,
+                        }}
+                      >
+                        {arrow}
+                      </td>
+                    </>
+                  )}
                 </tr>
               );
             })}
