@@ -16,6 +16,7 @@ import {
 import { useState, useEffect } from "react";
 import { getSessionHistory, type SessionData } from "@/lib/session-manager";
 import { supabase } from "@/integrations/supabase/client";
+import { CoachInvitations } from "@/components/CoachInvitations";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -134,6 +135,9 @@ function HomePage() {
           </span>
         )}
       </motion.div>
+
+      {/* Coach invitations */}
+      <CoachInvitations />
 
       {/* First-time profile completion banner */}
       <AnimatePresence>
