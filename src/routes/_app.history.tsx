@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { z } from "zod";
 import { PDFExportTemplate } from "@/components/history/PDFExportTemplate";
+import { PDFExportModal, type ExportConfig } from "@/components/history/PDFExportModal";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import {
   TrendingUp,
@@ -176,6 +177,10 @@ function HistoryPage() {
   const [compareMode, setCompareMode] = useState(false);
   const [compareAId, setCompareAId] = useState<string | null>(null);
   const [compareBId, setCompareBId] = useState<string | null>(null);
+
+  // PDF export modal state
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfConfig, setPdfConfig] = useState<ExportConfig | null>(null);
 
   useEffect(() => {
     let cancelled = false;
