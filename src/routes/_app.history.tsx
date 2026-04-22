@@ -809,6 +809,15 @@ function HistoryPage() {
         </SheetContent>
       </Sheet>
 
+      {/* PDF export modal */}
+      <PDFExportModal
+        open={pdfModalOpen}
+        onOpenChange={setPdfModalOpen}
+        groups={groups}
+        exporting={exporting}
+        onConfirm={handleConfirmExport}
+      />
+
       {/* Hidden PDF export template — off-screen, only used during export */}
       <div
         aria-hidden
@@ -820,14 +829,52 @@ function HistoryPage() {
           pointerEvents: "none",
         }}
       >
-        <PDFExportTemplate
-          ref={exportRef}
-          groups={groups}
-          dimStats={dimStats}
-          latestRadar={latestRadar}
-          userName={userName}
-          exportDate={format(new Date(), "dd MMMM yyyy", { locale: fr })}
-        />
+        {(() => {
+          const buildDimsForExport = (g: SessionGroup) =>
+            g.sgs.dimensions.map((d) => {
+              const meta = DIMENSIONS.find((m) => m.key === d.key);
+              return { ...d, label: meta?.label ?? d.label };
+            });
+
+          let exportMode: "single" | "comparison" = "single";
+          let selectedSession: SessionGroup | undefined = groups[0];
+          let sessionA: SessionGroup | undefined;
+          let sessionB: SessionGroup | undefined;
+          let radarA: ReturnType<typeof buildDimsForExport> | undefined;
+          let radarB: ReturnType<typeof buildDimsForExport> | undefined;
+
+          if (pdfConfig?.mode === "single") {
+            selectedSession =
+              groups.find((g) => g.groupId === pdfConfig.sessionId) ?? groups[0];
+          } else if (pdfConfig?.mode === "comparison") {
+            const a = groups.find((g) => g.groupId === pdfConfig.sessionAId);
+            const b = groups.find((g) => g.groupId === pdfConfig.sessionBId);
+            if (a && b) {
+              exportMode = "comparison";
+              sessionA = a;
+              sessionB = b;
+              radarA = buildDimsForExport(a);
+              radarB = buildDimsForExport(b);
+            }
+          }
+
+          return (
+            <PDFExportTemplate
+              ref={exportRef}
+              groups={groups}
+              dimStats={dimStats}
+              latestRadar={latestRadar}
+              userName={userName}
+              exportDate={format(new Date(), "dd MMMM yyyy", { locale: fr })}
+              exportMode={exportMode}
+              selectedSession={selectedSession}
+              sessionA={sessionA}
+              sessionB={sessionB}
+              radarA={radarA}
+              radarB={radarB}
+            />
+          );
+        })()}
       </div>
     </div>
   );
