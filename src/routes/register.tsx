@@ -108,9 +108,16 @@ function RegisterPage() {
       await supabase
         .from("profiles")
         .upsert(
-          { id: userId, full_name: fullName || null, role: "coach" },
+          { id: userId, full_name: fullName || null, role: "coach_pending" },
           { onConflict: "id" }
         );
+
+      await supabase.from("coach_requests").insert({
+        user_id: userId,
+        full_name: fullName,
+        email,
+        status: "pending",
+      });
     }
 
     navigate({ to: "/verify-email", search: { email }, replace: true });
