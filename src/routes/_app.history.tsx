@@ -423,7 +423,7 @@ function HistoryPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleExportPDF}
+          onClick={() => setPdfModalOpen(true)}
           disabled={exporting || groups.length === 0}
           className="shrink-0"
         >
