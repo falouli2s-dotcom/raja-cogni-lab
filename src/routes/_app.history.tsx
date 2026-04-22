@@ -247,10 +247,14 @@ function HistoryPage() {
   })();
 
   // PDF export — uses dedicated off-screen template for clean A4 layout
-  async function handleExportPDF() {
+  async function runPDFExport() {
     if (!exportRef.current || groups.length === 0) return;
     setExporting(true);
     try {
+      // Wait one frame so the off-screen template re-renders with the new config
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      await new Promise((r) => setTimeout(r, 50));
+
       const [{ default: jsPDF }, { toPng }] = await Promise.all([
         import("jspdf"),
         import("html-to-image"),
@@ -303,12 +307,19 @@ function HistoryPage() {
       const playerSlug = userName?.replace(/\s+/g, "-").toLowerCase() ?? "joueur";
       pdf.save(`cognilab-rapport-${playerSlug}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Rapport PDF exporté avec succès");
+      setPdfModalOpen(false);
     } catch (e: any) {
       console.error("PDF export failed:", e);
       toast.error("Échec de l'export : " + (e?.message ?? "erreur inconnue"));
     } finally {
       setExporting(false);
     }
+  }
+
+  function handleConfirmExport(config: ExportConfig) {
+    setPdfConfig(config);
+    // Defer to next tick so PDFExportTemplate re-renders with the new props
+    setTimeout(() => { runPDFExport(); }, 0);
   }
 
   // Loading
