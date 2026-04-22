@@ -171,6 +171,12 @@ function HistoryPage() {
   const [userName, setUserName] = useState<string | undefined>(undefined);
   const exportRef = useRef<HTMLDivElement>(null);
 
+  // Radar selection / comparison state
+  const [radarSelectedId, setRadarSelectedId] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareAId, setCompareAId] = useState<string | null>(null);
+  const [compareBId, setCompareBId] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
