@@ -18,9 +18,11 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoachSessionsRouteImport } from './routes/coach.sessions'
 import { Route as CoachProfilRouteImport } from './routes/coach.profil'
+import { Route as CoachPendingRouteImport } from './routes/coach.pending'
 import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
 import { Route as CoachExercicesRouteImport } from './routes/coach.exercices'
 import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
+import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
@@ -74,6 +76,11 @@ const CoachProfilRoute = CoachProfilRouteImport.update({
   path: '/profil',
   getParentRoute: () => CoachRoute,
 } as any)
+const CoachPendingRoute = CoachPendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => CoachRoute,
+} as any)
 const CoachJoueursRoute = CoachJoueursRouteImport.update({
   id: '/joueurs',
   path: '/joueurs',
@@ -88,6 +95,11 @@ const CoachDashboardRoute = CoachDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => CoachRoute,
+} as any)
+const AdminCoachesRoute = AdminCoachesRouteImport.update({
+  id: '/admin/coaches',
+  path: '/admin/coaches',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -141,9 +153,11 @@ export interface FileRoutesByFullPath {
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
+  '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/exercices': typeof CoachExercicesRoute
   '/coach/joueurs': typeof CoachJoueursRoute
+  '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
   '/coach/sessions': typeof CoachSessionsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
@@ -162,9 +176,11 @@ export interface FileRoutesByTo {
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
+  '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/exercices': typeof CoachExercicesRoute
   '/coach/joueurs': typeof CoachJoueursRoute
+  '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
   '/coach/sessions': typeof CoachSessionsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
@@ -185,9 +201,11 @@ export interface FileRoutesById {
   '/_app/history': typeof AppHistoryRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
+  '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/exercices': typeof CoachExercicesRoute
   '/coach/joueurs': typeof CoachJoueursRoute
+  '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
   '/coach/sessions': typeof CoachSessionsRoute
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
@@ -208,9 +226,11 @@ export interface FileRouteTypes {
     | '/history'
     | '/home'
     | '/profile'
+    | '/admin/coaches'
     | '/coach/dashboard'
     | '/coach/exercices'
     | '/coach/joueurs'
+    | '/coach/pending'
     | '/coach/profil'
     | '/coach/sessions'
     | '/sessions/$sessionId'
@@ -229,9 +249,11 @@ export interface FileRouteTypes {
     | '/history'
     | '/home'
     | '/profile'
+    | '/admin/coaches'
     | '/coach/dashboard'
     | '/coach/exercices'
     | '/coach/joueurs'
+    | '/coach/pending'
     | '/coach/profil'
     | '/coach/sessions'
     | '/sessions/$sessionId'
@@ -251,9 +273,11 @@ export interface FileRouteTypes {
     | '/_app/history'
     | '/_app/home'
     | '/_app/profile'
+    | '/admin/coaches'
     | '/coach/dashboard'
     | '/coach/exercices'
     | '/coach/joueurs'
+    | '/coach/pending'
     | '/coach/profil'
     | '/coach/sessions'
     | '/_app/sessions/$sessionId'
@@ -270,6 +294,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  AdminCoachesRoute: typeof AdminCoachesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -337,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoachProfilRouteImport
       parentRoute: typeof CoachRoute
     }
+    '/coach/pending': {
+      id: '/coach/pending'
+      path: '/pending'
+      fullPath: '/coach/pending'
+      preLoaderRoute: typeof CoachPendingRouteImport
+      parentRoute: typeof CoachRoute
+    }
     '/coach/joueurs': {
       id: '/coach/joueurs'
       path: '/joueurs'
@@ -357,6 +389,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/coach/dashboard'
       preLoaderRoute: typeof CoachDashboardRouteImport
       parentRoute: typeof CoachRoute
+    }
+    '/admin/coaches': {
+      id: '/admin/coaches'
+      path: '/admin/coaches'
+      fullPath: '/admin/coaches'
+      preLoaderRoute: typeof AdminCoachesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -445,6 +484,7 @@ interface CoachRouteChildren {
   CoachDashboardRoute: typeof CoachDashboardRoute
   CoachExercicesRoute: typeof CoachExercicesRoute
   CoachJoueursRoute: typeof CoachJoueursRoute
+  CoachPendingRoute: typeof CoachPendingRoute
   CoachProfilRoute: typeof CoachProfilRoute
   CoachSessionsRoute: typeof CoachSessionsRoute
 }
@@ -453,6 +493,7 @@ const CoachRouteChildren: CoachRouteChildren = {
   CoachDashboardRoute: CoachDashboardRoute,
   CoachExercicesRoute: CoachExercicesRoute,
   CoachJoueursRoute: CoachJoueursRoute,
+  CoachPendingRoute: CoachPendingRoute,
   CoachProfilRoute: CoachProfilRoute,
   CoachSessionsRoute: CoachSessionsRoute,
 }
@@ -467,6 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  AdminCoachesRoute: AdminCoachesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

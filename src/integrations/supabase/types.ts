@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_requests: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercices: {
         Row: {
           alignement_test_digital: string
@@ -232,6 +262,7 @@ export type Database = {
           id: string
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       dominant_foot: "Droit" | "Gauche" | "Les deux"
