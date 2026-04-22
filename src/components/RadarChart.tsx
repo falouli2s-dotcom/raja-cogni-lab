@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { CognitiveDimension } from "@/lib/sgs-engine";
 
 export interface RadarTheme {
@@ -9,28 +10,36 @@ export interface RadarTheme {
   dotBg: string;
 }
 
-export const darkRadarTheme: RadarTheme = {
-  ring: "#252e3f",
-  ringLabel: "#3d5270",
-  muted: "#6882a1",
-  text: "#eff3f7",
-  card: "#10141c",
-  dotBg: "#07090c",
-};
-
 export const lightRadarTheme: RadarTheme = {
   ring: "#dde3ec",
   ringLabel: "#94a3b8",
-  muted: "#64748b",
+  muted: "#475569",
   text: "#0f172a",
   card: "#ffffff",
   dotBg: "#f8fafc",
 };
 
-interface RadarChartProps {
+export const darkRadarTheme: RadarTheme = {
+  ring: "rgba(255,255,255,0.18)",
+  ringLabel: "rgba(229,231,235,0.7)",
+  muted: "#E5E7EB",
+  text: "#f8fafc",
+  card: "#10141c",
+  dotBg: "#07090c",
+};
+
+export interface RadarOverlay {
   dimensions: CognitiveDimension[];
+  color: string; // stroke / fill base color (hex or rgb)
+  label?: string;
+}
+
+interface RadarChartProps {
+  dimensions?: CognitiveDimension[];
   size?: number;
   theme?: RadarTheme;
+  /** When provided, renders multiple overlapping series and hides the center SGS / data dots */
+  overlays?: RadarOverlay[];
 }
 
 // Scientific weights matching sgs-engine WEIGHTS (sum = 1.0)
@@ -55,19 +64,42 @@ function getLevel(score: number): { color: string } {
   return { color: "#dc2626" };
 }
 
+/** Detect active dark mode via the `dark` class on <html>. */
+function useIsDark(): boolean {
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    if (typeof document === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+  });
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const update = () => setIsDark(root.classList.contains("dark"));
+    update();
+    const obs = new MutationObserver(update);
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+  return isDark;
+}
+
 export function RadarChart({
   dimensions,
   size = 280,
-  theme = darkRadarTheme,
+  theme,
+  overlays,
 }: RadarChartProps) {
-  const INDICATORS = dimensions.map((d) => ({
+  const isDark = useIsDark();
+  const resolvedTheme: RadarTheme = theme ?? (isDark ? darkRadarTheme : lightRadarTheme);
+
+  // Determine the indicator set (use first overlay if comparing)
+  const baseDims = dimensions ?? overlays?.[0]?.dimensions ?? [];
+  if (baseDims.length === 0) return null;
+
+  const INDICATORS = baseDims.map((d) => ({
     key: d.key,
     label: d.label,
-    weight: (WEIGHTS[d.key] ?? 1 / dimensions.length) * 100,
+    weight: (WEIGHTS[d.key] ?? 1 / baseDims.length) * 100,
   }));
-  const scores: Record<string, number> = Object.fromEntries(
-    dimensions.map((d) => [d.key, d.score])
-  );
 
   const n = INDICATORS.length;
   const cx = 200;
@@ -75,19 +107,27 @@ export function RadarChart({
   const maxR = 140;
   const rings = [20, 40, 60, 80, 100];
   const angles = INDICATORS.map((_, i) => (360 / n) * i);
+  const axisPoints = INDICATORS.map((_, i) => polarToXY(angles[i], maxR, cx, cy));
 
-  const dataPoints = INDICATORS.map((ind, i) => {
-    const r = (scores[ind.key] / 100) * maxR;
-    return polarToXY(angles[i], r, cx, cy);
-  });
-
-  const dataPath =
-    dataPoints
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-      .join(" ") + " Z";
-  const axisPoints = INDICATORS.map((_, i) =>
-    polarToXY(angles[i], maxR, cx, cy)
+  // Single-series scores (used for labels and dots when not in compare mode)
+  const scores: Record<string, number> = Object.fromEntries(
+    baseDims.map((d) => [d.key, d.score])
   );
+
+  function buildPath(dims: CognitiveDimension[]) {
+    const pts = INDICATORS.map((ind, i) => {
+      const score = dims.find((d) => d.key === ind.key)?.score ?? 0;
+      const r = (score / 100) * maxR;
+      return polarToXY(angles[i], r, cx, cy);
+    });
+    return {
+      path:
+        pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z",
+      pts,
+    };
+  }
+
+  const isCompare = !!overlays && overlays.length > 0;
 
   return (
     <svg
@@ -107,11 +147,16 @@ export function RadarChart({
             .join(" ") + " Z";
         return (
           <g key={pct}>
-            <path d={ringPath} fill="none" stroke={theme.ring} strokeWidth="1" />
+            <path
+              d={ringPath}
+              fill="none"
+              stroke={resolvedTheme.ring}
+              strokeWidth="1"
+            />
             <text
               x={cx + 4}
               y={cy - r + 4}
-              fill={theme.ringLabel}
+              fill={resolvedTheme.ringLabel}
               fontSize="8"
               fontFamily="'DM Mono', monospace"
             >
@@ -129,49 +174,68 @@ export function RadarChart({
           y1={cy}
           x2={p.x}
           y2={p.y}
-          stroke={theme.ring}
+          stroke={resolvedTheme.ring}
           strokeWidth="1"
           strokeDasharray="3,3"
         />
       ))}
 
-      {/* Data area */}
-      <path
-        d={dataPath}
-        fill="rgba(25, 140, 61, 0.15)"
-        stroke="#198c3d"
-        strokeWidth="2"
-        strokeLinejoin="round"
-        style={{
-          filter: "drop-shadow(0 0 8px rgba(25,140,61,0.4))",
-          transition: "all 0.6s ease",
-        }}
-      />
-
-      {/* Data points */}
-      {dataPoints.map((p, i) => {
-        const level = getLevel(scores[INDICATORS[i].key]);
-        return (
-          <g key={i}>
-            <circle cx={p.x} cy={p.y} r={8} fill={level.color} opacity={0.15} />
-            <circle
-              cx={p.x}
-              cy={p.y}
-              r={5}
-              fill={theme.dotBg}
-              stroke={level.color}
+      {/* Data area(s) */}
+      {isCompare ? (
+        overlays!.map((ov, idx) => {
+          const { path } = buildPath(ov.dimensions);
+          return (
+            <path
+              key={idx}
+              d={path}
+              fill={ov.color}
+              fillOpacity={0.25}
+              stroke={ov.color}
               strokeWidth="2"
+              strokeLinejoin="round"
             />
-            <circle cx={p.x} cy={p.y} r={2.5} fill={level.color} />
-          </g>
-        );
-      })}
+          );
+        })
+      ) : (
+        <path
+          d={buildPath(baseDims).path}
+          fill="rgba(25, 140, 61, 0.15)"
+          stroke="#198c3d"
+          strokeWidth="2"
+          strokeLinejoin="round"
+          style={{
+            filter: "drop-shadow(0 0 8px rgba(25,140,61,0.4))",
+            transition: "all 0.6s ease",
+          }}
+        />
+      )}
+
+      {/* Data points (single-series only) */}
+      {!isCompare &&
+        INDICATORS.map((ind, i) => {
+          const r = (scores[ind.key] / 100) * maxR;
+          const p = polarToXY(angles[i], r, cx, cy);
+          const level = getLevel(scores[ind.key]);
+          return (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r={8} fill={level.color} opacity={0.15} />
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={5}
+                fill={resolvedTheme.dotBg}
+                stroke={level.color}
+                strokeWidth="2"
+              />
+              <circle cx={p.x} cy={p.y} r={2.5} fill={level.color} />
+            </g>
+          );
+        })}
 
       {/* Labels */}
       {INDICATORS.map((ind, i) => {
         const labelPos = polarToXY(angles[i], maxR + 32, cx, cy);
         const lines = ind.label.split("\n");
-        const level = getLevel(scores[ind.key]);
         const anchor =
           Math.abs(labelPos.x - cx) < 10
             ? "middle"
@@ -187,67 +251,73 @@ export function RadarChart({
                 y={labelPos.y + li * 11 - (lines.length - 1) * 5}
                 textAnchor={anchor}
                 dominantBaseline="middle"
-                fill={theme.muted}
+                fill={resolvedTheme.muted}
                 fontSize="9"
                 fontFamily="'Inter', sans-serif"
-                fontWeight="500"
+                fontWeight="600"
               >
                 {line}
               </text>
             ))}
-            <text
-              x={labelPos.x}
-              y={labelPos.y + lines.length * 11 - (lines.length - 1) * 5}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              fill={level.color}
-              fontSize="11"
-              fontFamily="'DM Mono', monospace"
-              fontWeight="700"
-            >
-              {scores[ind.key]}
-            </text>
+            {!isCompare && (
+              <text
+                x={labelPos.x}
+                y={labelPos.y + lines.length * 11 - (lines.length - 1) * 5}
+                textAnchor={anchor}
+                dominantBaseline="middle"
+                fill={getLevel(scores[ind.key]).color}
+                fontSize="11"
+                fontFamily="'DM Mono', monospace"
+                fontWeight="700"
+              >
+                {scores[ind.key]}
+              </text>
+            )}
           </g>
         );
       })}
 
-      {/* Center SGS */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={28}
-        fill={theme.card}
-        stroke={theme.ring}
-        strokeWidth="1"
-      />
-      <text
-        x={cx}
-        y={cy - 7}
-        textAnchor="middle"
-        fill={theme.muted}
-        fontSize="7"
-        fontFamily="'Inter', sans-serif"
-        fontWeight="600"
-        letterSpacing="1"
-      >
-        SGS
-      </text>
-      <text
-        x={cx}
-        y={cy + 7}
-        textAnchor="middle"
-        fill={theme.text}
-        fontSize="16"
-        fontFamily="'DM Mono', monospace"
-        fontWeight="700"
-      >
-        {Math.round(
-          INDICATORS.reduce(
-            (s, ind) => s + (scores[ind.key] * ind.weight) / 100,
-            0
-          )
-        )}
-      </text>
+      {/* Center SGS (only single-series) */}
+      {!isCompare && (
+        <>
+          <circle
+            cx={cx}
+            cy={cy}
+            r={28}
+            fill={resolvedTheme.card}
+            stroke={resolvedTheme.ring}
+            strokeWidth="1"
+          />
+          <text
+            x={cx}
+            y={cy - 7}
+            textAnchor="middle"
+            fill={resolvedTheme.muted}
+            fontSize="7"
+            fontFamily="'Inter', sans-serif"
+            fontWeight="600"
+            letterSpacing="1"
+          >
+            SGS
+          </text>
+          <text
+            x={cx}
+            y={cy + 7}
+            textAnchor="middle"
+            fill={resolvedTheme.text}
+            fontSize="16"
+            fontFamily="'DM Mono', monospace"
+            fontWeight="700"
+          >
+            {Math.round(
+              INDICATORS.reduce(
+                (s, ind) => s + (scores[ind.key] * ind.weight) / 100,
+                0
+              )
+            )}
+          </text>
+        </>
+      )}
     </svg>
   );
 }
