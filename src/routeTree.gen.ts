@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
@@ -51,6 +52,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachDashboardRoute = CoachDashboardRouteImport.update({
+  id: '/coach/dashboard',
+  path: '/coach/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
+  '/coach/dashboard': typeof CoachDashboardRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/sessions/': typeof AppSessionsIndexRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
+  '/coach/dashboard': typeof CoachDashboardRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/sessions': typeof AppSessionsIndexRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_app/history': typeof AppHistoryRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
+  '/coach/dashboard': typeof CoachDashboardRoute
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/_app/tests/session': typeof AppTestsSessionRoute
   '/_app/sessions/': typeof AppSessionsIndexRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/home'
     | '/profile'
+    | '/coach/dashboard'
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/sessions/'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/home'
     | '/profile'
+    | '/coach/dashboard'
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/sessions'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_app/history'
     | '/_app/home'
     | '/_app/profile'
+    | '/coach/dashboard'
     | '/_app/sessions/$sessionId'
     | '/_app/tests/session'
     | '/_app/sessions/'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  CoachDashboardRoute: typeof CoachDashboardRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach/dashboard': {
+      id: '/coach/dashboard'
+      path: '/coach/dashboard'
+      fullPath: '/coach/dashboard'
+      preLoaderRoute: typeof CoachDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/profile': {
@@ -333,6 +353,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  CoachDashboardRoute: CoachDashboardRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

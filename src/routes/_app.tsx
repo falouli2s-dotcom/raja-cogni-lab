@@ -13,12 +13,21 @@ function AppLayout() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         navigate({ to: "/login", replace: true });
-      } else {
-        setReady(true);
+        return;
       }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if ((profile as { role?: string } | null)?.role === "coach") {
+        navigate({ to: "/coach/dashboard", replace: true });
+        return;
+      }
+      setReady(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

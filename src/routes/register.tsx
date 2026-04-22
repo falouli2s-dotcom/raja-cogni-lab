@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Eye, EyeOff, Mail, Lock, User, Calendar, ChevronRight, ChevronLeft, Camera, Loader2 } from "lucide-react";
+import { Brain, Eye, EyeOff, Mail, Lock, User, Calendar, ChevronRight, ChevronLeft, Camera, Loader2, Trophy, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -36,13 +36,17 @@ function getPasswordStrength(pw: string): { score: number; label: string; color:
 
 const TOTAL_STEPS = 3;
 
+type Role = "joueur" | "coach";
+
 function RegisterPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [role, setRole] = useState<Role | null>(null);
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
@@ -72,6 +76,44 @@ function RegisterPage() {
     const reader = new FileReader();
     reader.onload = () => setAvatarPreview(reader.result as string);
     reader.readAsDataURL(file);
+  }
+
+  async function handleCoachRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas");
+      return;
+    }
+    setLoading(true);
+    const fullName = `${prenom.trim()} ${nom.trim()}`.trim();
+
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { prenom, nom, full_name: fullName },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    const userId = signUpData.user?.id;
+    if (userId) {
+      await supabase
+        .from("profiles")
+        .upsert(
+          { id: userId, full_name: fullName || null, role: "coach" },
+          { onConflict: "id" }
+        );
+    }
+
+    navigate({ to: "/verify-email", search: { email }, replace: true });
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -129,6 +171,7 @@ function RegisterPage() {
           category: (category || null) as PlayerCategory | null,
           dominant_foot: (dominantFoot || null) as DominantFoot | null,
           avatar_url: avatarUrl,
+          role: "joueur",
         },
         { onConflict: "id" }
       );
@@ -137,6 +180,194 @@ function RegisterPage() {
     navigate({ to: "/verify-email", search: { email }, replace: true });
   }
 
+  // ROLE SELECTION SCREEN
+  if (role === null) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background px-6 pt-12 pb-8">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex flex-col items-center gap-2 mb-10"
+        >
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
+            <Brain className="h-9 w-9 text-primary-foreground" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Créer un compte</h1>
+          <p className="text-sm text-muted-foreground">Choisis ton profil</p>
+        </motion.div>
+
+        <div className="flex flex-col gap-4">
+          <button
+            type="button"
+            onClick={() => setRole("joueur")}
+            className="flex items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-primary hover:bg-primary/5"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
+              <Trophy className="h-7 w-7 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">Je suis Joueur</p>
+              <p className="text-sm text-muted-foreground">Réalise tes tests cognitifs</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRole("coach")}
+            className="flex items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-primary hover:bg-primary/5"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
+              <ClipboardList className="h-7 w-7 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">Je suis Coach</p>
+              <p className="text-sm text-muted-foreground">Suis les performances de tes joueurs</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Déjà un compte ?{" "}
+            <Link to="/login" className="font-semibold text-primary">
+              Se connecter
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // COACH REGISTRATION FORM
+  if (role === "coach") {
+    return (
+      <div className="flex min-h-screen flex-col bg-background px-6 pt-12 pb-8">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex flex-col items-center gap-2 mb-8"
+        >
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
+            <ClipboardList className="h-9 w-9 text-primary-foreground" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Inscription Coach</h1>
+          <button
+            type="button"
+            onClick={() => setRole(null)}
+            className="text-xs text-muted-foreground underline"
+          >
+            Changer de profil
+          </button>
+        </motion.div>
+
+        {error && (
+          <div className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleCoachRegister} className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="c-prenom">Prénom</Label>
+              <Input id="c-prenom" value={prenom} onChange={(e) => setPrenom(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="c-nom">Nom</Label>
+              <Input id="c-nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="c-email">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="c-email"
+                type="email"
+                placeholder="ton.email@exemple.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="c-password">Mot de passe</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="c-password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {password && (
+              <div className="space-y-1">
+                <div className="flex gap-1">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-colors ${
+                        i < strength.score ? strength.color : "bg-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">{strength.label}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="c-confirm">Confirmation mot de passe</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="c-confirm"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
+          </div>
+
+          <Button type="submit" disabled={loading} className="mt-2 h-12 text-base font-semibold">
+            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Inscription...</> : "Créer mon compte coach"}
+          </Button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Déjà un compte ?{" "}
+            <Link to="/login" className="font-semibold text-primary">
+              Se connecter
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // PLAYER REGISTRATION (existing flow)
   return (
     <div className="flex min-h-screen flex-col bg-background px-6 pt-12 pb-8">
       <motion.div
@@ -149,6 +380,13 @@ function RegisterPage() {
         </div>
         <h1 className="text-2xl font-bold text-foreground">Créer un compte</h1>
         <p className="text-sm text-muted-foreground">Étape {step} sur {TOTAL_STEPS}</p>
+        <button
+          type="button"
+          onClick={() => setRole(null)}
+          className="text-xs text-muted-foreground underline"
+        >
+          Changer de profil
+        </button>
       </motion.div>
 
       {/* Progress bar */}
