@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      coach_players: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          player_id: string
+          status: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          player_id: string
+          status?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          player_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_players_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "user_emails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_players_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "user_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercices: {
         Row: {
           alignement_test_digital: string
@@ -120,7 +159,15 @@ export type Database = {
           role?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "user_emails"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resultats_test: {
         Row: {
@@ -164,6 +211,13 @@ export type Database = {
             referencedRelation: "sessions_test"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "resultats_test_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_emails"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sessions_test: {
@@ -194,11 +248,33 @@ export type Database = {
           test_type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sessions_test_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_emails"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      user_emails: {
+        Row: {
+          email: string | null
+          id: string | null
+        }
+        Insert: {
+          email?: string | null
+          id?: string | null
+        }
+        Update: {
+          email?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
