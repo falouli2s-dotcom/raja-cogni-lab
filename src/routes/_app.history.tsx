@@ -33,7 +33,14 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { computeSGS, getGlobalStatus, type SGSResult, type TestScores } from "@/lib/sgs-engine";
-import { RadarChart } from "@/components/RadarChart";
+import { RadarChart, type RadarOverlay } from "@/components/RadarChart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
