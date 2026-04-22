@@ -444,11 +444,43 @@ function HistoryPage() {
 
       {/* Empty state for filtered period */}
       {groups.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-border bg-card p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Aucune session sur cette période.
-          </p>
-        </div>
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mt-8 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-8 text-center"
+        >
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">
+              Aucune session sur cette période
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Lance un nouveau test pour suivre ton évolution.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {period !== "all" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPeriod("all")}
+                className="h-10 px-4 text-xs font-semibold"
+              >
+                Voir tout l'historique
+              </Button>
+            )}
+            <Button
+              onClick={() => navigate({ to: "/tests/session" })}
+              size="sm"
+              className="h-10 px-5 text-xs font-semibold"
+            >
+              Lancer un nouveau test
+            </Button>
+          </div>
+        </motion.div>
       ) : (
         <div className="bg-background">
           {/* Section 1 — Evolution */}
