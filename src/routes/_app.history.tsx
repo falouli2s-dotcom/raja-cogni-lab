@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { z } from "zod";
 import { PDFExportTemplate } from "@/components/history/PDFExportTemplate";
+import { PDFExportModal, type ExportConfig } from "@/components/history/PDFExportModal";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import {
   TrendingUp,
@@ -177,6 +178,10 @@ function HistoryPage() {
   const [compareAId, setCompareAId] = useState<string | null>(null);
   const [compareBId, setCompareBId] = useState<string | null>(null);
 
+  // PDF export modal state
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfConfig, setPdfConfig] = useState<ExportConfig | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -242,10 +247,14 @@ function HistoryPage() {
   })();
 
   // PDF export — uses dedicated off-screen template for clean A4 layout
-  async function handleExportPDF() {
+  async function runPDFExport() {
     if (!exportRef.current || groups.length === 0) return;
     setExporting(true);
     try {
+      // Wait one frame so the off-screen template re-renders with the new config
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      await new Promise((r) => setTimeout(r, 50));
+
       const [{ default: jsPDF }, { toPng }] = await Promise.all([
         import("jspdf"),
         import("html-to-image"),
@@ -298,12 +307,19 @@ function HistoryPage() {
       const playerSlug = userName?.replace(/\s+/g, "-").toLowerCase() ?? "joueur";
       pdf.save(`cognilab-rapport-${playerSlug}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Rapport PDF exporté avec succès");
+      setPdfModalOpen(false);
     } catch (e: any) {
       console.error("PDF export failed:", e);
       toast.error("Échec de l'export : " + (e?.message ?? "erreur inconnue"));
     } finally {
       setExporting(false);
     }
+  }
+
+  function handleConfirmExport(config: ExportConfig) {
+    setPdfConfig(config);
+    // Defer to next tick so PDFExportTemplate re-renders with the new props
+    setTimeout(() => { runPDFExport(); }, 0);
   }
 
   // Loading
@@ -407,7 +423,7 @@ function HistoryPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleExportPDF}
+          onClick={() => setPdfModalOpen(true)}
           disabled={exporting || groups.length === 0}
           className="shrink-0"
         >
@@ -793,6 +809,15 @@ function HistoryPage() {
         </SheetContent>
       </Sheet>
 
+      {/* PDF export modal */}
+      <PDFExportModal
+        open={pdfModalOpen}
+        onOpenChange={setPdfModalOpen}
+        groups={groups}
+        exporting={exporting}
+        onConfirm={handleConfirmExport}
+      />
+
       {/* Hidden PDF export template — off-screen, only used during export */}
       <div
         aria-hidden
@@ -804,14 +829,52 @@ function HistoryPage() {
           pointerEvents: "none",
         }}
       >
-        <PDFExportTemplate
-          ref={exportRef}
-          groups={groups}
-          dimStats={dimStats}
-          latestRadar={latestRadar}
-          userName={userName}
-          exportDate={format(new Date(), "dd MMMM yyyy", { locale: fr })}
-        />
+        {(() => {
+          const buildDimsForExport = (g: SessionGroup) =>
+            g.sgs.dimensions.map((d) => {
+              const meta = DIMENSIONS.find((m) => m.key === d.key);
+              return { ...d, label: meta?.label ?? d.label };
+            });
+
+          let exportMode: "single" | "comparison" = "single";
+          let selectedSession: SessionGroup | undefined = groups[0];
+          let sessionA: SessionGroup | undefined;
+          let sessionB: SessionGroup | undefined;
+          let radarA: ReturnType<typeof buildDimsForExport> | undefined;
+          let radarB: ReturnType<typeof buildDimsForExport> | undefined;
+
+          if (pdfConfig?.mode === "single") {
+            selectedSession =
+              groups.find((g) => g.groupId === pdfConfig.sessionId) ?? groups[0];
+          } else if (pdfConfig?.mode === "comparison") {
+            const a = groups.find((g) => g.groupId === pdfConfig.sessionAId);
+            const b = groups.find((g) => g.groupId === pdfConfig.sessionBId);
+            if (a && b) {
+              exportMode = "comparison";
+              sessionA = a;
+              sessionB = b;
+              radarA = buildDimsForExport(a);
+              radarB = buildDimsForExport(b);
+            }
+          }
+
+          return (
+            <PDFExportTemplate
+              ref={exportRef}
+              groups={groups}
+              dimStats={dimStats}
+              latestRadar={latestRadar}
+              userName={userName}
+              exportDate={format(new Date(), "dd MMMM yyyy", { locale: fr })}
+              exportMode={exportMode}
+              selectedSession={selectedSession}
+              sessionA={sessionA}
+              sessionB={sessionB}
+              radarA={radarA}
+              radarB={radarB}
+            />
+          );
+        })()}
       </div>
     </div>
   );
