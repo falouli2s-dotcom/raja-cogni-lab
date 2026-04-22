@@ -100,7 +100,12 @@ function HomePage() {
 
   const sgs = lastSession?.sgs;
   const prevSgs = prevSession?.sgs;
-  const delta = sgs && prevSgs ? sgs.global - prevSgs.global : null;
+  const hasDelta =
+    !!sgs &&
+    !!prevSgs &&
+    typeof sgs.global === "number" &&
+    typeof prevSgs.global === "number";
+  const delta = hasDelta ? sgs!.global - prevSgs!.global : null;
 
   const weakDimensions = sgs
     ? [...sgs.dimensions].sort((a, b) => a.score - b.score).slice(0, 3)
@@ -191,32 +196,37 @@ function HomePage() {
                     month: "short",
                   })}
                 </p>
-                {delta !== null && (
-                  <div className="mt-2 flex items-center gap-1">
-                    {delta > 0 ? (
-                      <>
-                        <TrendingUp className="h-3.5 w-3.5 text-emerald-300" />
-                        <span className="text-xs font-semibold text-emerald-300">
-                          +{delta} vs session précédente
-                        </span>
-                      </>
-                    ) : delta < 0 ? (
-                      <>
-                        <TrendingDown className="h-3.5 w-3.5 text-rose-300" />
-                        <span className="text-xs font-semibold text-rose-300">
-                          {delta} vs session précédente
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Minus className="h-3.5 w-3.5 text-primary-foreground/50" />
-                        <span className="text-xs font-semibold text-primary-foreground/50">
-                          0 vs session précédente
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
+                <div className="mt-2 flex items-center gap-1">
+                  {delta === null ? (
+                    <>
+                      <Minus className="h-3.5 w-3.5 text-primary-foreground/40" />
+                      <span className="text-xs font-semibold text-primary-foreground/50">
+                        — pas de session précédente
+                      </span>
+                    </>
+                  ) : delta > 0 ? (
+                    <>
+                      <TrendingUp className="h-3.5 w-3.5 text-emerald-300" />
+                      <span className="text-xs font-semibold text-emerald-300">
+                        +{delta} vs session précédente
+                      </span>
+                    </>
+                  ) : delta < 0 ? (
+                    <>
+                      <TrendingDown className="h-3.5 w-3.5 text-rose-300" />
+                      <span className="text-xs font-semibold text-rose-300">
+                        {delta} vs session précédente
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Minus className="h-3.5 w-3.5 text-primary-foreground/50" />
+                      <span className="text-xs font-semibold text-primary-foreground/50">
+                        0 vs session précédente
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-foreground/15">
                 <Brain className="h-8 w-8 text-primary-foreground" />
