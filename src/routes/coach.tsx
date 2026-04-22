@@ -13,7 +13,6 @@ function CoachLayout() {
 
   useEffect(() => {
     (async () => {
-      // Server-verified identity
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error || !user) {
         navigate({ to: "/login", replace: true });
@@ -25,7 +24,16 @@ function CoachLayout() {
         .eq("id", user.id)
         .maybeSingle();
 
-      if ((profile as { role?: string } | null)?.role !== "coach") {
+      const role = (profile as { role?: string } | null)?.role;
+      if (role === "admin") {
+        navigate({ to: "/admin/coaches", replace: true });
+        return;
+      }
+      if (role === "coach_pending") {
+        navigate({ to: "/coach/pending", replace: true });
+        return;
+      }
+      if (role !== "coach") {
         navigate({ to: "/home", replace: true });
         return;
       }
