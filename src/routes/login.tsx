@@ -43,8 +43,17 @@ function LoginPage() {
         .eq("id", userId)
         .maybeSingle();
 
-      if ((profile as { role?: string } | null)?.role === "coach") {
+      const role = (profile as { role?: string } | null)?.role;
+      if (role === "admin") {
+        navigate({ to: "/admin/coaches", replace: true });
+        return;
+      }
+      if (role === "coach") {
         navigate({ to: "/coach/dashboard", replace: true });
+        return;
+      }
+      if (role === "coach_pending") {
+        navigate({ to: "/coach/pending", replace: true });
         return;
       }
     }
