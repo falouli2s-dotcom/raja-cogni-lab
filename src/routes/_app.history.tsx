@@ -33,7 +33,14 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { computeSGS, getGlobalStatus, type SGSResult, type TestScores } from "@/lib/sgs-engine";
-import { RadarChart } from "@/components/RadarChart";
+import { RadarChart, type RadarOverlay } from "@/components/RadarChart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -163,6 +170,12 @@ function HistoryPage() {
   const [exporting, setExporting] = useState(false);
   const [userName, setUserName] = useState<string | undefined>(undefined);
   const exportRef = useRef<HTMLDivElement>(null);
+
+  // Radar selection / comparison state
+  const [radarSelectedId, setRadarSelectedId] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareAId, setCompareAId] = useState<string | null>(null);
+  const [compareBId, setCompareBId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -492,20 +505,133 @@ function HistoryPage() {
             </div>
           </motion.section>
 
-          {/* Radar — latest profile (also in PDF) */}
-          {latestRadar.length > 0 && (
-            <motion.section
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.15 }}
-              className="mt-6 rounded-2xl border border-border bg-card p-4"
-            >
-              <h2 className="mb-3 text-sm font-semibold text-foreground">
-                Profil cognitif (dernière session)
-              </h2>
-              <RadarChart dimensions={latestRadar} size={280} />
-            </motion.section>
-          )}
+          {/* Radar — session selector OR comparison */}
+          {groups.length > 0 && (() => {
+            const buildDims = (g: SessionGroup) =>
+              g.sgs.dimensions.map((d) => {
+                const meta = DIMENSIONS.find((m) => m.key === d.key);
+                return { ...d, label: meta?.label ?? d.label };
+              });
+            const sessionLabel = (g: SessionGroup) =>
+              `${format(new Date(g.date), "dd MMMM yyyy", { locale: fr })} — SGS : ${g.sgs.global}%`;
+
+            const selectedId = radarSelectedId ?? groups[0].groupId;
+            const single = groups.find((g) => g.groupId === selectedId) ?? groups[0];
+
+            const aId = compareAId ?? groups[0]?.groupId ?? null;
+            const bId = compareBId ?? groups[1]?.groupId ?? groups[0]?.groupId ?? null;
+            const sessionA = groups.find((g) => g.groupId === aId);
+            const sessionB = groups.find((g) => g.groupId === bId);
+
+            const overlays: RadarOverlay[] | undefined =
+              compareMode && sessionA && sessionB
+                ? [
+                    { dimensions: buildDims(sessionA), color: "#3b82f6", label: sessionLabel(sessionA) },
+                    { dimensions: buildDims(sessionB), color: "#f97316", label: sessionLabel(sessionB) },
+                  ]
+                : undefined;
+
+            return (
+              <motion.section
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.15 }}
+                className="mt-6 rounded-2xl border border-border bg-card p-4"
+              >
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h2 className="text-sm font-semibold text-foreground">
+                    {compareMode ? "Comparaison de sessions" : "Profil cognitif"}
+                  </h2>
+                  {groups.length >= 2 && (
+                    <Button
+                      variant={compareMode ? "secondary" : "outline"}
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={() => setCompareMode((v) => !v)}
+                    >
+                      {compareMode ? "Quitter la comparaison" : "Comparer deux sessions"}
+                    </Button>
+                  )}
+                </div>
+
+                {!compareMode ? (
+                  <div className="mb-3">
+                    <Select
+                      value={selectedId}
+                      onValueChange={(v) => setRadarSelectedId(v)}
+                    >
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="Choisir une session" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {groups.map((g) => (
+                          <SelectItem key={g.groupId} value={g.groupId} className="text-xs">
+                            {sessionLabel(g)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div>
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-blue-500">
+                        Session A
+                      </p>
+                      <Select value={aId ?? undefined} onValueChange={setCompareAId}>
+                        <SelectTrigger className="h-9 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groups.map((g) => (
+                            <SelectItem key={g.groupId} value={g.groupId} className="text-xs">
+                              {sessionLabel(g)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-orange-500">
+                        Session B
+                      </p>
+                      <Select value={bId ?? undefined} onValueChange={setCompareBId}>
+                        <SelectTrigger className="h-9 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groups.map((g) => (
+                            <SelectItem key={g.groupId} value={g.groupId} className="text-xs">
+                              {sessionLabel(g)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
+                <RadarChart
+                  dimensions={!compareMode ? buildDims(single) : undefined}
+                  overlays={overlays}
+                  size={280}
+                />
+
+                {compareMode && sessionA && sessionB && (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-3 w-3 rounded-sm" style={{ background: "#3b82f6" }} />
+                      <span className="text-foreground">{sessionLabel(sessionA)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-3 w-3 rounded-sm" style={{ background: "#f97316" }} />
+                      <span className="text-foreground">{sessionLabel(sessionB)}</span>
+                    </div>
+                  </div>
+                )}
+              </motion.section>
+            );
+          })()}
 
           {/* Section 2 — Best per dimension */}
           <motion.section
