@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Eye, EyeOff, Mail, Lock, User, Calendar, ChevronRight, ChevronLeft, Camera, Loader2 } from "lucide-react";
+import { Brain, Eye, EyeOff, Mail, Lock, User, Calendar, ChevronRight, ChevronLeft, Camera, Loader2, Trophy, Whistle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
