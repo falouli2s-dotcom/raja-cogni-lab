@@ -13,8 +13,13 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as CoachRouteImport } from './routes/coach'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoachSessionsRouteImport } from './routes/coach.sessions'
+import { Route as CoachProfilRouteImport } from './routes/coach.profil'
+import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
+import { Route as CoachExercicesRouteImport } from './routes/coach.exercices'
 import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
@@ -45,6 +50,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoachRoute = CoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -54,10 +64,30 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoachSessionsRoute = CoachSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachProfilRoute = CoachProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachJoueursRoute = CoachJoueursRouteImport.update({
+  id: '/joueurs',
+  path: '/joueurs',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachExercicesRoute = CoachExercicesRouteImport.update({
+  id: '/exercices',
+  path: '/exercices',
+  getParentRoute: () => CoachRoute,
+} as any)
 const CoachDashboardRoute = CoachDashboardRouteImport.update({
-  id: '/coach/dashboard',
-  path: '/coach/dashboard',
-  getParentRoute: () => rootRouteImport,
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => CoachRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -102,6 +132,7 @@ const AppSessionsSessionIdRoute = AppSessionsSessionIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -111,6 +142,10 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/coach/dashboard': typeof CoachDashboardRoute
+  '/coach/exercices': typeof CoachExercicesRoute
+  '/coach/joueurs': typeof CoachJoueursRoute
+  '/coach/profil': typeof CoachProfilRoute
+  '/coach/sessions': typeof CoachSessionsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/sessions/': typeof AppSessionsIndexRoute
@@ -118,6 +153,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -127,6 +163,10 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/coach/dashboard': typeof CoachDashboardRoute
+  '/coach/exercices': typeof CoachExercicesRoute
+  '/coach/joueurs': typeof CoachJoueursRoute
+  '/coach/profil': typeof CoachProfilRoute
+  '/coach/sessions': typeof CoachSessionsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/sessions': typeof AppSessionsIndexRoute
@@ -136,6 +176,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/coach': typeof CoachRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -145,6 +186,10 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/coach/dashboard': typeof CoachDashboardRoute
+  '/coach/exercices': typeof CoachExercicesRoute
+  '/coach/joueurs': typeof CoachJoueursRoute
+  '/coach/profil': typeof CoachProfilRoute
+  '/coach/sessions': typeof CoachSessionsRoute
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/_app/tests/session': typeof AppTestsSessionRoute
   '/_app/sessions/': typeof AppSessionsIndexRoute
@@ -154,6 +199,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/coach'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -163,6 +209,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/coach/dashboard'
+    | '/coach/exercices'
+    | '/coach/joueurs'
+    | '/coach/profil'
+    | '/coach/sessions'
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/sessions/'
@@ -170,6 +220,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/coach'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -179,6 +230,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/coach/dashboard'
+    | '/coach/exercices'
+    | '/coach/joueurs'
+    | '/coach/profil'
+    | '/coach/sessions'
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/sessions'
@@ -187,6 +242,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/coach'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -196,6 +252,10 @@ export interface FileRouteTypes {
     | '/_app/home'
     | '/_app/profile'
     | '/coach/dashboard'
+    | '/coach/exercices'
+    | '/coach/joueurs'
+    | '/coach/profil'
+    | '/coach/sessions'
     | '/_app/sessions/$sessionId'
     | '/_app/tests/session'
     | '/_app/sessions/'
@@ -205,11 +265,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  CoachRoute: typeof CoachRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
-  CoachDashboardRoute: typeof CoachDashboardRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -242,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -256,12 +323,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach/sessions': {
+      id: '/coach/sessions'
+      path: '/sessions'
+      fullPath: '/coach/sessions'
+      preLoaderRoute: typeof CoachSessionsRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/profil': {
+      id: '/coach/profil'
+      path: '/profil'
+      fullPath: '/coach/profil'
+      preLoaderRoute: typeof CoachProfilRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/joueurs': {
+      id: '/coach/joueurs'
+      path: '/joueurs'
+      fullPath: '/coach/joueurs'
+      preLoaderRoute: typeof CoachJoueursRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/exercices': {
+      id: '/coach/exercices'
+      path: '/exercices'
+      fullPath: '/coach/exercices'
+      preLoaderRoute: typeof CoachExercicesRouteImport
+      parentRoute: typeof CoachRoute
+    }
     '/coach/dashboard': {
       id: '/coach/dashboard'
-      path: '/coach/dashboard'
+      path: '/dashboard'
       fullPath: '/coach/dashboard'
       preLoaderRoute: typeof CoachDashboardRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CoachRoute
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -346,14 +441,32 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface CoachRouteChildren {
+  CoachDashboardRoute: typeof CoachDashboardRoute
+  CoachExercicesRoute: typeof CoachExercicesRoute
+  CoachJoueursRoute: typeof CoachJoueursRoute
+  CoachProfilRoute: typeof CoachProfilRoute
+  CoachSessionsRoute: typeof CoachSessionsRoute
+}
+
+const CoachRouteChildren: CoachRouteChildren = {
+  CoachDashboardRoute: CoachDashboardRoute,
+  CoachExercicesRoute: CoachExercicesRoute,
+  CoachJoueursRoute: CoachJoueursRoute,
+  CoachProfilRoute: CoachProfilRoute,
+  CoachSessionsRoute: CoachSessionsRoute,
+}
+
+const CoachRouteWithChildren = CoachRoute._addFileChildren(CoachRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  CoachRoute: CoachRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
-  CoachDashboardRoute: CoachDashboardRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
