@@ -36,13 +36,17 @@ function getPasswordStrength(pw: string): { score: number; label: string; color:
 
 const TOTAL_STEPS = 3;
 
+type Role = "joueur" | "coach";
+
 function RegisterPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [role, setRole] = useState<Role | null>(null);
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
@@ -72,6 +76,44 @@ function RegisterPage() {
     const reader = new FileReader();
     reader.onload = () => setAvatarPreview(reader.result as string);
     reader.readAsDataURL(file);
+  }
+
+  async function handleCoachRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas");
+      return;
+    }
+    setLoading(true);
+    const fullName = `${prenom.trim()} ${nom.trim()}`.trim();
+
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { prenom, nom, full_name: fullName },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    const userId = signUpData.user?.id;
+    if (userId) {
+      await supabase
+        .from("profiles")
+        .upsert(
+          { id: userId, full_name: fullName || null, role: "coach" },
+          { onConflict: "id" }
+        );
+    }
+
+    navigate({ to: "/verify-email", search: { email }, replace: true });
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -129,6 +171,7 @@ function RegisterPage() {
           category: (category || null) as PlayerCategory | null,
           dominant_foot: (dominantFoot || null) as DominantFoot | null,
           avatar_url: avatarUrl,
+          role: "joueur",
         },
         { onConflict: "id" }
       );
