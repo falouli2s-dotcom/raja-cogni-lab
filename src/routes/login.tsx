@@ -24,7 +24,7 @@ function LoginPage() {
     setLoading(true);
     setError("");
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -33,6 +33,20 @@ function LoginPage() {
       setError(authError.message);
       setLoading(false);
       return;
+    }
+
+    const userId = signInData.user?.id;
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if ((profile as { role?: string } | null)?.role === "coach") {
+        navigate({ to: "/coach/dashboard", replace: true });
+        return;
+      }
     }
 
     navigate({ to: "/home", replace: true });
