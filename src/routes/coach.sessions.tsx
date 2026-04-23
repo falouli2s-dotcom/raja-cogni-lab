@@ -11,6 +11,7 @@ import {
   Brain,
   Activity,
   Search,
+  ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
