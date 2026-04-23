@@ -118,11 +118,18 @@ export function NotificationBell() {
   }
 
   async function handleClick(n: Notification) {
-    await markRead(n.id);
     if (n.type === "invitation_coach") {
-      setActiveInvitationId(n.metadata?.coach_players_id ?? null);
+      const cpId = n.metadata?.coach_players_id as string | undefined;
+      const status = cpId ? invitationStatuses[cpId] : undefined;
+      // Already processed → ignore click
+      if (status && status !== "pending") return;
+      await markRead(n.id);
+      setActiveInvitationId(cpId ?? null);
       setActiveCoachName(n.metadata?.coach_name ?? null);
-    } else if (n.type === "session_planifiee") {
+      return;
+    }
+    await markRead(n.id);
+    if (n.type === "session_planifiee") {
       setOpen(false);
       navigate({ to: "/tests" });
     } else if (n.type === "session_completee") {
@@ -143,7 +150,16 @@ export function NotificationBell() {
       toast.error("Action impossible");
       return;
     }
-    toast.success(status === "accepted" ? "Invitation acceptée ✓" : "Invitation déclinée");
+    if (status === "accepted") {
+      toast.success("✓ Invitation acceptée", {
+        style: { background: "rgb(16 185 129)", color: "white", border: "none" },
+      });
+    } else {
+      toast.error("✗ Invitation refusée", {
+        style: { background: "rgb(244 63 94)", color: "white", border: "none" },
+      });
+    }
+    setInvitationStatuses((prev) => ({ ...prev, [activeInvitationId]: status }));
     setActiveInvitationId(null);
     setActiveCoachName(null);
   }
