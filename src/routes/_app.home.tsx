@@ -16,7 +16,7 @@ import {
 import { useState, useEffect } from "react";
 import { getSessionHistory, type SessionData } from "@/lib/session-manager";
 import { supabase } from "@/integrations/supabase/client";
-import { CoachInvitations } from "@/components/CoachInvitations";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -129,15 +129,15 @@ function HomePage() {
           </p>
           <h1 className="text-2xl font-bold text-foreground">CogniRaja</h1>
         </div>
-        {position && (
-          <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            {position}
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {position && (
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              {position}
+            </span>
+          )}
+          <NotificationBell />
+        </div>
       </motion.div>
-
-      {/* Coach invitations */}
-      <CoachInvitations />
 
       {/* First-time profile completion banner */}
       <AnimatePresence>
