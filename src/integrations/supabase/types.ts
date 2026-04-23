@@ -137,6 +137,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -219,6 +252,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sessions_planifiees: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          note: string | null
+          player_id: string
+          scheduled_at: string
+          status: string
+          test_type: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          player_id: string
+          scheduled_at: string
+          status?: string
+          test_type: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          player_id?: string
+          scheduled_at?: string
+          status?: string
+          test_type?: string
+        }
+        Relationships: []
       }
       sessions_test: {
         Row: {
