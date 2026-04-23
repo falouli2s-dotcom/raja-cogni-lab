@@ -588,7 +588,7 @@ function CoachSessions() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-foreground">
-                          {s.player_name ?? "Joueur"}
+                          {displayName(s.player_id, s.player_name)}
                         </p>
                         <p className="text-xs font-medium text-foreground/90">
                           {meta.title}
