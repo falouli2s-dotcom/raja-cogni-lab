@@ -33,12 +33,15 @@ const TYPE_ICON: Record<Notification["type"], string> = {
   session_completee: "✅",
 };
 
+type InvitationStatus = "pending" | "accepted" | "declined";
+
 export function NotificationBell() {
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [activeInvitationId, setActiveInvitationId] = useState<string | null>(null);
   const [activeCoachName, setActiveCoachName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [invitationStatuses, setInvitationStatuses] = useState<Record<string, InvitationStatus>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -51,12 +54,39 @@ export function NotificationBell() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);
-    setItems((data ?? []) as Notification[]);
+    const list = (data ?? []) as Notification[];
+    setItems(list);
+    await refreshInvitationStatuses(list);
+  }
+
+  async function refreshInvitationStatuses(list: Notification[]) {
+    const ids = list
+      .filter((n) => n.type === "invitation_coach" && n.metadata?.coach_players_id)
+      .map((n) => n.metadata.coach_players_id as string);
+    if (ids.length === 0) {
+      setInvitationStatuses({});
+      return;
+    }
+    const { data } = await (supabase as any)
+      .from("coach_players")
+      .select("id, status")
+      .in("id", ids);
+    const map: Record<string, InvitationStatus> = {};
+    (data ?? []).forEach((r: any) => {
+      map[r.id] = r.status as InvitationStatus;
+    });
+    setInvitationStatuses(map);
   }
 
   useEffect(() => {
     load();
   }, []);
+
+  // Re-check invitation statuses each time the panel opens
+  useEffect(() => {
+    if (open) refreshInvitationStatuses(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // Click outside to close
   useEffect(() => {
@@ -88,11 +118,18 @@ export function NotificationBell() {
   }
 
   async function handleClick(n: Notification) {
-    await markRead(n.id);
     if (n.type === "invitation_coach") {
-      setActiveInvitationId(n.metadata?.coach_players_id ?? null);
+      const cpId = n.metadata?.coach_players_id as string | undefined;
+      const status = cpId ? invitationStatuses[cpId] : undefined;
+      // Already processed → ignore click
+      if (status && status !== "pending") return;
+      await markRead(n.id);
+      setActiveInvitationId(cpId ?? null);
       setActiveCoachName(n.metadata?.coach_name ?? null);
-    } else if (n.type === "session_planifiee") {
+      return;
+    }
+    await markRead(n.id);
+    if (n.type === "session_planifiee") {
       setOpen(false);
       navigate({ to: "/tests" });
     } else if (n.type === "session_completee") {
@@ -113,7 +150,16 @@ export function NotificationBell() {
       toast.error("Action impossible");
       return;
     }
-    toast.success(status === "accepted" ? "Invitation acceptée ✓" : "Invitation déclinée");
+    if (status === "accepted") {
+      toast.success("✓ Invitation acceptée", {
+        style: { background: "rgb(16 185 129)", color: "white", border: "none" },
+      });
+    } else {
+      toast.error("✗ Invitation refusée", {
+        style: { background: "rgb(244 63 94)", color: "white", border: "none" },
+      });
+    }
+    setInvitationStatuses((prev) => ({ ...prev, [activeInvitationId]: status }));
     setActiveInvitationId(null);
     setActiveCoachName(null);
   }
@@ -159,27 +205,48 @@ export function NotificationBell() {
                   Aucune notification pour l'instant
                 </p>
               ) : (
-                items.map((n) => (
-                  <button
-                    key={n.id}
-                    onClick={() => handleClick(n)}
-                    className={`flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/40 ${
-                      n.is_read ? "" : "bg-primary/5"
-                    }`}
-                  >
-                    <span className="text-xl leading-none">{TYPE_ICON[n.type]}</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">{n.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
-                      <p className="mt-1 text-[10px] text-muted-foreground/70">
-                        {timeAgo(n.created_at)}
-                      </p>
-                    </div>
-                    {!n.is_read && (
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    )}
-                  </button>
-                ))
+                items.map((n) => {
+                  const cpId = n.metadata?.coach_players_id as string | undefined;
+                  const invStatus =
+                    n.type === "invitation_coach" && cpId ? invitationStatuses[cpId] : undefined;
+                  const processed = !!invStatus && invStatus !== "pending";
+                  return (
+                    <button
+                      key={n.id}
+                      onClick={() => handleClick(n)}
+                      disabled={processed}
+                      className={`flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors ${
+                        processed
+                          ? "cursor-not-allowed bg-muted/30 opacity-60"
+                          : `hover:bg-muted/40 ${n.is_read ? "" : "bg-primary/5"}`
+                      }`}
+                    >
+                      <span className="text-xl leading-none">{TYPE_ICON[n.type]}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground">{n.title}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <p className="text-[10px] text-muted-foreground/70">
+                            {timeAgo(n.created_at)}
+                          </p>
+                          {invStatus === "accepted" && (
+                            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                              ✓ Acceptée
+                            </span>
+                          )}
+                          {invStatus === "declined" && (
+                            <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-semibold text-rose-600 dark:text-rose-400">
+                              ✗ Refusée
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {!n.is_read && !processed && (
+                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      )}
+                    </button>
+                  );
+                })
               )}
             </div>
           </motion.div>
