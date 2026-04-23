@@ -522,7 +522,9 @@ function CoachSessions() {
               <SelectContent>
                 {players.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.full_name ?? "Joueur"}
+                    {p.full_name ??
+                      profilesMap.get(p.id)?.category ??
+                      "Joueur sans nom"}
                   </SelectItem>
                 ))}
               </SelectContent>
