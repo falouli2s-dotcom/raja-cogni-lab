@@ -637,79 +637,139 @@ function CoachSessions() {
           </h2>
         </div>
 
-        {loading ? null : pastItems.length === 0 ? (
+        {loading ? null : byPlayer.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 p-5 text-center text-sm text-muted-foreground">
             Aucune session passée
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {pastItems.map((it) => {
-              if (it.kind === "planned") {
-                const s = it.data;
-                const isCompleted = s.status === "completed";
-                const meta = renderPlannedTitle(s);
-                return (
-                  <div
-                    key={`p-${s.id}`}
-                    className="rounded-2xl border border-border bg-card p-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground">
-                          {s.player_name ?? "Joueur"}
-                        </p>
-                        <p className="text-xs font-medium text-foreground/90">
-                          {meta.title}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {meta.subtitle}
-                        </p>
-                        <p className="mt-1 text-xs text-foreground/80">
-                          📅 {fmtDate(s.scheduled_at)}
-                        </p>
-                      </div>
-                      {isCompleted ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-400">
-                          <CheckCircle2 className="h-3 w-3" /> Complétée
-                        </span>
-                      ) : (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-500/10 px-2 py-1 text-[10px] font-semibold text-rose-400">
-                          <XCircle className="h-3 w-3" /> Annulée
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              }
-              const t = it.data;
+            {byPlayer.map(({ player, items }) => {
+              const isExpanded = expandedPlayerId === player.id;
+              const info = player.info;
               return (
                 <div
-                  key={`t-${t.id}`}
-                  className="rounded-2xl border border-border bg-card p-3"
+                  key={player.id}
+                  className="overflow-hidden rounded-2xl border border-border bg-card"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedPlayerId(isExpanded ? null : player.id)
+                    }
+                    className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-muted/30"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {initialsOf(player.full_name)}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-foreground">
-                        {t.player_name ?? "Joueur"}
+                        {player.full_name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {TEST_LABELS[t.test_type] ?? t.test_type}
-                      </p>
-                      <p className="mt-1 text-xs text-foreground/80">
-                        📅 {fmtDate(t.created_at)}
-                      </p>
+                      <div className="mt-0.5 flex flex-wrap gap-1.5">
+                        {info?.category && (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {info.category}
+                          </span>
+                        )}
+                        {info?.position && (
+                          <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
+                            {info.position}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
-                        Test passé
+                    <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                      <span className="font-semibold">
+                        {items.length} session{items.length > 1 ? "s" : ""}
                       </span>
-                      {t.score_global !== null && (
-                        <span className="text-xs font-bold text-foreground tabular-nums">
-                          {Math.round(Number(t.score_global))}/100
-                        </span>
-                      )}
+                      <ChevronRight
+                        className={`h-4 w-4 transition-transform ${
+                          isExpanded ? "rotate-90" : ""
+                        }`}
+                      />
                     </div>
-                  </div>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex flex-col gap-2 border-t border-border bg-background/30 p-3">
+                          {items.map((it) => {
+                            if (it.kind === "planned") {
+                              const s = it.data;
+                              const isCompleted = s.status === "completed";
+                              const meta = renderPlannedTitle(s);
+                              return (
+                                <div
+                                  key={`p-${s.id}`}
+                                  className="rounded-xl border border-border bg-card p-3"
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs font-medium text-foreground/90">
+                                        {meta.title}
+                                      </p>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        {meta.subtitle}
+                                      </p>
+                                      <p className="mt-1 text-xs text-foreground/80">
+                                        📅 {fmtDate(s.scheduled_at)}
+                                      </p>
+                                    </div>
+                                    {isCompleted ? (
+                                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-400">
+                                        <CheckCircle2 className="h-3 w-3" />{" "}
+                                        Complétée
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-500/10 px-2 py-1 text-[10px] font-semibold text-rose-400">
+                                        <XCircle className="h-3 w-3" /> Annulée
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            const t = it.data;
+                            return (
+                              <div
+                                key={`t-${t.id}`}
+                                className="rounded-xl border border-border bg-card p-3"
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs text-muted-foreground">
+                                      {TEST_LABELS[t.test_type] ?? t.test_type}
+                                    </p>
+                                    <p className="mt-1 text-xs text-foreground/80">
+                                      📅 {fmtDate(t.created_at)}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                                      Test passé
+                                    </span>
+                                    {t.score_global !== null && (
+                                      <span className="text-xs font-bold text-foreground tabular-nums">
+                                        {Math.round(Number(t.score_global))}/100
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
