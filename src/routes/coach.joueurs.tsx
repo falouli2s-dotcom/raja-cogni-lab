@@ -250,8 +250,13 @@ function CoachJoueurs() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">
-                      {r.profile?.full_name ?? "Joueur"}
+                      {r.profile?.full_name ?? r.profile?.category ?? "Joueur sans nom"}
                     </p>
+                    {!r.profile?.full_name && (
+                      <p className="text-[11px] font-medium text-amber-400">
+                        ⚠ Profil incomplet
+                      </p>
+                    )}
                     <div className="mt-0.5 flex flex-wrap gap-1.5">
                       {r.profile?.category && (
                         <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -307,7 +312,7 @@ function CoachJoueurs() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">
-                      {r.profile?.full_name ?? "Joueur"}
+                      {r.profile?.full_name ?? r.profile?.category ?? "Joueur sans nom"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       En attente de réponse...
