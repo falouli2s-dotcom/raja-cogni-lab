@@ -257,32 +257,38 @@ export type Database = {
         Row: {
           coach_id: string
           created_at: string
+          exercice_ids: string[] | null
           id: string
           note: string | null
           player_id: string
           scheduled_at: string
+          session_category: string
           status: string
-          test_type: string
+          test_type: string | null
         }
         Insert: {
           coach_id: string
           created_at?: string
+          exercice_ids?: string[] | null
           id?: string
           note?: string | null
           player_id: string
           scheduled_at: string
+          session_category?: string
           status?: string
-          test_type: string
+          test_type?: string | null
         }
         Update: {
           coach_id?: string
           created_at?: string
+          exercice_ids?: string[] | null
           id?: string
           note?: string | null
           player_id?: string
           scheduled_at?: string
+          session_category?: string
           status?: string
-          test_type?: string
+          test_type?: string | null
         }
         Relationships: []
       }
