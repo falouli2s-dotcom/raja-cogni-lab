@@ -312,7 +312,7 @@ function CoachJoueurs() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">
-                      {r.profile?.full_name ?? "Joueur"}
+                      {r.profile?.full_name ?? r.profile?.category ?? "Joueur sans nom"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       En attente de réponse...
