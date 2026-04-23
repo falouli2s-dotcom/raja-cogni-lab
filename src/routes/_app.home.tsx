@@ -15,25 +15,14 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { computeSGS, type SGSResult, type TestScores } from "@/lib/sgs-engine";
+import { NotificationBell } from "@/components/NotificationBell";
 
-type DimensionScore = {
-  key: string;
-  label: string;
-  score: number;
-};
-
-type SGSData = {
-  global: number;
-  dimensions: DimensionScore[];
-};
-
-type SessionData = {
+type HomeSession = {
   sessionId: string;
   startedAt: string;
-  sgs: SGSData | null;
-  score_global: number | null;
+  sgs: SGSResult | null;
 };
-import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
