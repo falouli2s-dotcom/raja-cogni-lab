@@ -33,12 +33,15 @@ const TYPE_ICON: Record<Notification["type"], string> = {
   session_completee: "✅",
 };
 
+type InvitationStatus = "pending" | "accepted" | "declined";
+
 export function NotificationBell() {
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [activeInvitationId, setActiveInvitationId] = useState<string | null>(null);
   const [activeCoachName, setActiveCoachName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [invitationStatuses, setInvitationStatuses] = useState<Record<string, InvitationStatus>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -51,12 +54,39 @@ export function NotificationBell() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);
-    setItems((data ?? []) as Notification[]);
+    const list = (data ?? []) as Notification[];
+    setItems(list);
+    await refreshInvitationStatuses(list);
+  }
+
+  async function refreshInvitationStatuses(list: Notification[]) {
+    const ids = list
+      .filter((n) => n.type === "invitation_coach" && n.metadata?.coach_players_id)
+      .map((n) => n.metadata.coach_players_id as string);
+    if (ids.length === 0) {
+      setInvitationStatuses({});
+      return;
+    }
+    const { data } = await (supabase as any)
+      .from("coach_players")
+      .select("id, status")
+      .in("id", ids);
+    const map: Record<string, InvitationStatus> = {};
+    (data ?? []).forEach((r: any) => {
+      map[r.id] = r.status as InvitationStatus;
+    });
+    setInvitationStatuses(map);
   }
 
   useEffect(() => {
     load();
   }, []);
+
+  // Re-check invitation statuses each time the panel opens
+  useEffect(() => {
+    if (open) refreshInvitationStatuses(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // Click outside to close
   useEffect(() => {
