@@ -85,10 +85,12 @@ function fmtDate(iso: string) {
 function CoachSessions() {
   const [coachId, setCoachId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [profilesMap, setProfilesMap] = useState<Map<string, PlayerInfo>>(new Map());
   const [planned, setPlanned] = useState<PlannedSession[]>([]);
   const [completedTests, setCompletedTests] = useState<TestSession[]>([]);
   const [exercices, setExercices] = useState<Exercice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
 
   // form
   const [category, setCategory] = useState<"session" | "exercices">("session");
