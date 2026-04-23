@@ -117,16 +117,24 @@ function CoachSessions() {
     const ids = (rels ?? []).map((r: any) => r.player_id) as string[];
 
     let nameMap = new Map<string, string | null>();
+    let profMap = new Map<string, PlayerInfo>();
     if (ids.length > 0) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, category, position")
         .in("id", ids);
       nameMap = new Map((profs ?? []).map((p: any) => [p.id, p.full_name]));
+      profMap = new Map(
+        (profs ?? []).map((p: any) => [
+          p.id,
+          { full_name: p.full_name, category: p.category, position: p.position } as PlayerInfo,
+        ])
+      );
       setPlayers(ids.map((id) => ({ id, full_name: nameMap.get(id) ?? null })));
     } else {
       setPlayers([]);
     }
+    setProfilesMap(profMap);
 
     const { data: ps } = await (supabase as any)
       .from("sessions_planifiees")
