@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarPlus, Clock, X, CheckCircle2, XCircle, History } from "lucide-react";
+import {
+  CalendarPlus,
+  Clock,
+  X,
+  CheckCircle2,
+  XCircle,
+  History,
+  Brain,
+  Activity,
+  Search,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,14 +36,15 @@ const TEST_LABELS: Record<string, string> = {
   crt: "Choice Reaction Time",
   anticipation: "Test d'Anticipation",
 };
-const TEST_TYPES = Object.keys(TEST_LABELS);
 
 type Player = { id: string; full_name: string | null };
 
 type PlannedSession = {
   id: string;
   player_id: string;
-  test_type: string;
+  test_type: string | null;
+  session_category: "session" | "exercices" | null;
+  exercice_ids: string[] | null;
   scheduled_at: string;
   status: "pending" | "completed" | "cancelled";
   note: string | null;
@@ -47,6 +58,14 @@ type TestSession = {
   created_at: string;
   score_global: number | null;
   player_name?: string | null;
+};
+
+type Exercice = {
+  id: string;
+  numero: number;
+  titre: string;
+  niveau: string;
+  indicateur_cognitif: string;
 };
 
 function fmtDate(iso: string) {
@@ -63,13 +82,16 @@ function CoachSessions() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [planned, setPlanned] = useState<PlannedSession[]>([]);
   const [completedTests, setCompletedTests] = useState<TestSession[]>([]);
+  const [exercices, setExercices] = useState<Exercice[]>([]);
   const [loading, setLoading] = useState(true);
 
   // form
+  const [category, setCategory] = useState<"session" | "exercices">("session");
   const [playerId, setPlayerId] = useState("");
-  const [testType, setTestType] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
+  const [selectedExercices, setSelectedExercices] = useState<string[]>([]);
+  const [exSearch, setExSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const minDateTime = useMemo(() => {
@@ -80,7 +102,6 @@ function CoachSessions() {
 
   async function loadAll(uid: string) {
     setLoading(true);
-    // Accepted players
     const { data: rels } = await (supabase as any)
       .from("coach_players")
       .select("player_id")
@@ -100,10 +121,11 @@ function CoachSessions() {
       setPlayers([]);
     }
 
-    // Planned sessions
     const { data: ps } = await (supabase as any)
       .from("sessions_planifiees")
-      .select("id, player_id, test_type, scheduled_at, status, note")
+      .select(
+        "id, player_id, test_type, session_category, exercice_ids, scheduled_at, status, note"
+      )
       .eq("coach_id", uid)
       .order("scheduled_at", { ascending: true });
     const plannedRows = ((ps ?? []) as PlannedSession[]).map((p) => ({
@@ -112,7 +134,6 @@ function CoachSessions() {
     }));
     setPlanned(plannedRows);
 
-    // Test sessions of accepted players
     if (ids.length > 0) {
       const { data: ts } = await (supabase as any)
         .from("sessions_test")
@@ -132,18 +153,49 @@ function CoachSessions() {
     setLoading(false);
   }
 
+  async function loadExercices() {
+    const { data } = await supabase
+      .from("exercices")
+      .select("id, numero, titre, niveau, indicateur_cognitif")
+      .order("numero", { ascending: true });
+    setExercices((data ?? []) as Exercice[]);
+  }
+
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
       setCoachId(user.id);
-      await loadAll(user.id);
+      await Promise.all([loadAll(user.id), loadExercices()]);
     })();
   }, []);
 
+  const filteredExercices = useMemo(() => {
+    const q = exSearch.trim().toLowerCase();
+    if (!q) return exercices;
+    return exercices.filter(
+      (e) =>
+        e.titre.toLowerCase().includes(q) ||
+        e.indicateur_cognitif.toLowerCase().includes(q)
+    );
+  }, [exercices, exSearch]);
+
+  function toggleExercice(id: string) {
+    setSelectedExercices((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  const canSubmit =
+    !!playerId &&
+    !!scheduledAt &&
+    (category === "session" || selectedExercices.length >= 1);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!coachId || !playerId || !testType || !scheduledAt) return;
+    if (!coachId || !canSubmit) return;
     const when = new Date(scheduledAt);
     if (when.getTime() <= Date.now()) {
       toast.error("La date doit être dans le futur");
@@ -155,7 +207,9 @@ function CoachSessions() {
       .insert({
         coach_id: coachId,
         player_id: playerId,
-        test_type: testType,
+        session_category: category,
+        test_type: null,
+        exercice_ids: category === "exercices" ? selectedExercices : null,
         scheduled_at: when.toISOString(),
         note: note.trim() || null,
       });
@@ -166,9 +220,11 @@ function CoachSessions() {
     }
     toast.success("Session planifiée ✓");
     setPlayerId("");
-    setTestType("");
     setScheduledAt("");
     setNote("");
+    setSelectedExercices([]);
+    setExSearch("");
+    setCategory("session");
     await loadAll(coachId);
   }
 
@@ -211,6 +267,29 @@ function CoachSessions() {
     return [...a, ...b].sort((x, y) => y.date - x.date);
   }, [pastPlanned, completedTests]);
 
+  function renderPlannedTitle(s: PlannedSession) {
+    if (s.session_category === "exercices") {
+      const n = s.exercice_ids?.length ?? 0;
+      return {
+        title: "🏃 Exercices terrain",
+        subtitle: `${n} exercice${n > 1 ? "s" : ""} assigné${n > 1 ? "s" : ""}`,
+      };
+    }
+    if (s.session_category === "session" || s.session_category == null) {
+      if (s.test_type) {
+        return {
+          title: TEST_LABELS[s.test_type] ?? s.test_type,
+          subtitle: "Test cognitif",
+        };
+      }
+      return {
+        title: "📋 Session cognitive complète",
+        subtitle: "Simon Task · N-Back 2 · TMT",
+      };
+    }
+    return { title: "Session", subtitle: "" };
+  }
+
   return (
     <div className="px-5 pt-12 pb-8">
       <header className="mb-6">
@@ -226,14 +305,16 @@ function CoachSessions() {
         animate={{ y: 0, opacity: 1 }}
         className="mb-6 rounded-2xl border border-border bg-card p-4"
       >
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-4 flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
             <CalendarPlus className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Planifier une session</p>
+            <p className="text-sm font-semibold text-foreground">
+              Planifier une session
+            </p>
             <p className="text-xs text-muted-foreground">
-              Assignez un test à l'un de vos joueurs
+              Assignez du contenu à l'un de vos joueurs
             </p>
           </div>
         </div>
@@ -244,6 +325,132 @@ function CoachSessions() {
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            {/* Category toggle */}
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/40 p-1">
+              <button
+                type="button"
+                onClick={() => setCategory("session")}
+                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
+                  category === "session"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Brain className="h-4 w-4" />
+                Session cognitive
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategory("exercices")}
+                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all ${
+                  category === "exercices"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Activity className="h-4 w-4" />
+                Exercices terrain
+              </button>
+            </div>
+
+            {/* Conditional content */}
+            {category === "session" ? (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">
+                    Session cognitive complète
+                  </p>
+                </div>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Cette session inclut automatiquement les 3 tests suivants :
+                </p>
+                <ul className="space-y-1.5 text-xs text-foreground/90">
+                  <li className="flex justify-between">
+                    <span>① Simon Task</span>
+                    <span className="text-muted-foreground">~8 min</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>② N-Back 2</span>
+                    <span className="text-muted-foreground">~6 min</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>③ Trail Making Test</span>
+                    <span className="text-muted-foreground">~6 min</span>
+                  </li>
+                </ul>
+                <div className="mt-3 border-t border-primary/20 pt-2 text-xs font-semibold text-foreground">
+                  ⏱ Durée totale estimée : ~20 min
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-background/40 p-3">
+                <div className="relative mb-2">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={exSearch}
+                    onChange={(e) => setExSearch(e.target.value)}
+                    placeholder="Rechercher un exercice..."
+                    className="h-9 pl-9 text-xs"
+                  />
+                </div>
+                <div className="max-h-60 space-y-1.5 overflow-y-auto pr-1">
+                  {filteredExercices.length === 0 ? (
+                    <p className="py-6 text-center text-xs text-muted-foreground">
+                      Aucun exercice trouvé
+                    </p>
+                  ) : (
+                    filteredExercices.map((ex) => {
+                      const checked = selectedExercices.includes(ex.id);
+                      return (
+                        <button
+                          type="button"
+                          key={ex.id}
+                          onClick={() => toggleExercice(ex.id)}
+                          className={`flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all ${
+                            checked
+                              ? "border-primary bg-primary/10"
+                              : "border-border bg-card hover:border-border/80"
+                          }`}
+                        >
+                          <span
+                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                              checked
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-background"
+                            }`}
+                          >
+                            {checked && (
+                              <CheckCircle2 className="h-3 w-3" />
+                            )}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-semibold text-foreground">
+                              #{String(ex.numero).padStart(2, "0")} ·{" "}
+                              {ex.titre}
+                            </p>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                {ex.niveau}
+                              </span>
+                              <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                {ex.indicateur_cognitif}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <p className="mt-2 border-t border-border pt-2 text-center text-[11px] font-semibold text-muted-foreground">
+                  {selectedExercices.length} exercice
+                  {selectedExercices.length > 1 ? "s" : ""} sélectionné
+                  {selectedExercices.length > 1 ? "s" : ""}
+                </p>
+              </div>
+            )}
+
             <Select value={playerId} onValueChange={setPlayerId}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un joueur" />
@@ -252,19 +459,6 @@ function CoachSessions() {
                 {players.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.full_name ?? "Joueur"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={testType} onValueChange={setTestType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un test" />
-              </SelectTrigger>
-              <SelectContent>
-                {TEST_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {TEST_LABELS[t]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -285,10 +479,7 @@ function CoachSessions() {
               rows={2}
             />
 
-            <Button
-              type="submit"
-              disabled={submitting || !playerId || !testType || !scheduledAt}
-            >
+            <Button type="submit" disabled={submitting || !canSubmit}>
               {submitting ? "Planification..." : "Planifier"}
             </Button>
           </form>
@@ -298,7 +489,9 @@ function CoachSessions() {
       {/* Section 2 - Upcoming */}
       <section className="mb-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">Sessions à venir</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            Sessions à venir
+          </h2>
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
             {upcoming.length}
           </span>
@@ -315,48 +508,54 @@ function CoachSessions() {
         ) : (
           <div className="flex flex-col gap-2">
             <AnimatePresence>
-              {upcoming.map((s) => (
-                <motion.div
-                  key={s.id}
-                  layout
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className="rounded-2xl border border-border bg-card p-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">
-                        {s.player_name ?? "Joueur"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {TEST_LABELS[s.test_type] ?? s.test_type}
-                      </p>
-                      <p className="mt-1 text-xs text-foreground/80">
-                        📅 {fmtDate(s.scheduled_at)}
-                      </p>
-                      {s.note && (
-                        <p className="mt-1 text-xs italic text-muted-foreground">
-                          « {s.note} »
+              {upcoming.map((s) => {
+                const meta = renderPlannedTitle(s);
+                return (
+                  <motion.div
+                    key={s.id}
+                    layout
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="rounded-2xl border border-border bg-card p-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {s.player_name ?? "Joueur"}
                         </p>
-                      )}
+                        <p className="text-xs font-medium text-foreground/90">
+                          {meta.title}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {meta.subtitle}
+                        </p>
+                        <p className="mt-1 text-xs text-foreground/80">
+                          📅 {fmtDate(s.scheduled_at)}
+                        </p>
+                        {s.note && (
+                          <p className="mt-1 text-xs italic text-muted-foreground">
+                            « {s.note} »
+                          </p>
+                        )}
+                      </div>
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-semibold text-amber-400">
+                        <Clock className="h-3 w-3" /> À venir
+                      </span>
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-semibold text-amber-400">
-                      <Clock className="h-3 w-3" /> À venir
-                    </span>
-                  </div>
-                  <div className="mt-3 flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => cancelSession(s.id)}
-                      className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
-                    >
-                      <X className="mr-1 h-3.5 w-3.5" /> Annuler
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => cancelSession(s.id)}
+                        className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                      >
+                        <X className="mr-1 h-3.5 w-3.5" /> Annuler
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </div>
         )}
@@ -366,7 +565,9 @@ function CoachSessions() {
       <section>
         <div className="mb-3 flex items-center gap-2">
           <History className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground">Sessions passées</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            Sessions passées
+          </h2>
         </div>
 
         {loading ? null : pastItems.length === 0 ? (
@@ -379,6 +580,7 @@ function CoachSessions() {
               if (it.kind === "planned") {
                 const s = it.data;
                 const isCompleted = s.status === "completed";
+                const meta = renderPlannedTitle(s);
                 return (
                   <div
                     key={`p-${s.id}`}
@@ -389,8 +591,11 @@ function CoachSessions() {
                         <p className="truncate text-sm font-semibold text-foreground">
                           {s.player_name ?? "Joueur"}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {TEST_LABELS[s.test_type] ?? s.test_type}
+                        <p className="text-xs font-medium text-foreground/90">
+                          {meta.title}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {meta.subtitle}
                         </p>
                         <p className="mt-1 text-xs text-foreground/80">
                           📅 {fmtDate(s.scheduled_at)}
