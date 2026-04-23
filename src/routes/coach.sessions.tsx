@@ -37,6 +37,11 @@ const TEST_LABELS: Record<string, string> = {
   anticipation: "Test d'Anticipation",
 };
 
+type PlayerInfo = {
+  full_name: string | null;
+  category: string | null;
+  position: string | null;
+};
 type Player = { id: string; full_name: string | null };
 
 type PlannedSession = {
