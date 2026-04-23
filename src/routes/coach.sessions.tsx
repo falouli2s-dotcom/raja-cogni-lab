@@ -282,6 +282,55 @@ function CoachSessions() {
     return [...a, ...b].sort((x, y) => y.date - x.date);
   }, [pastPlanned, completedTests]);
 
+  function displayName(pid: string, fallback?: string | null): string {
+    const info = profilesMap.get(pid);
+    return (
+      info?.full_name ?? fallback ?? info?.category ?? "Joueur sans nom"
+    );
+  }
+
+  function initialsOf(name: string): string {
+    return name
+      .trim()
+      .split(/\s+/)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  }
+
+  type GroupedPlayer = {
+    player: { id: string; full_name: string; info: PlayerInfo | null };
+    items: PastItem[];
+  };
+
+  const byPlayer: GroupedPlayer[] = useMemo(() => {
+    const map = new Map<string, GroupedPlayer>();
+    for (const item of pastItems) {
+      const pid =
+        item.kind === "planned" ? item.data.player_id : item.data.user_id;
+      const name = displayName(
+        pid,
+        item.kind === "planned"
+          ? item.data.player_name
+          : item.data.player_name
+      );
+      if (!map.has(pid)) {
+        map.set(pid, {
+          player: {
+            id: pid,
+            full_name: name,
+            info: profilesMap.get(pid) ?? null,
+          },
+          items: [],
+        });
+      }
+      map.get(pid)!.items.push(item);
+    }
+    return Array.from(map.values());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pastItems, profilesMap]);
+
   function renderPlannedTitle(s: PlannedSession) {
     if (s.session_category === "exercices") {
       const n = s.exercice_ids?.length ?? 0;
