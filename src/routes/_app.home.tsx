@@ -105,14 +105,10 @@ function HomePage() {
   const [totalSessions, setTotalSessions] = useState<number>(0);
 
   useEffect(() => {
-    const history = getSessionHistory().filter(s => s.status === "completed");
-    setLastSession(history[0] ?? null);
-    setPrevSession(history[1] ?? null);
-    setTotalSessions(history.length);
-
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
       const { data: prof } = await supabase
         .from("profiles")
         .select("position, full_name")
@@ -128,6 +124,36 @@ function HomePage() {
       } else {
         const dismissed = localStorage.getItem(PROFILE_BANNER_DISMISS_KEY) === "1";
         if (!dismissed) setShowProfileBanner(true);
+      }
+
+      const { data: sessions } = await supabase
+        .from("sessions_test")
+        .select("id, created_at, score_global, donnees_brutes")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const completed = sessions ?? [];
+      setTotalSessions(completed.length);
+
+      if (completed.length === 0) return;
+
+      const last = completed[0];
+      setLastSession({
+        sessionId: last.id,
+        startedAt: last.created_at,
+        sgs: buildSGS(last),
+        score_global: last.score_global,
+      });
+
+      if (completed.length >= 2) {
+        const prev = completed[1];
+        setPrevSession({
+          sessionId: prev.id,
+          startedAt: prev.created_at,
+          sgs: buildSGS(prev),
+          score_global: prev.score_global,
+        });
       }
     })();
   }, []);
