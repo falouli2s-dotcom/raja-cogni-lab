@@ -14,8 +14,25 @@ import {
   Flame,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getSessionHistory, type SessionData } from "@/lib/session-manager";
 import { supabase } from "@/integrations/supabase/client";
+
+type DimensionScore = {
+  key: string;
+  label: string;
+  score: number;
+};
+
+type SGSData = {
+  global: number;
+  dimensions: DimensionScore[];
+};
+
+type SessionData = {
+  sessionId: string;
+  startedAt: string;
+  sgs: SGSData | null;
+  score_global: number | null;
+};
 import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_app/home")({
@@ -58,6 +75,27 @@ function scoreTextColor(score: number): string {
   return "text-rose-300";
 }
 
+function buildSGS(session: any): SGSData | null {
+  if (!session) return null;
+  const global = session.score_global;
+  if (global === null || global === undefined) return null;
+  const brutes = session.donnees_brutes;
+  const dimensions: DimensionScore[] =
+    brutes?.dimensions ?? brutes?.sgs?.dimensions ?? [];
+  const dims =
+    dimensions.length > 0
+      ? dimensions
+      : Object.keys(DIM_LABELS).map((key) => ({
+          key,
+          label: DIM_LABELS[key],
+          score: 0,
+        }));
+  return {
+    global: Math.round(Number(global)),
+    dimensions: dims,
+  };
+}
+
 function HomePage() {
   const [lastSession, setLastSession] = useState<SessionData | null>(null);
   const [prevSession, setPrevSession] = useState<SessionData | null>(null);
@@ -67,14 +105,10 @@ function HomePage() {
   const [totalSessions, setTotalSessions] = useState<number>(0);
 
   useEffect(() => {
-    const history = getSessionHistory().filter(s => s.status === "completed");
-    setLastSession(history[0] ?? null);
-    setPrevSession(history[1] ?? null);
-    setTotalSessions(history.length);
-
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
       const { data: prof } = await supabase
         .from("profiles")
         .select("position, full_name")
@@ -90,6 +124,36 @@ function HomePage() {
       } else {
         const dismissed = localStorage.getItem(PROFILE_BANNER_DISMISS_KEY) === "1";
         if (!dismissed) setShowProfileBanner(true);
+      }
+
+      const { data: sessions } = await supabase
+        .from("sessions_test")
+        .select("id, created_at, score_global, donnees_brutes")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const completed = sessions ?? [];
+      setTotalSessions(completed.length);
+
+      if (completed.length === 0) return;
+
+      const last = completed[0];
+      setLastSession({
+        sessionId: last.id,
+        startedAt: last.created_at,
+        sgs: buildSGS(last),
+        score_global: last.score_global,
+      });
+
+      if (completed.length >= 2) {
+        const prev = completed[1];
+        setPrevSession({
+          sessionId: prev.id,
+          startedAt: prev.created_at,
+          sgs: buildSGS(prev),
+          score_global: prev.score_global,
+        });
       }
     })();
   }, []);
@@ -262,8 +326,7 @@ function HomePage() {
             </div>
 
             <Link
-              to="/sessions/$sessionId"
-              params={{ sessionId: lastSession!.sessionId }}
+              to="/sessions"
               className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary-foreground"
             >
               Rapport complet <ChevronRight className="h-3.5 w-3.5" />
