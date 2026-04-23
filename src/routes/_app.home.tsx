@@ -75,6 +75,27 @@ function scoreTextColor(score: number): string {
   return "text-rose-300";
 }
 
+function buildSGS(session: any): SGSData | null {
+  if (!session) return null;
+  const global = session.score_global;
+  if (global === null || global === undefined) return null;
+  const brutes = session.donnees_brutes;
+  const dimensions: DimensionScore[] =
+    brutes?.dimensions ?? brutes?.sgs?.dimensions ?? [];
+  const dims =
+    dimensions.length > 0
+      ? dimensions
+      : Object.keys(DIM_LABELS).map((key) => ({
+          key,
+          label: DIM_LABELS[key],
+          score: 0,
+        }));
+  return {
+    global: Math.round(Number(global)),
+    dimensions: dims,
+  };
+}
+
 function HomePage() {
   const [lastSession, setLastSession] = useState<SessionData | null>(null);
   const [prevSession, setPrevSession] = useState<SessionData | null>(null);
