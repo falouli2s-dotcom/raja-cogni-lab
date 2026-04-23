@@ -14,8 +14,25 @@ import {
   Flame,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getSessionHistory, type SessionData } from "@/lib/session-manager";
 import { supabase } from "@/integrations/supabase/client";
+
+type DimensionScore = {
+  key: string;
+  label: string;
+  score: number;
+};
+
+type SGSData = {
+  global: number;
+  dimensions: DimensionScore[];
+};
+
+type SessionData = {
+  sessionId: string;
+  startedAt: string;
+  sgs: SGSData | null;
+  score_global: number | null;
+};
 import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_app/home")({
