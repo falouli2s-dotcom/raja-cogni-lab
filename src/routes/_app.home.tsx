@@ -15,25 +15,14 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { computeSGS, type SGSResult, type TestScores } from "@/lib/sgs-engine";
+import { NotificationBell } from "@/components/NotificationBell";
 
-type DimensionScore = {
-  key: string;
-  label: string;
-  score: number;
-};
-
-type SGSData = {
-  global: number;
-  dimensions: DimensionScore[];
-};
-
-type SessionData = {
+type HomeSession = {
   sessionId: string;
   startedAt: string;
-  sgs: SGSData | null;
-  score_global: number | null;
+  sgs: SGSResult | null;
 };
-import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -75,30 +64,9 @@ function scoreTextColor(score: number): string {
   return "text-rose-300";
 }
 
-function buildSGS(session: any): SGSData | null {
-  if (!session) return null;
-  const global = session.score_global;
-  if (global === null || global === undefined) return null;
-  const brutes = session.donnees_brutes;
-  const dimensions: DimensionScore[] =
-    brutes?.dimensions ?? brutes?.sgs?.dimensions ?? [];
-  const dims =
-    dimensions.length > 0
-      ? dimensions
-      : Object.keys(DIM_LABELS).map((key) => ({
-          key,
-          label: DIM_LABELS[key],
-          score: 0,
-        }));
-  return {
-    global: Math.round(Number(global)),
-    dimensions: dims,
-  };
-}
-
 function HomePage() {
-  const [lastSession, setLastSession] = useState<SessionData | null>(null);
-  const [prevSession, setPrevSession] = useState<SessionData | null>(null);
+  const [lastSession, setLastSession] = useState<HomeSession | null>(null);
+  const [prevSession, setPrevSession] = useState<HomeSession | null>(null);
   const [showProfileBanner, setShowProfileBanner] = useState(false);
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [position, setPosition] = useState<string | null>(null);
@@ -128,33 +96,86 @@ function HomePage() {
 
       const { data: sessions } = await supabase
         .from("sessions_test")
-        .select("id, created_at, score_global, donnees_brutes")
+        .select("id, created_at, test_type, donnees_brutes")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(10);
 
-      const completed = sessions ?? [];
-      setTotalSessions(completed.length);
+      if (!sessions || sessions.length === 0) {
+        setTotalSessions(0);
+        return;
+      }
 
-      if (completed.length === 0) return;
+      setTotalSessions(sessions.length);
 
-      const last = completed[0];
-      setLastSession({
-        sessionId: last.id,
-        startedAt: last.created_at,
-        sgs: buildSGS(last),
-        score_global: last.score_global,
-      });
+      const sessionIds = sessions.map((s) => s.id);
+      const { data: results } = await supabase
+        .from("resultats_test")
+        .select("session_id, test_type, metrique, valeur, details")
+        .in("session_id", sessionIds);
 
-      if (completed.length >= 2) {
-        const prev = completed[1];
-        setPrevSession({
-          sessionId: prev.id,
-          startedAt: prev.created_at,
-          sgs: buildSGS(prev),
-          score_global: prev.score_global,
+      const groups = new Map<string, { sessions: any[]; results: any[]; date: string }>();
+
+      for (const s of sessions) {
+        const key = (s.donnees_brutes as any)?.sessionId ?? s.id;
+        const existing = groups.get(key);
+        if (existing) {
+          existing.sessions.push(s);
+          if (new Date(s.created_at) > new Date(existing.date)) {
+            existing.date = s.created_at;
+          }
+        } else {
+          groups.set(key, { sessions: [s], results: [], date: s.created_at });
+        }
+      }
+
+      for (const r of results ?? []) {
+        for (const [, group] of groups) {
+          if (group.sessions.some((s) => s.id === r.session_id)) {
+            group.results.push(r);
+            break;
+          }
+        }
+      }
+
+      const computed: HomeSession[] = [];
+      for (const [key, group] of groups) {
+        const scores: TestScores = {};
+        for (const r of group.results) {
+          if (r.test_type === "simon" && r.details) {
+            scores.simon = {
+              avgRT: Number(r.details.avg_rt ?? 0),
+              simonEffect: Number(r.valeur ?? 0),
+              accuracy: Number(r.details.accuracy ?? 0),
+            };
+          } else if (r.test_type === "nback" && r.details) {
+            scores.nback = {
+              accuracy: Number(r.details.accuracy ?? 0),
+              targetErrorRate: Number(r.valeur ?? 0),
+              dPrime: Number(r.details.d_prime ?? 0),
+            };
+          } else if (r.test_type === "tmt" && r.details) {
+            scores.tmt = {
+              ratioBA: Number(r.valeur ?? 0),
+              timeA: Number(r.details.time_a ?? 0),
+              timeB: Number(r.details.time_b ?? 0),
+            };
+          }
+        }
+
+        computed.push({
+          sessionId: key,
+          startedAt: group.date,
+          sgs: computeSGS(scores),
         });
       }
+
+      computed.sort(
+        (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+      );
+
+      if (computed.length > 0) setLastSession(computed[0]);
+      if (computed.length > 1) setPrevSession(computed[1]);
     })();
   }, []);
 
