@@ -290,9 +290,9 @@ function CoachSessions() {
   const upcoming = planned.filter(
     (p) => p.status === "pending" && new Date(p.scheduled_at).getTime() > now
   );
-  const pastPlanned = planned.filter(
-    (p) => p.status === "completed" || p.status === "cancelled"
-  );
+  // Only keep cancelled planned sessions: completed ones are already represented
+  // by their corresponding sessions_test rows (avoids double-counting).
+  const pastPlanned = planned.filter((p) => p.status === "cancelled");
 
   type PastItem =
     | { kind: "planned"; data: PlannedSession; date: number }
@@ -361,11 +361,19 @@ function CoachSessions() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pastItems, profilesMap]);
 
-  // Average cognitive score per player (only test sessions with score_global)
+  // Average cognitive score per player. Each TestSession in `items` is already
+  // a logical session (grouped by sessionId via groupTestSessions), so we just
+  // average their score_global. We also dedupe defensively by session id.
   function avgScoreFor(items: PastItem[]): number | null {
-    const vals = items
-      .filter((it) => it.kind === "test" && it.data.score_global != null)
-      .map((it) => Number((it as Extract<PastItem, { kind: "test" }>).data.score_global));
+    const seen = new Set<string>();
+    const vals: number[] = [];
+    for (const it of items) {
+      if (it.kind !== "test") continue;
+      if (it.data.score_global == null) continue;
+      if (seen.has(it.data.id)) continue;
+      seen.add(it.data.id);
+      vals.push(Number(it.data.score_global));
+    }
     if (vals.length === 0) return null;
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }
@@ -753,6 +761,14 @@ function CoachSessions() {
               const isExpanded = expandedPlayerId === player.id;
               const info = player.info;
               const avg = avgScoreFor(items);
+              const testItems = items.filter(
+                (it): it is Extract<PastItem, { kind: "test" }> => it.kind === "test"
+              );
+              const cancelledItems = items.filter(
+                (it): it is Extract<PastItem, { kind: "planned" }> =>
+                  it.kind === "planned" && it.data.status === "cancelled"
+              );
+              const passedCount = testItems.length;
               return (
                 <motion.div
                   key={player.id}
@@ -785,7 +801,7 @@ function CoachSessions() {
                           </span>
                         )}
                         <span className="text-[10px] text-muted-foreground">
-                          · {items.length} session{items.length > 1 ? "s" : ""}
+                          · {passedCount} session{passedCount > 1 ? "s" : ""} passée{passedCount > 1 ? "s" : ""}
                         </span>
                       </div>
                     </div>
@@ -817,119 +833,119 @@ function CoachSessions() {
                         transition={{ duration: 0.25, ease: "easeOut" }}
                         className="overflow-hidden"
                       >
-                        <div className="flex flex-col gap-3 border-t border-border bg-background/30 p-3">
-                          {items.map((it) => {
-                            if (it.kind === "planned") {
-                              const s = it.data;
-                              const isCompleted = s.status === "completed";
-                              const dateObj = new Date(s.scheduled_at);
-                              const dateStr = dateObj.toLocaleDateString("fr-FR", {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              });
-                              const timeStr = dateObj.toLocaleTimeString("fr-FR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              });
-                              const isExercices = s.session_category === "exercices";
-                              const exCount = s.exercice_ids?.length ?? 0;
-                              const subtitle = isExercices
-                                ? `${exCount} exercice${exCount > 1 ? "s" : ""} terrain`
-                                : "Session cognitive";
-                              return (
-                                <div
-                                  key={`p-${s.id}`}
-                                  className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
-                                >
-                                  <div
-                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                                      isCompleted
-                                        ? "bg-emerald-500/10 text-emerald-400"
-                                        : "bg-rose-500/10 text-rose-400"
-                                    }`}
+                        <div className="flex flex-col gap-4 border-t border-border bg-background/30 p-3">
+                          {/* Cognitive sessions passed */}
+                          {testItems.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                              <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                Sessions cognitives passées
+                              </p>
+                              {testItems.map((it) => {
+                                const t = it.data;
+                                const dateObj = new Date(t.created_at);
+                                const dateStr = dateObj.toLocaleDateString("fr-FR", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                });
+                                const timeStr = dateObj.toLocaleTimeString("fr-FR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                });
+                                const score =
+                                  t.score_global != null
+                                    ? Math.round(Number(t.score_global))
+                                    : null;
+                                const tone =
+                                  score == null
+                                    ? "bg-muted text-muted-foreground"
+                                    : score >= 70
+                                      ? "bg-primary/10 text-primary"
+                                      : score >= 40
+                                        ? "bg-accent/10 text-accent"
+                                        : "bg-destructive/10 text-destructive";
+                                return (
+                                  <button
+                                    type="button"
+                                    key={`t-${t.id}`}
+                                    onClick={() => openSession(t)}
+                                    className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
                                   >
-                                    {isCompleted ? (
-                                      <CheckCircle2 className="h-5 w-5" />
-                                    ) : (
-                                      <XCircle className="h-5 w-5" />
-                                    )}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate font-semibold text-foreground">
-                                      {dateStr}
-                                    </p>
-                                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                                      <Clock className="h-3 w-3" />
-                                      <span>{timeStr}</span>
-                                      <span>· {subtitle}</span>
+                                    <div
+                                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${tone}`}
+                                    >
+                                      <span className="text-lg font-bold tabular-nums">
+                                        {score ?? "—"}
+                                      </span>
                                     </div>
-                                  </div>
-                                  <span
-                                    className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${
-                                      isCompleted
-                                        ? "bg-emerald-500/10 text-emerald-400"
-                                        : "bg-rose-500/10 text-rose-400"
-                                    }`}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-semibold text-foreground">
+                                        {dateStr}
+                                      </p>
+                                      <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        <span>{timeStr}</span>
+                                        <span>
+                                          · {t.test_types.length} test{t.test_types.length > 1 ? "s" : ""}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Cancelled planned sessions */}
+                          {cancelledItems.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                              <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                Sessions annulées
+                              </p>
+                              {cancelledItems.map((it) => {
+                                const s = it.data;
+                                const dateObj = new Date(s.scheduled_at);
+                                const dateStr = dateObj.toLocaleDateString("fr-FR", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                });
+                                const timeStr = dateObj.toLocaleTimeString("fr-FR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                });
+                                const isExercices = s.session_category === "exercices";
+                                const exCount = s.exercice_ids?.length ?? 0;
+                                const subtitle = isExercices
+                                  ? `${exCount} exercice${exCount > 1 ? "s" : ""} terrain`
+                                  : "Session cognitive";
+                                return (
+                                  <div
+                                    key={`p-${s.id}`}
+                                    className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
                                   >
-                                    {isCompleted ? "Complétée" : "Annulée"}
-                                  </span>
-                                </div>
-                              );
-                            }
-                            const t = it.data;
-                            const dateObj = new Date(t.created_at);
-                            const dateStr = dateObj.toLocaleDateString("fr-FR", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            });
-                            const timeStr = dateObj.toLocaleTimeString("fr-FR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            });
-                            const score =
-                              t.score_global != null
-                                ? Math.round(Number(t.score_global))
-                                : null;
-                            const tone =
-                              score == null
-                                ? "bg-muted text-muted-foreground"
-                                : score >= 70
-                                  ? "bg-primary/10 text-primary"
-                                  : score >= 40
-                                    ? "bg-accent/10 text-accent"
-                                    : "bg-destructive/10 text-destructive";
-                            return (
-                              <button
-                                type="button"
-                                key={`t-${t.id}`}
-                                onClick={() => openSession(t)}
-                                className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
-                              >
-                                <div
-                                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${tone}`}
-                                >
-                                  <span className="text-lg font-bold tabular-nums">
-                                    {score ?? "—"}
-                                  </span>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate font-semibold text-foreground">
-                                    {dateStr}
-                                  </p>
-                                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Clock className="h-3 w-3" />
-                                    <span>{timeStr}</span>
-                                    <span>
-                                      · {t.test_types.length} test{t.test_types.length > 1 ? "s" : ""}
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+                                      <XCircle className="h-5 w-5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-semibold text-foreground">
+                                        {dateStr}
+                                      </p>
+                                      <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        <span>{timeStr}</span>
+                                        <span>· {subtitle}</span>
+                                      </div>
+                                    </div>
+                                    <span className="shrink-0 rounded-full bg-destructive/10 px-2 py-1 text-[10px] font-semibold text-destructive">
+                                      Annulée
                                     </span>
                                   </div>
-                                </div>
-                                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                              </button>
-                            );
-                          })}
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     )}
