@@ -361,11 +361,19 @@ function CoachSessions() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pastItems, profilesMap]);
 
-  // Average cognitive score per player (only test sessions with score_global)
+  // Average cognitive score per player. Each TestSession in `items` is already
+  // a logical session (grouped by sessionId via groupTestSessions), so we just
+  // average their score_global. We also dedupe defensively by session id.
   function avgScoreFor(items: PastItem[]): number | null {
-    const vals = items
-      .filter((it) => it.kind === "test" && it.data.score_global != null)
-      .map((it) => Number((it as Extract<PastItem, { kind: "test" }>).data.score_global));
+    const seen = new Set<string>();
+    const vals: number[] = [];
+    for (const it of items) {
+      if (it.kind !== "test") continue;
+      if (it.data.score_global == null) continue;
+      if (seen.has(it.data.id)) continue;
+      seen.add(it.data.id);
+      vals.push(Number(it.data.score_global));
+    }
     if (vals.length === 0) return null;
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }
