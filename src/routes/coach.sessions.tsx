@@ -953,13 +953,6 @@ function CoachSessions() {
                 </motion.div>
               );
             })}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
           </div>
         )}
       </section>
