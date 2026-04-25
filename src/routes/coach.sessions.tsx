@@ -290,9 +290,9 @@ function CoachSessions() {
   const upcoming = planned.filter(
     (p) => p.status === "pending" && new Date(p.scheduled_at).getTime() > now
   );
-  const pastPlanned = planned.filter(
-    (p) => p.status === "completed" || p.status === "cancelled"
-  );
+  // Only keep cancelled planned sessions: completed ones are already represented
+  // by their corresponding sessions_test rows (avoids double-counting).
+  const pastPlanned = planned.filter((p) => p.status === "cancelled");
 
   type PastItem =
     | { kind: "planned"; data: PlannedSession; date: number }
