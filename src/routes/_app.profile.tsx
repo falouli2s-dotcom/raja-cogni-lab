@@ -164,7 +164,7 @@ function ProfilePage() {
       if (upErr) throw upErr;
 
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(newPath);
-      const publicUrl = `${pub.publicUrl}?v=${Date.now()}`;
+      const publicUrl = pub.publicUrl;
 
       const { error: updErr } = await supabase
         .from("profiles")
@@ -183,7 +183,7 @@ function ProfilePage() {
         category: p?.category ?? null,
         position: p?.position ?? null,
         dominant_foot: p?.dominant_foot ?? null,
-        avatar_url: publicUrl,
+        avatar_url: `${publicUrl}?v=${Date.now()}`,
       }));
       toast.success("Photo de profil mise à jour");
     } catch (err: any) {
