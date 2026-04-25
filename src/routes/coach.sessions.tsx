@@ -66,11 +66,13 @@ type PlannedSession = {
 };
 
 type TestSession = {
-  id: string;
+  id: string; // grouped session key (donnees_brutes.sessionId or first row id)
   user_id: string;
-  test_type: string;
-  created_at: string;
-  score_global: number | null;
+  test_type: string; // joined list e.g. "simon_task · n_back · tmt"
+  test_types: string[];
+  created_at: string; // most recent created_at across grouped rows
+  score_global: number | null; // average across grouped rows
+  raw_ids: string[]; // underlying sessions_test ids
   player_name?: string | null;
 };
 
