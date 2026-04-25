@@ -951,7 +951,7 @@ function CoachSessions() {
                                     <Clock className="h-3 w-3" />
                                     <span>{timeStr}</span>
                                     <span>
-                                      · {TEST_LABELS[t.test_type] ?? t.test_type}
+                                      · {t.test_types.length} test{t.test_types.length > 1 ? "s" : ""}
                                     </span>
                                   </div>
                                 </div>
