@@ -417,13 +417,18 @@ function CoachSessions() {
     setSessionDetail({ scores: {}, loading: true });
     // TODO: remplacer par les vraies colonnes (score_reaction, score_flexibilite, ...)
     // dès qu'elles existent dans sessions_test. En attendant, on utilise score_global
-    // comme valeur de fallback pour les 6 axes.
+    // moyen sur l'ensemble des rows regroupées comme valeur de fallback pour les 6 axes.
     const { data } = await (supabase as any)
       .from("sessions_test")
       .select("score_global")
-      .eq("id", t.id)
-      .maybeSingle();
-    const g = data?.score_global != null ? Number(data.score_global) : (t.score_global ?? 0);
+      .in("id", t.raw_ids);
+    const vals = ((data ?? []) as Array<{ score_global: number | null }>)
+      .map((r) => (r.score_global == null ? null : Number(r.score_global)))
+      .filter((v): v is number => v != null && !Number.isNaN(v));
+    const g =
+      vals.length > 0
+        ? vals.reduce((a, b) => a + b, 0) / vals.length
+        : (t.score_global ?? 0);
     const fb = Math.max(0, Math.min(100, Math.round(g)));
     setSessionDetail({
       loading: false,
