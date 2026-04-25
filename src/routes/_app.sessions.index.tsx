@@ -164,7 +164,8 @@ function SessionHistoryPage() {
                 transition={{ delay: 0.05 * i }}
               >
                 <Link
-                  to="/history"
+                  to="/sessions/$sessionId"
+                  params={{ sessionId: s.sessionId }}
                   className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors active:bg-muted"
                 >
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
