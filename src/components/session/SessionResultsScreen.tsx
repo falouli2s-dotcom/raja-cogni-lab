@@ -116,6 +116,28 @@ export function SessionResultsScreen() {
             });
           }
         }
+
+        // Mark the oldest pending planned "session" (full cognitive battery,
+        // test_type IS NULL) as completed. The DB trigger only handles
+        // single-test planned sessions, so we cover the full-session case
+        // explicitly here.
+        const { data: pendingSession } = await supabase
+          .from("sessions_planifiees")
+          .select("id")
+          .eq("player_id", user.id)
+          .eq("status", "pending")
+          .eq("session_category", "session")
+          .is("test_type", null)
+          .order("scheduled_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (pendingSession) {
+          await supabase
+            .from("sessions_planifiees")
+            .update({ status: "completed" })
+            .eq("id", pendingSession.id);
+        }
       } catch (e) {
         console.warn("Could not save session:", e);
       }
