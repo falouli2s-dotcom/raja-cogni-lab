@@ -347,6 +347,78 @@ function CoachSessions() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pastItems, profilesMap]);
 
+  // Average cognitive score per player (only test sessions with score_global)
+  function avgScoreFor(items: PastItem[]): number | null {
+    const vals = items
+      .filter((it) => it.kind === "test" && it.data.score_global != null)
+      .map((it) => Number((it as Extract<PastItem, { kind: "test" }>).data.score_global));
+    if (vals.length === 0) return null;
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }
+
+  function scoreBadgeClass(score: number): string {
+    if (score >= 70) return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+    if (score >= 40) return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+    return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+  }
+
+  function scoreBarColor(score: number): string {
+    if (score >= 70) return "bg-emerald-500";
+    if (score >= 40) return "bg-amber-500";
+    return "bg-rose-500";
+  }
+
+  // Open detail modal for a test session and load per-axis scores
+  async function openSession(t: TestSession) {
+    setSelectedSession(t);
+    setSessionDetail({ scores: {}, loading: true });
+    // TODO: remplacer par les vraies colonnes (score_reaction, score_flexibilite, ...)
+    // dès qu'elles existent dans sessions_test. En attendant, on utilise score_global
+    // comme valeur de fallback pour les 6 axes.
+    const { data } = await (supabase as any)
+      .from("sessions_test")
+      .select("score_global")
+      .eq("id", t.id)
+      .maybeSingle();
+    const g = data?.score_global != null ? Number(data.score_global) : (t.score_global ?? 0);
+    const fb = Math.max(0, Math.min(100, Math.round(g)));
+    setSessionDetail({
+      loading: false,
+      scores: {
+        reactionTime: fb,
+        flexibility: fb,
+        workingMemory: fb,
+        inhibition: fb,
+        attention: fb,
+        anticipation: fb,
+      },
+    });
+  }
+  function closeSession() {
+    setSelectedSession(null);
+  }
+
+  const RADAR_AXES: Array<{
+    key: string;
+    label: string;
+    short: string;
+    Icon: typeof Zap;
+  }> = [
+    { key: "reactionTime", label: "Temps de\nréaction", short: "Réaction", Icon: Zap },
+    { key: "flexibility", label: "Flexibilité\ncognitive", short: "Flexibilité", Icon: Shuffle },
+    { key: "workingMemory", label: "Mémoire de\ntravail", short: "Mémoire", Icon: Database },
+    { key: "inhibition", label: "Contrôle\ninhibiteur", short: "Inhibition", Icon: ShieldCheck },
+    { key: "attention", label: "Attention\nsélective", short: "Attention", Icon: Eye },
+    { key: "anticipation", label: "Anticipation\nperceptuelle", short: "Anticipation", Icon: Target },
+  ];
+
+  const radarDimensions: CognitiveDimension[] = RADAR_AXES.map((a) => {
+    const score = sessionDetail.scores[a.key] ?? 0;
+    const status: CognitiveDimension["status"] =
+      score >= 75 ? "excellent" : score >= 50 ? "normal" : score >= 30 ? "limite" : "faible";
+    return { key: a.key, label: a.label, score, status };
+  });
+
   function renderPlannedTitle(s: PlannedSession) {
     if (s.session_category === "exercices") {
       const n = s.exercice_ids?.length ?? 0;
