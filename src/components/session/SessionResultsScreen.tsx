@@ -71,9 +71,9 @@ export function SessionResultsScreen() {
             .insert({
               user_id: user.id,
               test_type: result.testId,
-              score_global: result.testId === "simon" ? (result.data as SimonResultData).accuracy
-                : result.testId === "nback" ? (result.data as NBackResultData).accuracy
-                : (result.data as TMTCombinedResults).ratioBA,
+              // Store the unified SGS global (0-100) on every row of the same
+              // session so coach-side averages match the player-side SGS.
+              score_global: sgs.global,
               duree_totale: 0,
               donnees_brutes: { sessionId: session.sessionId, data: result.data } as any,
             })

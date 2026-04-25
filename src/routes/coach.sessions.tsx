@@ -20,7 +20,7 @@ import {
   Target,
 } from "lucide-react";
 import { RadarChart } from "@/components/RadarChart";
-import type { CognitiveDimension } from "@/lib/sgs-engine";
+import { computeSGS, type CognitiveDimension, type TestScores } from "@/lib/sgs-engine";
 import { groupTestSessions } from "@/lib/group-test-sessions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -390,36 +390,48 @@ function CoachSessions() {
     return "bg-rose-500";
   }
 
-  // Open detail modal for a test session and load per-axis scores
+  // Open detail modal for a test session and load per-axis SGS.
+  // We fetch resultats_test for the underlying rows and run computeSGS() —
+  // exact same pipeline the player history uses, so the radar values match.
   async function openSession(t: TestSession) {
     setSelectedSession(t);
     setSessionDetail({ scores: {}, loading: true });
-    // TODO: remplacer par les vraies colonnes (score_reaction, score_flexibilite, ...)
-    // dès qu'elles existent dans sessions_test. En attendant, on utilise score_global
-    // moyen sur l'ensemble des rows regroupées comme valeur de fallback pour les 6 axes.
-    const { data } = await (supabase as any)
-      .from("sessions_test")
-      .select("score_global")
-      .in("id", t.raw_ids);
-    const vals = ((data ?? []) as Array<{ score_global: number | null }>)
-      .map((r) => (r.score_global == null ? null : Number(r.score_global)))
-      .filter((v): v is number => v != null && !Number.isNaN(v));
-    const g =
-      vals.length > 0
-        ? vals.reduce((a, b) => a + b, 0) / vals.length
-        : (t.score_global ?? 0);
-    const fb = Math.max(0, Math.min(100, Math.round(g)));
-    setSessionDetail({
-      loading: false,
-      scores: {
-        reactionTime: fb,
-        flexibility: fb,
-        workingMemory: fb,
-        inhibition: fb,
-        attention: fb,
-        anticipation: fb,
-      },
-    });
+    const { data: results } = await (supabase as any)
+      .from("resultats_test")
+      .select("test_type, metrique, valeur, details")
+      .in("session_id", t.raw_ids);
+
+    const scores: TestScores = {};
+    for (const r of (results ?? []) as Array<{
+      test_type: string;
+      valeur: number | null;
+      details: any;
+    }>) {
+      if (r.test_type === "simon" && r.details) {
+        scores.simon = {
+          avgRT: Number(r.details.avg_rt ?? 0),
+          simonEffect: Number(r.valeur ?? 0),
+          accuracy: Number(r.details.accuracy ?? 0),
+        };
+      } else if (r.test_type === "nback" && r.details) {
+        scores.nback = {
+          accuracy: Number(r.details.accuracy ?? 0),
+          targetErrorRate: Number(r.valeur ?? 0),
+          dPrime: Number(r.details.d_prime ?? 0),
+        };
+      } else if (r.test_type === "tmt" && r.details) {
+        scores.tmt = {
+          ratioBA: Number(r.valeur ?? 0),
+          timeA: Number(r.details.time_a ?? 0),
+          timeB: Number(r.details.time_b ?? 0),
+        };
+      }
+    }
+
+    const sgs = computeSGS(scores);
+    const scoreMap: Record<string, number> = {};
+    for (const d of sgs.dimensions) scoreMap[d.key] = d.score;
+    setSessionDetail({ loading: false, scores: scoreMap });
   }
   function closeSession() {
     setSelectedSession(null);
