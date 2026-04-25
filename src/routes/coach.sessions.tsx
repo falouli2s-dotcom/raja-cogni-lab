@@ -1007,7 +1007,7 @@ function CoachSessions() {
                     </p>
                     <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
                       <Brain className="h-3 w-3" />
-                      {TEST_LABELS[selectedSession.test_type] ?? selectedSession.test_type}
+                      {selectedSession.test_types.map((tt) => TEST_LABELS[tt] ?? tt).join(" · ")}
                     </span>
                   </div>
                   <button
