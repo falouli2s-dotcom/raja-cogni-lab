@@ -110,6 +110,13 @@ function CoachSessions() {
   const [exSearch, setExSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Modal: detail of a test session with radar
+  const [selectedSession, setSelectedSession] = useState<TestSession | null>(null);
+  const [sessionDetail, setSessionDetail] = useState<{
+    scores: Record<string, number>;
+    loading: boolean;
+  }>({ scores: {}, loading: false });
+
   const minDateTime = useMemo(() => {
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
