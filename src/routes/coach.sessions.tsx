@@ -20,7 +20,7 @@ import {
   Target,
 } from "lucide-react";
 import { RadarChart } from "@/components/RadarChart";
-import type { CognitiveDimension } from "@/lib/sgs-engine";
+import { computeSGS, type CognitiveDimension, type TestScores } from "@/lib/sgs-engine";
 import { groupTestSessions } from "@/lib/group-test-sessions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
