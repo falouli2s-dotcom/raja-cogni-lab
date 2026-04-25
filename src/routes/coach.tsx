@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CoachBottomNav } from "@/components/CoachBottomNav";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ export const Route = createFileRoute("/coach")({
 
 function CoachLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -37,9 +38,13 @@ function CoachLayout() {
         navigate({ to: "/home", replace: true });
         return;
       }
+      if (location.pathname === "/coach") {
+        navigate({ to: "/coach/dashboard", replace: true });
+        return;
+      }
       setReady(true);
     })();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   if (!ready) {
     return (
