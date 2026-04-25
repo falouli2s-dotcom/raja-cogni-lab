@@ -12,7 +12,15 @@ import {
   Activity,
   Search,
   ChevronRight,
+  Zap,
+  Shuffle,
+  Database,
+  ShieldCheck,
+  Eye,
+  Target,
 } from "lucide-react";
+import { RadarChart } from "@/components/RadarChart";
+import type { CognitiveDimension } from "@/lib/sgs-engine";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
