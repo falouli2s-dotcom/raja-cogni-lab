@@ -733,9 +733,11 @@ function CoachSessions() {
             {byPlayer.map(({ player, items }) => {
               const isExpanded = expandedPlayerId === player.id;
               const info = player.info;
+              const avg = avgScoreFor(items);
               return (
-                <div
+                <motion.div
                   key={player.id}
+                  layout
                   className="overflow-hidden rounded-2xl border border-border bg-card"
                 >
                   <button
@@ -745,14 +747,14 @@ function CoachSessions() {
                     }
                     className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-muted/30"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                       {initialsOf(player.full_name)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-foreground">
                         {player.full_name}
                       </p>
-                      <div className="mt-0.5 flex flex-wrap gap-1.5">
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                         {info?.category && (
                           <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                             {info.category}
@@ -763,17 +765,26 @@ function CoachSessions() {
                             {info.position}
                           </span>
                         )}
+                        <span className="text-[10px] text-muted-foreground">
+                          · {items.length} session{items.length > 1 ? "s" : ""}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-semibold">
-                        {items.length} session{items.length > 1 ? "s" : ""}
-                      </span>
-                      <ChevronRight
-                        className={`h-4 w-4 transition-transform ${
-                          isExpanded ? "rotate-90" : ""
-                        }`}
-                      />
+                    <div className="flex shrink-0 items-center gap-2">
+                      {avg !== null && (
+                        <span
+                          className={`rounded-full border px-2 py-1 text-[11px] font-bold tabular-nums ${scoreBadgeClass(avg)}`}
+                          title="Score cognitif moyen"
+                        >
+                          {avg}
+                        </span>
+                      )}
+                      <motion.div
+                        animate={{ rotate: isExpanded ? 90 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </motion.div>
                     </div>
                   </button>
 
@@ -784,7 +795,7 @@ function CoachSessions() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
                         className="overflow-hidden"
                       >
                         <div className="flex flex-col gap-2 border-t border-border bg-background/30 p-3">
@@ -792,27 +803,34 @@ function CoachSessions() {
                             if (it.kind === "planned") {
                               const s = it.data;
                               const isCompleted = s.status === "completed";
+                              const isExercices = s.session_category === "exercices";
                               const meta = renderPlannedTitle(s);
+                              const exCount = s.exercice_ids?.length ?? 0;
+                              const titleText = isExercices
+                                ? `${exCount} exercice${exCount > 1 ? "s" : ""} terrain`
+                                : meta.title.replace(/^[^\w]+\s*/, "");
                               return (
                                 <div
                                   key={`p-${s.id}`}
                                   className="rounded-xl border border-border bg-card p-3"
                                 >
                                   <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-xs font-medium text-foreground/90">
-                                        {meta.title}
-                                      </p>
-                                      <p className="text-[11px] text-muted-foreground">
-                                        {meta.subtitle}
-                                      </p>
-                                      <p className="mt-1 text-xs text-foreground/80">
-                                        📅 {fmtDate(s.scheduled_at)}
-                                      </p>
+                                    <div className="flex min-w-0 flex-1 items-start gap-2">
+                                      <span className="text-base leading-none">
+                                        {isExercices ? "🏃" : "🧠"}
+                                      </span>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-xs font-semibold text-foreground">
+                                          {titleText}
+                                        </p>
+                                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                          {fmtDate(s.scheduled_at)}
+                                        </p>
+                                      </div>
                                     </div>
                                     {isCompleted ? (
                                       <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-400">
-                                        <CheckCircle2 className="h-3 w-3" />{" "}
+                                        <CheckCircle2 className="h-3 w-3" />
                                         Complétée
                                       </span>
                                     ) : (
@@ -826,18 +844,23 @@ function CoachSessions() {
                             }
                             const t = it.data;
                             return (
-                              <div
+                              <button
+                                type="button"
                                 key={`t-${t.id}`}
-                                className="rounded-xl border border-border bg-card p-3"
+                                onClick={() => openSession(t)}
+                                className="rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-[0.99]"
                               >
                                 <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs text-muted-foreground">
-                                      {TEST_LABELS[t.test_type] ?? t.test_type}
-                                    </p>
-                                    <p className="mt-1 text-xs text-foreground/80">
-                                      📅 {fmtDate(t.created_at)}
-                                    </p>
+                                  <div className="flex min-w-0 flex-1 items-start gap-2">
+                                    <span className="text-base leading-none">🧠</span>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate text-xs font-semibold text-foreground">
+                                        {TEST_LABELS[t.test_type] ?? t.test_type}
+                                      </p>
+                                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                        {fmtDate(t.created_at)}
+                                      </p>
+                                    </div>
                                   </div>
                                   <div className="flex flex-col items-end gap-1">
                                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
@@ -850,19 +873,129 @@ function CoachSessions() {
                                     )}
                                   </div>
                                 </div>
-                              </div>
+                              </button>
                             );
                           })}
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         )}
       </section>
+
+      {/* Bottom sheet — session detail with radar */}
+      <AnimatePresence>
+        {selectedSession && (
+          <>
+            <motion.div
+              key="overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={closeSession}
+              className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+            />
+            <motion.div
+              key="sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 280 }}
+              className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] overflow-y-auto rounded-t-3xl border-t border-border bg-card shadow-2xl"
+            >
+              <div className="sticky top-0 z-10 flex justify-center bg-card pt-2">
+                <div className="h-1.5 w-12 rounded-full bg-muted" />
+              </div>
+
+              <div className="px-5 pb-8 pt-3">
+                {/* Header */}
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-bold text-foreground">
+                      {displayName(selectedSession.user_id, selectedSession.player_name)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {fmtDate(selectedSession.created_at)}
+                    </p>
+                    <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                      <Brain className="h-3 w-3" />
+                      {TEST_LABELS[selectedSession.test_type] ?? selectedSession.test_type}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeSession}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                    aria-label="Fermer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Radar */}
+                <div className="rounded-2xl border border-border bg-background/40 p-3">
+                  {sessionDetail.loading ? (
+                    <div className="flex h-[260px] items-center justify-center">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    </div>
+                  ) : (
+                    <RadarChart dimensions={radarDimensions} size={260} />
+                  )}
+                </div>
+
+                {/* Per-axis cards */}
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {RADAR_AXES.map(({ key, short, Icon }) => {
+                    const score = sessionDetail.scores[key] ?? 0;
+                    return (
+                      <div
+                        key={key}
+                        className="rounded-xl border border-border bg-background/40 p-2.5"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                            <Icon className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[10px] font-medium text-muted-foreground">
+                              {short}
+                            </p>
+                            <p className="text-sm font-bold tabular-nums text-foreground">
+                              {score}
+                              <span className="text-[10px] font-normal text-muted-foreground">
+                                /100
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={`h-full ${scoreBarColor(score)} transition-all`}
+                            style={{ width: `${score}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  onClick={closeSession}
+                  variant="secondary"
+                  className="mt-5 w-full"
+                >
+                  Fermer
+                </Button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
