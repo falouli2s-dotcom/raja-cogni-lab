@@ -798,81 +798,116 @@ function CoachSessions() {
                         transition={{ duration: 0.25, ease: "easeOut" }}
                         className="overflow-hidden"
                       >
-                        <div className="flex flex-col gap-2 border-t border-border bg-background/30 p-3">
+                        <div className="flex flex-col gap-3 border-t border-border bg-background/30 p-3">
                           {items.map((it) => {
                             if (it.kind === "planned") {
                               const s = it.data;
                               const isCompleted = s.status === "completed";
+                              const dateObj = new Date(s.scheduled_at);
+                              const dateStr = dateObj.toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              });
+                              const timeStr = dateObj.toLocaleTimeString("fr-FR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              });
                               const isExercices = s.session_category === "exercices";
-                              const meta = renderPlannedTitle(s);
                               const exCount = s.exercice_ids?.length ?? 0;
-                              const titleText = isExercices
+                              const subtitle = isExercices
                                 ? `${exCount} exercice${exCount > 1 ? "s" : ""} terrain`
-                                : meta.title.replace(/^[^\w]+\s*/, "");
+                                : "Session cognitive";
                               return (
                                 <div
                                   key={`p-${s.id}`}
-                                  className="rounded-xl border border-border bg-card p-3"
+                                  className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
                                 >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="flex min-w-0 flex-1 items-start gap-2">
-                                      <span className="text-base leading-none">
-                                        {isExercices ? "🏃" : "🧠"}
-                                      </span>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="truncate text-xs font-semibold text-foreground">
-                                          {titleText}
-                                        </p>
-                                        <p className="mt-0.5 text-[11px] text-muted-foreground">
-                                          {fmtDate(s.scheduled_at)}
-                                        </p>
-                                      </div>
-                                    </div>
+                                  <div
+                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+                                      isCompleted
+                                        ? "bg-emerald-500/10 text-emerald-400"
+                                        : "bg-rose-500/10 text-rose-400"
+                                    }`}
+                                  >
                                     {isCompleted ? (
-                                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-400">
-                                        <CheckCircle2 className="h-3 w-3" />
-                                        Complétée
-                                      </span>
+                                      <CheckCircle2 className="h-5 w-5" />
                                     ) : (
-                                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-500/10 px-2 py-1 text-[10px] font-semibold text-rose-400">
-                                        <XCircle className="h-3 w-3" /> Annulée
-                                      </span>
+                                      <XCircle className="h-5 w-5" />
                                     )}
                                   </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate font-semibold text-foreground">
+                                      {dateStr}
+                                    </p>
+                                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                                      <Clock className="h-3 w-3" />
+                                      <span>{timeStr}</span>
+                                      <span>· {subtitle}</span>
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${
+                                      isCompleted
+                                        ? "bg-emerald-500/10 text-emerald-400"
+                                        : "bg-rose-500/10 text-rose-400"
+                                    }`}
+                                  >
+                                    {isCompleted ? "Complétée" : "Annulée"}
+                                  </span>
                                 </div>
                               );
                             }
                             const t = it.data;
+                            const dateObj = new Date(t.created_at);
+                            const dateStr = dateObj.toLocaleDateString("fr-FR", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            });
+                            const timeStr = dateObj.toLocaleTimeString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            });
+                            const score =
+                              t.score_global != null
+                                ? Math.round(Number(t.score_global))
+                                : null;
+                            const tone =
+                              score == null
+                                ? "bg-muted text-muted-foreground"
+                                : score >= 70
+                                  ? "bg-primary/10 text-primary"
+                                  : score >= 40
+                                    ? "bg-accent/10 text-accent"
+                                    : "bg-destructive/10 text-destructive";
                             return (
                               <button
                                 type="button"
                                 key={`t-${t.id}`}
                                 onClick={() => openSession(t)}
-                                className="rounded-xl border border-border bg-card p-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-[0.99]"
+                                className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
                               >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex min-w-0 flex-1 items-start gap-2">
-                                    <span className="text-base leading-none">🧠</span>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="truncate text-xs font-semibold text-foreground">
-                                        {TEST_LABELS[t.test_type] ?? t.test_type}
-                                      </p>
-                                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                                        {fmtDate(t.created_at)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-col items-end gap-1">
-                                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
-                                      Test passé
+                                <div
+                                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${tone}`}
+                                >
+                                  <span className="text-lg font-bold tabular-nums">
+                                    {score ?? "—"}
+                                  </span>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate font-semibold text-foreground">
+                                    {dateStr}
+                                  </p>
+                                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{timeStr}</span>
+                                    <span>
+                                      · {TEST_LABELS[t.test_type] ?? t.test_type}
                                     </span>
-                                    {t.score_global !== null && (
-                                      <span className="text-xs font-bold text-foreground tabular-nums">
-                                        {Math.round(Number(t.score_global))}/100
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
+                                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
                               </button>
                             );
                           })}
