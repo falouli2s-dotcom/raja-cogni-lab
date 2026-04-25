@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { RadarChart } from "@/components/RadarChart";
 import type { CognitiveDimension } from "@/lib/sgs-engine";
+import { groupTestSessions } from "@/lib/group-test-sessions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -175,52 +176,22 @@ function CoachSessions() {
         .order("created_at", { ascending: false })
         .limit(500);
 
-      // Group rows belonging to the same logical session (same logic as player history)
-      type Row = {
-        id: string;
-        user_id: string;
-        test_type: string;
-        created_at: string;
-        score_global: number | null;
-        donnees_brutes: any;
-      };
-      const groups = new Map<string, Row[]>();
-      for (const r of ((ts ?? []) as Row[])) {
-        const key = `${r.user_id}::${r.donnees_brutes?.sessionId ?? r.id}`;
-        const arr = groups.get(key);
-        if (arr) arr.push(r);
-        else groups.set(key, [r]);
-      }
+      // Shared grouping logic (also used by /sessions player history) so the
+      // count and contents stay identical between coach & player views.
+      const grouped = groupTestSessions((ts ?? []) as any[]);
 
-      const grouped: TestSession[] = Array.from(groups.entries()).map(([key, rows]) => {
-        const sorted = [...rows].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        const types = Array.from(new Set(sorted.map((r) => r.test_type)));
-        const scoreVals = sorted
-          .map((r) => (r.score_global == null ? null : Number(r.score_global)))
-          .filter((v): v is number => v != null && !Number.isNaN(v));
-        const avg =
-          scoreVals.length === 0
-            ? null
-            : Math.round(scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length);
-        const sessionKey = key.split("::")[1] ?? sorted[0].id;
-        return {
-          id: sessionKey,
-          user_id: sorted[0].user_id,
-          test_type: types.join(" · "),
-          test_types: types,
-          created_at: sorted[0].created_at,
-          score_global: avg,
-          raw_ids: sorted.map((r) => r.id),
-          player_name: nameMap.get(sorted[0].user_id) ?? null,
-        };
-      });
+      const completed: TestSession[] = grouped.map((g) => ({
+        id: g.sessionKey,
+        user_id: g.user_id,
+        test_type: g.testTypes.join(" · "),
+        test_types: g.testTypes,
+        created_at: g.startedAt,
+        score_global: g.avgScore,
+        raw_ids: g.rawIds,
+        player_name: nameMap.get(g.user_id) ?? null,
+      }));
 
-      grouped.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      setCompletedTests(grouped);
+      setCompletedTests(completed);
     } else {
       setCompletedTests([]);
     }

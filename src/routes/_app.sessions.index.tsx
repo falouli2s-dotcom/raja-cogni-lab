@@ -9,6 +9,7 @@ import {
   type SGSResult,
   type TestScores,
 } from "@/lib/sgs-engine";
+import { groupTestSessions } from "@/lib/group-test-sessions";
 
 export const Route = createFileRoute("/_app/sessions/")({
   component: SessionHistoryPage,
@@ -32,7 +33,7 @@ function SessionHistoryPage() {
 
       const { data: dbSessions } = await supabase
         .from("sessions_test")
-        .select("id, created_at, test_type, donnees_brutes")
+        .select("id, user_id, created_at, test_type, score_global, donnees_brutes")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -41,40 +42,29 @@ function SessionHistoryPage() {
         return;
       }
 
+      // Single shared grouping logic (also used by /coach/sessions)
+      const grouped = groupTestSessions(dbSessions as any);
+
       const sessionIds = dbSessions.map((s) => s.id);
       const { data: results } = await supabase
         .from("resultats_test")
         .select("session_id, test_type, metrique, valeur, details")
         .in("session_id", sessionIds);
 
-      const groups = new Map<string, { sessions: any[]; results: any[]; date: string }>();
-
-      for (const s of dbSessions) {
-        const key = (s.donnees_brutes as any)?.sessionId ?? s.id;
-        const existing = groups.get(key);
-        if (existing) {
-          existing.sessions.push(s);
-          if (new Date(s.created_at) > new Date(existing.date)) {
-            existing.date = s.created_at;
-          }
-        } else {
-          groups.set(key, { sessions: [s], results: [], date: s.created_at });
-        }
-      }
-
+      // Index results by underlying session_id for O(1) lookup per group
+      const resultsBySessionId = new Map<string, any[]>();
       for (const r of results ?? []) {
-        for (const [, group] of groups) {
-          if (group.sessions.some((s) => s.id === r.session_id)) {
-            group.results.push(r);
-            break;
-          }
-        }
+        const arr = resultsBySessionId.get(r.session_id);
+        if (arr) arr.push(r);
+        else resultsBySessionId.set(r.session_id, [r]);
       }
 
-      const computed: HistorySession[] = [];
-      for (const [key, group] of groups) {
+      const computed: HistorySession[] = grouped.map((g) => {
+        const groupResults = g.rawIds.flatMap(
+          (id) => resultsBySessionId.get(id) ?? []
+        );
         const scores: TestScores = {};
-        for (const r of group.results) {
+        for (const r of groupResults) {
           if (r.test_type === "simon" && r.details) {
             scores.simon = {
               avgRT: Number(r.details.avg_rt ?? 0),
@@ -95,19 +85,14 @@ function SessionHistoryPage() {
             };
           }
         }
-
-        computed.push({
-          sessionId: key,
-          startedAt: group.date,
+        return {
+          sessionId: g.sessionKey,
+          startedAt: g.startedAt,
           sgs: computeSGS(scores),
-          testTypes: [...new Set(group.sessions.map((s) => s.test_type))],
-          resultsCount: group.results.length,
-        });
-      }
-
-      computed.sort(
-        (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-      );
+          testTypes: g.testTypes,
+          resultsCount: groupResults.length,
+        };
+      });
 
       setSessions(computed);
     })();
