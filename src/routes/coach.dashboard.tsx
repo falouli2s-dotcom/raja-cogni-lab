@@ -29,6 +29,9 @@ export const Route = createFileRoute("/coach/dashboard")({
   component: CoachDashboard,
 });
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+const WEEKS_TO_DISPLAY = 8;
+
 // ─── Animation variants ───────────────────────────────────────────────────────
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -272,7 +275,7 @@ function CoachDashboard() {
               }
             }
           }
-          let weakest = "Flexibilité cognitive";
+          let weakest = "Non déterminé";
           let weakestScore = Infinity;
           for (const [k, vals] of Object.entries(dimScores)) {
             const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
@@ -294,7 +297,7 @@ function CoachDashboard() {
       // ── Weekly progression (last 8 weeks) ────────────────────────────────
       const now = new Date();
       const weeks: WeeklyData[] = [];
-      for (let i = 7; i >= 0; i--) {
+      for (let i = WEEKS_TO_DISPLAY - 1; i >= 0; i--) {
         const weekStart = startOfWeek(
           new Date(now.getTime() - i * 7 * 24 * 3600 * 1000)
         );
@@ -311,7 +314,7 @@ function CoachDashboard() {
             ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
             : 0;
         weeks.push({
-          week: `S${8 - i}`,
+          week: `S${WEEKS_TO_DISPLAY - i}`,
           avgSGS: avg,
           sessions: weekSessions.length,
         });
