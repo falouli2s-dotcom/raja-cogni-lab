@@ -9,6 +9,7 @@ import {
   type SGSResult,
   type TestScores,
 } from "@/lib/sgs-engine";
+import { groupTestSessions } from "@/lib/group-test-sessions";
 
 export const Route = createFileRoute("/_app/sessions/")({
   component: SessionHistoryPage,
