@@ -439,9 +439,15 @@ function TrainingDetailPage() {
             index={currentIdx}
             total={exercices.length}
             onClose={() => setRunning(false)}
-            onNext={() => setCurrentIdx((i) => i + 1)}
-            onFinish={handleFinish}
-            finishing={completing}
+            onAdvance={() => {
+              const isLast = currentIdx >= exercices.length - 1;
+              if (isLast) {
+                setRunning(false);
+                handleFinish();
+              } else {
+                setCurrentIdx((i) => i + 1);
+              }
+            }}
           />
         )}
       </AnimatePresence>
