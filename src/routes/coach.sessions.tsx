@@ -62,6 +62,7 @@ type PlannedSession = {
   test_type: string | null;
   session_category: "session" | "exercices" | null;
   exercice_ids: string[] | null;
+  exercice_overrides: ExerciceOverridesMap | null;
   scheduled_at: string;
   status: "pending" | "completed" | "cancelled";
   note: string | null;
