@@ -60,12 +60,8 @@ const TEST_LABELS: Record<string, string> = {
   anticipation: "Test d'Anticipation",
 };
 
-export type ExerciceOverride = {
-  stimuli?: string;
-  materiel?: string;
-  distances?: string;
-};
-export type ExerciceOverridesMap = Record<string, ExerciceOverride>;
+// ExerciceOverride / ExerciceOverridesMap imported from "@/lib/exercise-overrides"
+
 
 type PlayerInfo = {
   full_name: string | null;
