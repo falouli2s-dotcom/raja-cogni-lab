@@ -83,7 +83,17 @@ type Exercice = {
   titre: string;
   niveau: string;
   indicateur_cognitif: string;
+  stimulus_type?: string | null;
+  materiel?: string | null;
+  stimulus_detail?: any;
 };
+
+export type ExerciceOverride = {
+  stimuli?: string;
+  materiel?: string;
+  distances?: string;
+};
+export type ExerciceOverridesMap = Record<string, ExerciceOverride>;
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("fr-FR", {
@@ -110,6 +120,8 @@ function CoachSessions() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
   const [selectedExercices, setSelectedExercices] = useState<string[]>([]);
+  const [exerciceOverrides, setExerciceOverrides] = useState<ExerciceOverridesMap>({});
+  const [expandedOverrideId, setExpandedOverrideId] = useState<string | null>(null);
   const [exSearch, setExSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -201,7 +213,7 @@ function CoachSessions() {
   async function loadExercices() {
     const { data } = await supabase
       .from("exercices")
-      .select("id, numero, titre, niveau, indicateur_cognitif")
+      .select("id, numero, titre, niveau, indicateur_cognitif, stimulus_type, materiel, stimulus_detail")
       .order("numero", { ascending: true });
     setExercices((data ?? []) as Exercice[]);
   }
