@@ -365,33 +365,31 @@ function TrainingDetailPage() {
         })}
       </div>
 
-      {/* Sticky bottom CTA */}
+      {/* In-flow CTA (not fixed — pb on container clears BottomNav) */}
       {exercices.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-5 py-3 backdrop-blur-md">
-          {isCompleted ? (
-            <div className="space-y-1">
-              <Button disabled className="w-full" size="lg">
-                <CheckCircle2 className="h-4 w-4" /> Séance terminée
-              </Button>
-              {planning.completed_at && (
-                <p className="text-center text-[11px] text-muted-foreground">
-                  Terminée le {fmtShort(planning.completed_at)}
-                </p>
-              )}
-            </div>
-          ) : (
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={() => {
-                setCurrentIdx(0);
-                setRunning(true);
-              }}
-            >
-              <Play className="h-4 w-4" /> Commencer les exercices
-            </Button>
-          )}
-        </div>
+        isCompleted ? (
+          <div className="mt-6 mb-2 text-center">
+            <p className="text-sm font-medium text-muted-foreground">
+              ✓ Séance terminée
+            </p>
+            {planning.completed_at && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {fmtShort(planning.completed_at)}
+              </p>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => {
+              setCurrentIdx(0);
+              setRunning(true);
+            }}
+            className="mt-6 mb-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-base font-semibold text-primary-foreground transition-transform active:scale-95"
+          >
+            <Play className="h-5 w-5" />
+            Commencer les exercices
+          </button>
+        )
       )}
 
       {/* Full-screen exercise runner */}
