@@ -1218,3 +1218,29 @@ function CoachSessions() {
     </div>
   );
 }
+
+function OverrideField({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </label>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-8 text-xs"
+      />
+    </div>
+  );
+}
