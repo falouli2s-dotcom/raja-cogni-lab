@@ -396,11 +396,12 @@ function TrainingDetailPage() {
                     {ex.series > 1 ? "s" : ""} · récup.{" "}
                     {ex.recuperation_secondes}s
                   </p>
-                </SpecRow>
               </div>
             </motion.article>
           );
         })}
+        {/* Per-exercise Commencer buttons (rendered as a parallel list under cards is messy in flex,
+            so we render them inline above by wrapping each card+button in a fragment) */}
       </div>
 
       {/* Bottom completion summary (only when whole session is complete) */}
