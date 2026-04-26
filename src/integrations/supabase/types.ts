@@ -259,6 +259,7 @@ export type Database = {
       sessions_planifiees: {
         Row: {
           coach_id: string
+          completed_at: string | null
           created_at: string
           exercice_ids: string[] | null
           exercice_overrides: Json
@@ -272,6 +273,7 @@ export type Database = {
         }
         Insert: {
           coach_id: string
+          completed_at?: string | null
           created_at?: string
           exercice_ids?: string[] | null
           exercice_overrides?: Json
@@ -285,6 +287,7 @@ export type Database = {
         }
         Update: {
           coach_id?: string
+          completed_at?: string | null
           created_at?: string
           exercice_ids?: string[] | null
           exercice_overrides?: Json

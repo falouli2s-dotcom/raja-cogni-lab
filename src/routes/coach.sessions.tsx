@@ -36,6 +36,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import {
+  StimuliPicker,
+  DistancePicker,
+} from "@/components/coach/OverridePickers";
+import {
+  type ExerciceOverride,
+  type ExerciceOverridesMap,
+  type DistancesOverride,
+  normalizeStimuli,
+  normalizeDistances,
+} from "@/lib/exercise-overrides";
 
 export const Route = createFileRoute("/coach/sessions")({
   component: CoachSessions,
@@ -49,12 +60,8 @@ const TEST_LABELS: Record<string, string> = {
   anticipation: "Test d'Anticipation",
 };
 
-export type ExerciceOverride = {
-  stimuli?: string;
-  materiel?: string;
-  distances?: string;
-};
-export type ExerciceOverridesMap = Record<string, ExerciceOverride>;
+// ExerciceOverride / ExerciceOverridesMap imported from "@/lib/exercise-overrides"
+
 
 type PlayerInfo = {
   full_name: string | null;
@@ -261,23 +268,30 @@ function CoachSessions() {
     });
   }
 
-  function setOverrideField(
-    exId: string,
-    field: keyof ExerciceOverride,
-    value: string
-  ) {
+  function isEmptyOverride(o: ExerciceOverride): boolean {
+    const stimuliEmpty = !o.stimuli || o.stimuli.length === 0;
+    const materielEmpty = !o.materiel || o.materiel.trim() === "";
+    const distancesEmpty =
+      !o.distances || (!o.distances.distance && !o.distances.grid);
+    return stimuliEmpty && materielEmpty && distancesEmpty;
+  }
+
+  function updateOverride(exId: string, patch: Partial<ExerciceOverride>) {
     setExerciceOverrides((prev) => {
       const current = prev[exId] ?? {};
-      const trimmed = value.trim();
-      const nextEntry: ExerciceOverride = { ...current };
-      if (trimmed === "") delete nextEntry[field];
-      else nextEntry[field] = trimmed;
+      const merged: ExerciceOverride = { ...current, ...patch };
+      // Clean empties
+      if (merged.stimuli && merged.stimuli.length === 0) delete merged.stimuli;
+      if (merged.materiel !== undefined && merged.materiel.trim() === "")
+        delete merged.materiel;
+      if (merged.distances === null) delete merged.distances;
       const next = { ...prev };
-      if (Object.keys(nextEntry).length === 0) delete next[exId];
-      else next[exId] = nextEntry;
+      if (isEmptyOverride(merged)) delete next[exId];
+      else next[exId] = merged;
       return next;
     });
   }
+
 
   const canSubmit =
     !!playerId &&
@@ -731,17 +745,18 @@ function CoachSessions() {
                               />
                             </button>
                             {open && (
-                              <div className="space-y-2 border-t border-border px-2.5 py-2.5">
-                                <OverrideField
-                                  label="Stimuli"
-                                  placeholder={
-                                    ex.stimulus_type ?? "Couleur, son, indice visuel…"
-                                  }
-                                  value={ov.stimuli ?? ""}
-                                  onChange={(v) =>
-                                    setOverrideField(exId, "stimuli", v)
-                                  }
-                                />
+                              <div className="space-y-3 border-t border-border px-2.5 py-2.5">
+                                <div>
+                                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Stimuli
+                                  </label>
+                                  <StimuliPicker
+                                    value={normalizeStimuli(ov.stimuli)}
+                                    onChange={(next) =>
+                                      updateOverride(exId, { stimuli: next })
+                                    }
+                                  />
+                                </div>
                                 <OverrideField
                                   label="Matériel"
                                   placeholder={
@@ -749,17 +764,26 @@ function CoachSessions() {
                                   }
                                   value={ov.materiel ?? ""}
                                   onChange={(v) =>
-                                    setOverrideField(exId, "materiel", v)
+                                    updateOverride(exId, {
+                                      materiel: v.trim(),
+                                    })
                                   }
                                 />
-                                <OverrideField
-                                  label="Distances / dimensions"
-                                  placeholder="Ex : grille 5×5 m, plots à 8 m…"
-                                  value={ov.distances ?? ""}
-                                  onChange={(v) =>
-                                    setOverrideField(exId, "distances", v)
-                                  }
-                                />
+                                <div>
+                                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Distances / dimensions
+                                  </label>
+                                  <DistancePicker
+                                    value={
+                                      normalizeDistances(ov.distances) ?? null
+                                    }
+                                    onChange={(next: DistancesOverride | null) =>
+                                      updateOverride(exId, {
+                                        distances: next ?? undefined,
+                                      })
+                                    }
+                                  />
+                                </div>
                                 <p className="text-[10px] italic text-muted-foreground">
                                   Ces réglages s'appliquent uniquement à cette séance.
                                   L'exercice du catalogue reste inchangé.
