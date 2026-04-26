@@ -20,6 +20,7 @@ import { Route as CoachSessionsRouteImport } from './routes/coach.sessions'
 import { Route as CoachProfilRouteImport } from './routes/coach.profil'
 import { Route as CoachPendingRouteImport } from './routes/coach.pending'
 import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
+import { Route as CoachJoueurPlayerIdRouteImport } from './routes/coach.joueur.$playerId'
 import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
 import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
@@ -84,6 +85,11 @@ const CoachPendingRoute = CoachPendingRouteImport.update({
 const CoachJoueursRoute = CoachJoueursRouteImport.update({
   id: '/joueurs',
   path: '/joueurs',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachJoueurPlayerIdRoute = CoachJoueurPlayerIdRouteImport.update({
+  id: '/joueur/$playerId',
+  path: '/joueur/$playerId',
   getParentRoute: () => CoachRoute,
 } as any)
 const CoachDashboardRoute = CoachDashboardRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
+  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
+  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
+  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
+    | '/coach/joueur/$playerId'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
+    | '/coach/joueur/$playerId'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
+    | '/coach/joueur/$playerId'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -374,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/joueurs'
       fullPath: '/coach/joueurs'
       preLoaderRoute: typeof CoachJoueursRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/joueur/$playerId': {
+      id: '/coach/joueur/$playerId'
+      path: '/joueur/$playerId'
+      fullPath: '/coach/joueur/$playerId'
+      preLoaderRoute: typeof CoachJoueurPlayerIdRouteImport
       parentRoute: typeof CoachRoute
     }
     '/coach/dashboard': {
@@ -484,6 +503,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface CoachRouteChildren {
   CoachDashboardRoute: typeof CoachDashboardRoute
+  CoachJoueurPlayerIdRoute: typeof CoachJoueurPlayerIdRoute
   CoachJoueursRoute: typeof CoachJoueursRoute
   CoachPendingRoute: typeof CoachPendingRoute
   CoachProfilRoute: typeof CoachProfilRoute
@@ -492,6 +512,7 @@ interface CoachRouteChildren {
 
 const CoachRouteChildren: CoachRouteChildren = {
   CoachDashboardRoute: CoachDashboardRoute,
+  CoachJoueurPlayerIdRoute: CoachJoueurPlayerIdRoute,
   CoachJoueursRoute: CoachJoueursRoute,
   CoachPendingRoute: CoachPendingRoute,
   CoachProfilRoute: CoachProfilRoute,
