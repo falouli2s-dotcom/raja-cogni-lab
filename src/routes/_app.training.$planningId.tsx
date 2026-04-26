@@ -16,15 +16,53 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { ExercisePlayer } from "@/components/exercises/ExercisePlayer";
 import {
   type ExerciceOverride,
   normalizeStimuli,
   normalizeDistances,
   type DistancesOverride,
 } from "@/lib/exercise-overrides";
+
+/**
+ * Map a coach's free-text / chip stimulus override to a stimulus_type key
+ * supported by the ExercisePlayer engine.
+ */
+function resolveStimulusType(
+  overrideStimuli: string[] | undefined,
+  catalogType: string,
+): string {
+  if (!overrideStimuli || overrideStimuli.length === 0) return catalogType;
+  const lower = overrideStimuli.join(" ").toLowerCase();
+  if (
+    lower.includes("couleur") ||
+    lower.includes("maillot") ||
+    lower.includes("cône") ||
+    lower.includes("cone") ||
+    lower.includes("balle color")
+  )
+    return "couleur";
+  if (
+    lower.includes("flèche") ||
+    lower.includes("fleche") ||
+    lower.includes("direction") ||
+    lower.includes("panneau")
+  )
+    return "fleche";
+  if (lower.includes("nombre") || lower.includes("chiffre")) return "nombre";
+  if (
+    lower.includes("flash") ||
+    lower.includes("lumière") ||
+    lower.includes("lumineux") ||
+    lower.includes("sifflet") ||
+    lower.includes("sonore")
+  )
+    return "flash";
+  if (lower.includes("forme")) return "forme";
+  return catalogType;
+}
 
 type PlanningRow = {
   id: string;
