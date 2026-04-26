@@ -12,6 +12,7 @@ type Notification = {
   message: string;
   is_read: boolean;
   metadata: Record<string, any>;
+  session_type: "training" | "test" | null;
   created_at: string;
 };
 
@@ -50,7 +51,7 @@ export function NotificationBell() {
     if (!user) return;
     const { data } = await (supabase as any)
       .from("notifications")
-      .select("id, type, title, message, is_read, metadata, created_at")
+      .select("id, type, title, message, is_read, metadata, session_type, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -131,7 +132,26 @@ export function NotificationBell() {
     await markRead(n.id);
     if (n.type === "session_planifiee") {
       setOpen(false);
-      navigate({ to: "/tests" });
+      // Discriminate training vs test using session_type (with metadata fallback
+      // for legacy notifications that may not have the column populated yet).
+      const isTraining =
+        n.session_type === "training" ||
+        n.metadata?.session_category === "exercices";
+      if (isTraining) {
+        const planningId =
+          (n.metadata?.planning_session_id as string | undefined) ??
+          (n.metadata?.session_id as string | undefined);
+        if (planningId) {
+          navigate({
+            to: "/training/$planningId",
+            params: { planningId },
+          });
+        } else {
+          navigate({ to: "/exercises" });
+        }
+      } else {
+        navigate({ to: "/tests" });
+      }
     } else if (n.type === "session_completee") {
       setOpen(false);
       navigate({ to: "/sessions" });

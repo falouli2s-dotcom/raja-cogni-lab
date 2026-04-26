@@ -28,6 +28,7 @@ import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
 import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
 import { Route as AppSessionsIndexRouteImport } from './routes/_app.sessions.index'
+import { Route as AppTrainingPlanningIdRouteImport } from './routes/_app.training.$planningId'
 import { Route as AppTestsSessionRouteImport } from './routes/_app.tests.session'
 import { Route as AppSessionsSessionIdRouteImport } from './routes/_app.sessions.$sessionId'
 
@@ -125,6 +126,11 @@ const AppSessionsIndexRoute = AppSessionsIndexRouteImport.update({
   path: '/sessions/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTrainingPlanningIdRoute = AppTrainingPlanningIdRouteImport.update({
+  id: '/training/$planningId',
+  path: '/training/$planningId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTestsSessionRoute = AppTestsSessionRouteImport.update({
   id: '/tests/session',
   path: '/tests/session',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/coach/sessions': typeof CoachSessionsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
+  '/training/$planningId': typeof AppTrainingPlanningIdRoute
   '/sessions/': typeof AppSessionsIndexRoute
   '/tests/': typeof AppTestsIndexRoute
 }
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/coach/sessions': typeof CoachSessionsRoute
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
+  '/training/$planningId': typeof AppTrainingPlanningIdRoute
   '/sessions': typeof AppSessionsIndexRoute
   '/tests': typeof AppTestsIndexRoute
 }
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/coach/sessions': typeof CoachSessionsRoute
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/_app/tests/session': typeof AppTestsSessionRoute
+  '/_app/training/$planningId': typeof AppTrainingPlanningIdRoute
   '/_app/sessions/': typeof AppSessionsIndexRoute
   '/_app/tests/': typeof AppTestsIndexRoute
 }
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/coach/sessions'
     | '/sessions/$sessionId'
     | '/tests/session'
+    | '/training/$planningId'
     | '/sessions/'
     | '/tests/'
   fileRoutesByTo: FileRoutesByTo
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/coach/sessions'
     | '/sessions/$sessionId'
     | '/tests/session'
+    | '/training/$planningId'
     | '/sessions'
     | '/tests'
   id:
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/coach/sessions'
     | '/_app/sessions/$sessionId'
     | '/_app/tests/session'
+    | '/_app/training/$planningId'
     | '/_app/sessions/'
     | '/_app/tests/'
   fileRoutesById: FileRoutesById
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSessionsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/training/$planningId': {
+      id: '/_app/training/$planningId'
+      path: '/training/$planningId'
+      fullPath: '/training/$planningId'
+      preLoaderRoute: typeof AppTrainingPlanningIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/tests/session': {
       id: '/_app/tests/session'
       path: '/tests/session'
@@ -444,6 +463,7 @@ interface AppRouteChildren {
   AppProfileRoute: typeof AppProfileRoute
   AppSessionsSessionIdRoute: typeof AppSessionsSessionIdRoute
   AppTestsSessionRoute: typeof AppTestsSessionRoute
+  AppTrainingPlanningIdRoute: typeof AppTrainingPlanningIdRoute
   AppSessionsIndexRoute: typeof AppSessionsIndexRoute
   AppTestsIndexRoute: typeof AppTestsIndexRoute
 }
@@ -455,6 +475,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileRoute: AppProfileRoute,
   AppSessionsSessionIdRoute: AppSessionsSessionIdRoute,
   AppTestsSessionRoute: AppTestsSessionRoute,
+  AppTrainingPlanningIdRoute: AppTrainingPlanningIdRoute,
   AppSessionsIndexRoute: AppSessionsIndexRoute,
   AppTestsIndexRoute: AppTestsIndexRoute,
 }
