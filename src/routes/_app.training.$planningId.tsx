@@ -468,6 +468,11 @@ function TrainingDetailPage() {
               exercice={mergedExercice}
               onClose={async () => {
                 const { data: { user } } = await supabase.auth.getUser();
+
+                // 1. Update local state (for immediate UI grey-out)
+                setCompletedIds(prev => new Set([...prev, ex.id]));
+                setActiveExerciceId(null);
+
                 if (user) {
                   await (supabase as any)
                     .from("completed_exercises")
@@ -478,21 +483,30 @@ function TrainingDetailPage() {
                       completed_at: new Date().toISOString(),
                       planning_id: planningId,
                     });
-                }
-                const newCompleted = new Set([...completedIds, ex.id]);
-                setCompletedIds(newCompleted);
-                setActiveExerciceId(null);
 
-                const allDone = exercices.every((e) => newCompleted.has(e.id));
-                if (allDone) {
-                  await (supabase as any)
-                    .from("sessions_planifiees")
-                    .update({
-                      status: "completed",
-                      completed_at: new Date().toISOString(),
-                    })
-                    .eq("id", planningId);
-                  toast.success("Séance terminée ! Bon travail 💪");
+                  // 2. Ask the DB how many distinct exercises are completed
+                  //    for this planning — source of truth, no race condition
+                  const { count } = await (supabase as any)
+                    .from("completed_exercises")
+                    .select("*", { count: "exact", head: true })
+                    .eq("user_id", user.id)
+                    .eq("planning_id", planningId);
+
+                  const totalExercises = exercices.length;
+                  const allDone = (count ?? 0) >= totalExercises;
+
+                  if (allDone) {
+                    await (supabase as any)
+                      .from("sessions_planifiees")
+                      .update({
+                        status: "completed",
+                        completed_at: new Date().toISOString(),
+                      })
+                      .eq("id", planningId);
+                    toast.success("Séance terminée ! Bon travail 💪");
+                  } else {
+                    toast.success("Exercice terminé ✓");
+                  }
                 } else {
                   toast.success("Exercice terminé ✓");
                 }
