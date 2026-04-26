@@ -11,6 +11,7 @@ import {
   Timer,
   Sparkles,
   Play,
+  CheckCircle,
   CheckCircle2,
   ArrowRight,
   X,

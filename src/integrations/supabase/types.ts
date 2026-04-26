@@ -68,6 +68,44 @@ export type Database = {
         }
         Relationships: []
       }
+      completed_exercises: {
+        Row: {
+          completed_at: string
+          created_at: string
+          exercise_id: string
+          id: string
+          planning_id: string | null
+          series_completed: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          exercise_id: string
+          id?: string
+          planning_id?: string | null
+          series_completed?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          planning_id?: string | null
+          series_completed?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_exercises_planning_id_fkey"
+            columns: ["planning_id"]
+            isOneToOne: false
+            referencedRelation: "sessions_planifiees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercices: {
         Row: {
           alignement_test_digital: string
