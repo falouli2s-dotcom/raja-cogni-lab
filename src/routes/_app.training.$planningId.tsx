@@ -321,87 +321,117 @@ function TrainingDetailPage() {
           const distancesOv = normalizeDistances(ov.distances);
           const materielValue = ov.materiel ?? ex.materiel ?? "—";
 
+          const isDone = completedIds.has(ex.id);
+          const isActive = activeExerciceId === ex.id;
           return (
-            <motion.article
-              key={ex.id}
-              initial={{ y: 6, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.04 * i }}
-              className="rounded-2xl border border-border bg-card p-4"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">
-                  #{String(ex.numero).padStart(2, "0")}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    {ex.titre}
-                  </p>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                      {ex.indicateur_cognitif}
-                    </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {ex.niveau}
-                    </span>
+            <div key={ex.id} className="flex flex-col">
+              <motion.article
+                initial={{ y: 6, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.04 * i }}
+                className={`rounded-2xl border border-border bg-card p-4 ${isDone ? "opacity-60" : ""}`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">
+                    #{String(ex.numero).padStart(2, "0")}
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {ex.titre}
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        {ex.indicateur_cognitif}
+                      </span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        {ex.niveau}
+                      </span>
+                    </div>
+                  </div>
+                  {isDone && (
+                    <CheckCircle className="h-5 w-5 shrink-0 text-primary" />
+                  )}
                 </div>
-              </div>
 
-              <div className="mt-3 space-y-2">
-                <SpecRow
-                  icon={<Target className="h-3.5 w-3.5 text-primary" />}
-                  label="Objectif cognitif"
-                >
-                  <p className="text-xs text-foreground">{ex.objectif_cognitif}</p>
-                </SpecRow>
-                <SpecRow
-                  icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
-                  label="Tâche motrice"
-                >
-                  <p className="text-xs text-foreground">{ex.tache_motrice}</p>
-                </SpecRow>
-                <SpecRow
-                  icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
-                  label="Stimuli"
-                  customized={stimuliOv.length > 0}
-                >
-                  <StimuliDisplay
-                    override={stimuliOv.length > 0 ? stimuliOv : null}
-                    fallback={stimuliFallback}
-                  />
-                </SpecRow>
-                <SpecRow
-                  icon={<Brain className="h-3.5 w-3.5 text-primary" />}
-                  label="Matériel"
-                  customized={!!ov.materiel}
-                >
-                  <p className="text-xs text-foreground">{materielValue}</p>
-                </SpecRow>
-                {distancesOv && (
+                <div className="mt-3 space-y-2">
                   <SpecRow
-                    icon={<Pencil className="h-3.5 w-3.5 text-primary" />}
-                    label="Distances / dimensions"
-                    customized
+                    icon={<Target className="h-3.5 w-3.5 text-primary" />}
+                    label="Objectif cognitif"
                   >
-                    <DistanceDisplay override={distancesOv} fallback="—" />
+                    <p className="text-xs text-foreground">{ex.objectif_cognitif}</p>
                   </SpecRow>
+                  <SpecRow
+                    icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
+                    label="Tâche motrice"
+                  >
+                    <p className="text-xs text-foreground">{ex.tache_motrice}</p>
+                  </SpecRow>
+                  <SpecRow
+                    icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
+                    label="Stimuli"
+                    customized={stimuliOv.length > 0}
+                  >
+                    <StimuliDisplay
+                      override={stimuliOv.length > 0 ? stimuliOv : null}
+                      fallback={stimuliFallback}
+                    />
+                  </SpecRow>
+                  <SpecRow
+                    icon={<Brain className="h-3.5 w-3.5 text-primary" />}
+                    label="Matériel"
+                    customized={!!ov.materiel}
+                  >
+                    <p className="text-xs text-foreground">{materielValue}</p>
+                  </SpecRow>
+                  {distancesOv && (
+                    <SpecRow
+                      icon={<Pencil className="h-3.5 w-3.5 text-primary" />}
+                      label="Distances / dimensions"
+                      customized
+                    >
+                      <DistanceDisplay override={distancesOv} fallback="—" />
+                    </SpecRow>
+                  )}
+                  <SpecRow
+                    icon={<Timer className="h-3.5 w-3.5 text-primary" />}
+                    label="Format"
+                  >
+                    <p className="text-xs text-foreground">
+                      {ex.duree_serie} — {ex.series} série
+                      {ex.series > 1 ? "s" : ""} · récup.{" "}
+                      {ex.recuperation_secondes}s
+                    </p>
+                  </SpecRow>
+                </div>
+              </motion.article>
+
+              {/* Per-exercise CTA */}
+              <button
+                disabled={isDone || isActive}
+                onClick={() => setActiveExerciceId(ex.id)}
+                className={[
+                  "mt-2 mb-4 flex w-full items-center justify-center gap-2",
+                  "rounded-xl py-3 text-sm font-semibold transition-all",
+                  isDone
+                    ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
+                    : "bg-primary text-primary-foreground active:scale-95",
+                ].join(" ")}
+              >
+                {isDone ? (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    Exercice terminé
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Commencer l'exercice
+                  </>
                 )}
-                <SpecRow
-                  icon={<Timer className="h-3.5 w-3.5 text-primary" />}
-                  label="Format"
-                >
-                  <p className="text-xs text-foreground">
-                    {ex.duree_serie} — {ex.series} série
-                    {ex.series > 1 ? "s" : ""} · récup.{" "}
-                    {ex.recuperation_secondes}s
-                  </p>
-              </div>
-            </motion.article>
+              </button>
+            </div>
           );
         })}
-        {/* Per-exercise Commencer buttons (rendered as a parallel list under cards is messy in flex,
-            so we render them inline above by wrapping each card+button in a fragment) */}
       </div>
 
       {/* Bottom completion summary (only when whole session is complete) */}
