@@ -229,21 +229,21 @@ function TrainingDetailPage() {
     })();
   }, [planningId, navigate]);
 
-  async function handleFinish() {
-    if (!planning || completing) return;
-    setCompleting(true);
-    const { error } = await (supabase as any)
-      .from("sessions_planifiees")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", planning.id);
-    setCompleting(false);
-    if (error) {
-      toast.error("Impossible de marquer la séance comme terminée");
-      return;
-    }
-    toast.success("Séance terminée ! Bon travail 💪");
-    navigate({ to: "/exercises" });
-  }
+  // Fetch already-completed exercises for this planning to grey out cards
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await (supabase as any)
+        .from("completed_exercises")
+        .select("exercise_id")
+        .eq("user_id", user.id)
+        .eq("planning_id", planningId);
+      if (data) {
+        setCompletedIds(new Set(data.map((r: any) => r.exercise_id)));
+      }
+    })();
+  }, [planningId]);
 
   if (loading) {
     return (
