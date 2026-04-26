@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, Trash2, Clock, X, Mail, Users } from "lucide-react";
@@ -36,6 +36,7 @@ function initials(name?: string | null) {
 }
 
 function CoachJoueurs() {
+  const navigate = useNavigate();
   const [coachId, setCoachId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -235,7 +236,13 @@ function CoachJoueurs() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
+                  className="flex cursor-pointer items-center gap-3 rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted/50"
+                  onClick={() =>
+                    navigate({
+                      to: "/coach/joueur/$playerId",
+                      params: { playerId: r.player_id },
+                    })
+                  }
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-primary">
                     {r.profile?.avatar_url ? (
