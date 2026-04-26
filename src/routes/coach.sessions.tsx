@@ -36,6 +36,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import {
+  StimuliPicker,
+  DistancePicker,
+} from "@/components/coach/OverridePickers";
+import {
+  type ExerciceOverride,
+  type ExerciceOverridesMap,
+  type DistancesOverride,
+  normalizeStimuli,
+  normalizeDistances,
+} from "@/lib/exercise-overrides";
 
 export const Route = createFileRoute("/coach/sessions")({
   component: CoachSessions,
