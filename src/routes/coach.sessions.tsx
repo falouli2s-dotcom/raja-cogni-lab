@@ -98,12 +98,6 @@ type Exercice = {
   stimulus_detail?: any;
 };
 
-export type ExerciceOverride = {
-  stimuli?: string;
-  materiel?: string;
-  distances?: string;
-};
-export type ExerciceOverridesMap = Record<string, ExerciceOverride>;
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("fr-FR", {
