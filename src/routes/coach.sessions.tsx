@@ -268,23 +268,30 @@ function CoachSessions() {
     });
   }
 
-  function setOverrideField(
-    exId: string,
-    field: keyof ExerciceOverride,
-    value: string
-  ) {
+  function isEmptyOverride(o: ExerciceOverride): boolean {
+    const stimuliEmpty = !o.stimuli || o.stimuli.length === 0;
+    const materielEmpty = !o.materiel || o.materiel.trim() === "";
+    const distancesEmpty =
+      !o.distances || (!o.distances.distance && !o.distances.grid);
+    return stimuliEmpty && materielEmpty && distancesEmpty;
+  }
+
+  function updateOverride(exId: string, patch: Partial<ExerciceOverride>) {
     setExerciceOverrides((prev) => {
       const current = prev[exId] ?? {};
-      const trimmed = value.trim();
-      const nextEntry: ExerciceOverride = { ...current };
-      if (trimmed === "") delete nextEntry[field];
-      else nextEntry[field] = trimmed;
+      const merged: ExerciceOverride = { ...current, ...patch };
+      // Clean empties
+      if (merged.stimuli && merged.stimuli.length === 0) delete merged.stimuli;
+      if (merged.materiel !== undefined && merged.materiel.trim() === "")
+        delete merged.materiel;
+      if (merged.distances === null) delete merged.distances;
       const next = { ...prev };
-      if (Object.keys(nextEntry).length === 0) delete next[exId];
-      else next[exId] = nextEntry;
+      if (isEmptyOverride(merged)) delete next[exId];
+      else next[exId] = merged;
       return next;
     });
   }
+
 
   const canSubmit =
     !!playerId &&
