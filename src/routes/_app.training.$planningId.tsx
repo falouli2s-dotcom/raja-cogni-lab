@@ -489,30 +489,26 @@ function ExerciseRunner({
   index,
   total,
   onClose,
-  onNext,
-  onFinish,
-  finishing,
+  onAdvance,
 }: {
   exercice: ExerciceRow;
   override: ExerciceOverride;
   index: number;
   total: number;
   onClose: () => void;
-  onNext: () => void;
-  onFinish: () => void;
-  finishing: boolean;
+  onAdvance: () => void;
 }) {
-  const isLast = index === total - 1;
   const stimuliOv = normalizeStimuli(override.stimuli);
-  const stimuliFallback =
-    exercice.stimulus_type ||
-    (exercice.stimulus_detail
-      ? typeof exercice.stimulus_detail === "string"
-        ? exercice.stimulus_detail
-        : JSON.stringify(exercice.stimulus_detail)
-      : "—");
-  const distancesOv = normalizeDistances(override.distances);
-  const materielValue = override.materiel ?? exercice.materiel ?? "—";
+
+  // Build a merged Exercice with the resolved stimulus_type so the
+  // ExercisePlayer engine renders the right kind of stimuli.
+  const mergedExercice = {
+    ...exercice,
+    stimulus_type: resolveStimulusType(
+      stimuliOv.length > 0 ? stimuliOv : undefined,
+      exercice.stimulus_type,
+    ),
+  } as any;
 
   return (
     <motion.div
@@ -521,8 +517,8 @@ function ExerciseRunner({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex flex-col bg-background"
     >
-      {/* Top bar */}
-      <div className="flex items-center gap-3 border-b border-border px-5 pt-12 pb-3">
+      {/* Progress header */}
+      <div className="flex items-center gap-3 border-b border-border bg-background px-5 pt-12 pb-3">
         <button
           type="button"
           onClick={onClose}
@@ -533,7 +529,7 @@ function ExerciseRunner({
         </button>
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Exercice {index + 1} / {total}
+            Exercice {index + 1} / {total} · {exercice.titre}
           </p>
           <Progress
             value={((index + 1) / total) * 100}
@@ -542,105 +538,9 @@ function ExerciseRunner({
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-5">
-        <motion.div
-          key={exercice.id}
-          initial={{ y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="space-y-4"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-sm font-bold text-primary">
-              #{String(exercice.numero).padStart(2, "0")}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold text-foreground">
-                {exercice.titre}
-              </h2>
-              <div className="mt-1 flex flex-wrap gap-1">
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                  {exercice.indicateur_cognitif}
-                </span>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  {exercice.niveau}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <SpecRow
-              icon={<Target className="h-3.5 w-3.5 text-primary" />}
-              label="Objectif cognitif"
-            >
-              <p className="text-xs text-foreground">
-                {exercice.objectif_cognitif}
-              </p>
-            </SpecRow>
-            <SpecRow
-              icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
-              label="Tâche motrice"
-            >
-              <p className="text-xs text-foreground">{exercice.tache_motrice}</p>
-            </SpecRow>
-            <SpecRow
-              icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
-              label="Stimuli"
-              customized={stimuliOv.length > 0}
-            >
-              <StimuliDisplay
-                override={stimuliOv.length > 0 ? stimuliOv : null}
-                fallback={stimuliFallback}
-              />
-            </SpecRow>
-            <SpecRow
-              icon={<Brain className="h-3.5 w-3.5 text-primary" />}
-              label="Matériel"
-              customized={!!override.materiel}
-            >
-              <p className="text-xs text-foreground">{materielValue}</p>
-            </SpecRow>
-            {distancesOv && (
-              <SpecRow
-                icon={<Pencil className="h-3.5 w-3.5 text-primary" />}
-                label="Distances / dimensions"
-                customized
-              >
-                <DistanceDisplay override={distancesOv} fallback="—" />
-              </SpecRow>
-            )}
-            <SpecRow
-              icon={<Timer className="h-3.5 w-3.5 text-primary" />}
-              label="Format"
-            >
-              <p className="text-xs text-foreground">
-                {exercice.duree_serie} — {exercice.series} série
-                {exercice.series > 1 ? "s" : ""} · récup.{" "}
-                {exercice.recuperation_secondes}s
-              </p>
-            </SpecRow>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Footer CTA */}
-      <div className="border-t border-border bg-background px-5 py-3 pb-6">
-        {isLast ? (
-          <Button
-            className="w-full"
-            size="lg"
-            disabled={finishing}
-            onClick={onFinish}
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            {finishing ? "Validation…" : "Terminer la séance"}
-          </Button>
-        ) : (
-          <Button className="w-full" size="lg" onClick={onNext}>
-            Exercice suivant <ArrowRight className="h-4 w-4" />
-          </Button>
-        )}
+      {/* Embedded player — calls onAdvance when the exercise is finished/closed */}
+      <div className="flex-1 overflow-hidden">
+        <ExercisePlayer exercice={mergedExercice} onClose={onAdvance} />
       </div>
     </motion.div>
   );
