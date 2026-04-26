@@ -174,7 +174,7 @@ function CoachSessions() {
     const { data: ps } = await (supabase as any)
       .from("sessions_planifiees")
       .select(
-        "id, player_id, test_type, session_category, exercice_ids, scheduled_at, status, note"
+        "id, player_id, test_type, session_category, exercice_ids, exercice_overrides, scheduled_at, status, note"
       )
       .eq("coach_id", uid)
       .order("scheduled_at", { ascending: true });
