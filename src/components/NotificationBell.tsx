@@ -137,10 +137,17 @@ export function NotificationBell() {
       const isTraining =
         n.session_type === "training" ||
         n.metadata?.session_category === "exercices";
+      const planningId =
+        (n.metadata?.planning_session_id as string | undefined) ??
+        (n.metadata?.session_id as string | undefined);
+      console.log("[NotifClick]", {
+        type: n.type,
+        session_type: n.session_type,
+        session_category: n.metadata?.session_category,
+        planningId,
+        isTraining,
+      });
       if (isTraining) {
-        const planningId =
-          (n.metadata?.planning_session_id as string | undefined) ??
-          (n.metadata?.session_id as string | undefined);
         if (planningId) {
           navigate({
             to: "/training/$planningId",
