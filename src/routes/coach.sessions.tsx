@@ -240,9 +240,39 @@ function CoachSessions() {
   }, [exercices, exSearch]);
 
   function toggleExercice(id: string) {
-    setSelectedExercices((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSelectedExercices((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id];
+      // Re-adding an exercise resets its override to catalog defaults: drop it.
+      if (!next.includes(id)) {
+        setExerciceOverrides((cur) => {
+          const c = { ...cur };
+          delete c[id];
+          return c;
+        });
+        if (expandedOverrideId === id) setExpandedOverrideId(null);
+      }
+      return next;
+    });
+  }
+
+  function setOverrideField(
+    exId: string,
+    field: keyof ExerciceOverride,
+    value: string
+  ) {
+    setExerciceOverrides((prev) => {
+      const current = prev[exId] ?? {};
+      const trimmed = value.trim();
+      const nextEntry: ExerciceOverride = { ...current };
+      if (trimmed === "") delete nextEntry[field];
+      else nextEntry[field] = trimmed;
+      const next = { ...prev };
+      if (Object.keys(nextEntry).length === 0) delete next[exId];
+      else next[exId] = nextEntry;
+      return next;
+    });
   }
 
   const canSubmit =
@@ -259,6 +289,14 @@ function CoachSessions() {
       return;
     }
     setSubmitting(true);
+    // Only persist overrides for exercises actually included in this planning.
+    const overridesToSave: ExerciceOverridesMap = {};
+    if (category === "exercices") {
+      for (const exId of selectedExercices) {
+        const o = exerciceOverrides[exId];
+        if (o && Object.keys(o).length > 0) overridesToSave[exId] = o;
+      }
+    }
     const { error } = await (supabase as any)
       .from("sessions_planifiees")
       .insert({
@@ -267,6 +305,7 @@ function CoachSessions() {
         session_category: category,
         test_type: null,
         exercice_ids: category === "exercices" ? selectedExercices : null,
+        exercice_overrides: overridesToSave,
         scheduled_at: when.toISOString(),
         note: note.trim() || null,
       });
@@ -280,6 +319,8 @@ function CoachSessions() {
     setScheduledAt("");
     setNote("");
     setSelectedExercices([]);
+    setExerciceOverrides({});
+    setExpandedOverrideId(null);
     setExSearch("");
     setCategory("session");
     await loadAll(coachId);
