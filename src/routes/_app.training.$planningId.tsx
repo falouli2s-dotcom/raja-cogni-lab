@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Calendar,
@@ -10,20 +10,28 @@ import {
   Brain,
   Timer,
   Sparkles,
+  Play,
+  CheckCircle2,
+  ArrowRight,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
-type ExerciceOverride = {
-  stimuli?: string;
-  materiel?: string;
-  distances?: string;
-};
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import {
+  type ExerciceOverride,
+  normalizeStimuli,
+  normalizeDistances,
+  type DistancesOverride,
+} from "@/lib/exercise-overrides";
 
 type PlanningRow = {
   id: string;
   player_id: string;
   coach_id: string;
   scheduled_at: string;
+  completed_at: string | null;
   status: string;
   session_category: string;
   exercice_ids: string[] | null;
@@ -61,6 +69,67 @@ function fmtDate(iso: string) {
   });
 }
 
+function fmtShort(iso: string) {
+  return new Date(iso).toLocaleString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/* ---------- Read-only display helpers ---------- */
+
+function StimuliDisplay({
+  override,
+  fallback,
+}: {
+  override: string[] | null;
+  fallback: string;
+}) {
+  if (override && override.length > 0) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {override.map((s) => (
+          <span
+            key={s}
+            className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary"
+          >
+            {s}
+          </span>
+        ))}
+      </div>
+    );
+  }
+  return <p className="text-xs text-foreground">{fallback}</p>;
+}
+
+function DistanceDisplay({
+  override,
+  fallback,
+}: {
+  override: DistancesOverride | null;
+  fallback: string;
+}) {
+  if (override && (override.distance || override.grid)) {
+    return (
+      <div className="space-y-0.5">
+        {override.distance && (
+          <p className="text-sm font-semibold text-foreground">
+            {override.distance}
+          </p>
+        )}
+        {override.grid && (
+          <p className="text-[11px] text-muted-foreground">
+            Grille : {override.grid}
+          </p>
+        )}
+      </div>
+    );
+  }
+  return <p className="text-xs text-foreground">{fallback}</p>;
+}
+
 function TrainingDetailPage() {
   const { planningId } = Route.useParams();
   const navigate = useNavigate();
@@ -68,6 +137,9 @@ function TrainingDetailPage() {
   const [exercices, setExercices] = useState<ExerciceRow[]>([]);
   const [coachName, setCoachName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -83,7 +155,7 @@ function TrainingDetailPage() {
       const { data: p } = await (supabase as any)
         .from("sessions_planifiees")
         .select(
-          "id, player_id, coach_id, scheduled_at, status, session_category, exercice_ids, exercice_overrides, note"
+          "id, player_id, coach_id, scheduled_at, completed_at, status, session_category, exercice_ids, exercice_overrides, note"
         )
         .eq("id", planningId)
         .maybeSingle();
@@ -102,7 +174,6 @@ function TrainingDetailPage() {
             "id, numero, titre, niveau, indicateur_cognitif, objectif_cognitif, tache_motrice, duree_serie, series, recuperation_secondes, materiel, stimulus_type, stimulus_detail"
           )
           .in("id", ids);
-        // Preserve coach-defined order
         const map = new Map<string, ExerciceRow>(
           (ex ?? []).map((e: any) => [e.id, e as ExerciceRow])
         );
@@ -119,6 +190,22 @@ function TrainingDetailPage() {
       setLoading(false);
     })();
   }, [planningId, navigate]);
+
+  async function handleFinish() {
+    if (!planning || completing) return;
+    setCompleting(true);
+    const { error } = await (supabase as any)
+      .from("sessions_planifiees")
+      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .eq("id", planning.id);
+    setCompleting(false);
+    if (error) {
+      toast.error("Impossible de marquer la séance comme terminée");
+      return;
+    }
+    toast.success("Séance terminée ! Bon travail 💪");
+    navigate({ to: "/exercises" });
+  }
 
   if (loading) {
     return (
@@ -140,9 +227,10 @@ function TrainingDetailPage() {
   }
 
   const overrides = planning.exercice_overrides ?? {};
+  const isCompleted = planning.status === "completed";
 
   return (
-    <div className="px-5 pt-12 pb-24">
+    <div className="px-5 pt-12 pb-32">
       <Link
         to="/exercises"
         className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground"
@@ -184,16 +272,16 @@ function TrainingDetailPage() {
         )}
         {exercices.map((ex, i) => {
           const ov = overrides[ex.id] ?? {};
-          const baseStimuli =
+          const stimuliOv = normalizeStimuli(ov.stimuli);
+          const stimuliFallback =
             ex.stimulus_type ||
             (ex.stimulus_detail
               ? typeof ex.stimulus_detail === "string"
                 ? ex.stimulus_detail
                 : JSON.stringify(ex.stimulus_detail)
               : "—");
-          const stimuliValue = ov.stimuli ?? baseStimuli;
+          const distancesOv = normalizeDistances(ov.distances);
           const materielValue = ov.materiel ?? ex.materiel ?? "—";
-          const distancesValue = ov.distances ?? null;
 
           return (
             <motion.article
@@ -226,43 +314,101 @@ function TrainingDetailPage() {
                 <SpecRow
                   icon={<Target className="h-3.5 w-3.5 text-primary" />}
                   label="Objectif cognitif"
-                  value={ex.objectif_cognitif}
-                />
+                >
+                  <p className="text-xs text-foreground">{ex.objectif_cognitif}</p>
+                </SpecRow>
                 <SpecRow
                   icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
                   label="Tâche motrice"
-                  value={ex.tache_motrice}
-                />
+                >
+                  <p className="text-xs text-foreground">{ex.tache_motrice}</p>
+                </SpecRow>
                 <SpecRow
                   icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
                   label="Stimuli"
-                  value={stimuliValue}
-                  customized={!!ov.stimuli}
-                />
+                  customized={stimuliOv.length > 0}
+                >
+                  <StimuliDisplay
+                    override={stimuliOv.length > 0 ? stimuliOv : null}
+                    fallback={stimuliFallback}
+                  />
+                </SpecRow>
                 <SpecRow
                   icon={<Brain className="h-3.5 w-3.5 text-primary" />}
                   label="Matériel"
-                  value={materielValue}
                   customized={!!ov.materiel}
-                />
-                {distancesValue !== null && (
+                >
+                  <p className="text-xs text-foreground">{materielValue}</p>
+                </SpecRow>
+                {distancesOv && (
                   <SpecRow
                     icon={<Pencil className="h-3.5 w-3.5 text-primary" />}
                     label="Distances / dimensions"
-                    value={distancesValue}
-                    customized={true}
-                  />
+                    customized
+                  >
+                    <DistanceDisplay override={distancesOv} fallback="—" />
+                  </SpecRow>
                 )}
                 <SpecRow
                   icon={<Timer className="h-3.5 w-3.5 text-primary" />}
                   label="Format"
-                  value={`${ex.duree_serie} — ${ex.series} série${ex.series > 1 ? "s" : ""} · récup. ${ex.recuperation_secondes}s`}
-                />
+                >
+                  <p className="text-xs text-foreground">
+                    {ex.duree_serie} — {ex.series} série
+                    {ex.series > 1 ? "s" : ""} · récup.{" "}
+                    {ex.recuperation_secondes}s
+                  </p>
+                </SpecRow>
               </div>
             </motion.article>
           );
         })}
       </div>
+
+      {/* Sticky bottom CTA */}
+      {exercices.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-5 py-3 backdrop-blur-md">
+          {isCompleted ? (
+            <div className="space-y-1">
+              <Button disabled className="w-full" size="lg">
+                <CheckCircle2 className="h-4 w-4" /> Séance terminée
+              </Button>
+              {planning.completed_at && (
+                <p className="text-center text-[11px] text-muted-foreground">
+                  Terminée le {fmtShort(planning.completed_at)}
+                </p>
+              )}
+            </div>
+          ) : (
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={() => {
+                setCurrentIdx(0);
+                setRunning(true);
+              }}
+            >
+              <Play className="h-4 w-4" /> Commencer les exercices
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Full-screen exercise runner */}
+      <AnimatePresence>
+        {running && exercices[currentIdx] && (
+          <ExerciseRunner
+            exercice={exercices[currentIdx]}
+            override={overrides[exercices[currentIdx].id] ?? {}}
+            index={currentIdx}
+            total={exercices.length}
+            onClose={() => setRunning(false)}
+            onNext={() => setCurrentIdx((i) => i + 1)}
+            onFinish={handleFinish}
+            finishing={completing}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -270,13 +416,13 @@ function TrainingDetailPage() {
 function SpecRow({
   icon,
   label,
-  value,
   customized,
+  children,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
   customized?: boolean;
+  children: React.ReactNode;
 }) {
   return (
     <div className="flex gap-2.5 rounded-xl border border-border bg-background/40 p-2.5">
@@ -293,8 +439,173 @@ function SpecRow({
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-xs text-foreground">{value}</p>
+        <div className="mt-0.5">{children}</div>
       </div>
     </div>
+  );
+}
+
+/* ---------- Full-screen runner ---------- */
+
+function ExerciseRunner({
+  exercice,
+  override,
+  index,
+  total,
+  onClose,
+  onNext,
+  onFinish,
+  finishing,
+}: {
+  exercice: ExerciceRow;
+  override: ExerciceOverride;
+  index: number;
+  total: number;
+  onClose: () => void;
+  onNext: () => void;
+  onFinish: () => void;
+  finishing: boolean;
+}) {
+  const isLast = index === total - 1;
+  const stimuliOv = normalizeStimuli(override.stimuli);
+  const stimuliFallback =
+    exercice.stimulus_type ||
+    (exercice.stimulus_detail
+      ? typeof exercice.stimulus_detail === "string"
+        ? exercice.stimulus_detail
+        : JSON.stringify(exercice.stimulus_detail)
+      : "—");
+  const distancesOv = normalizeDistances(override.distances);
+  const materielValue = override.materiel ?? exercice.materiel ?? "—";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex flex-col bg-background"
+    >
+      {/* Top bar */}
+      <div className="flex items-center gap-3 border-b border-border px-5 pt-12 pb-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground"
+          aria-label="Fermer"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Exercice {index + 1} / {total}
+          </p>
+          <Progress
+            value={((index + 1) / total) * 100}
+            className="mt-1 h-1.5"
+          />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-5 py-5">
+        <motion.div
+          key={exercice.id}
+          initial={{ y: 12, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="space-y-4"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-sm font-bold text-primary">
+              #{String(exercice.numero).padStart(2, "0")}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-foreground">
+                {exercice.titre}
+              </h2>
+              <div className="mt-1 flex flex-wrap gap-1">
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  {exercice.indicateur_cognitif}
+                </span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  {exercice.niveau}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <SpecRow
+              icon={<Target className="h-3.5 w-3.5 text-primary" />}
+              label="Objectif cognitif"
+            >
+              <p className="text-xs text-foreground">
+                {exercice.objectif_cognitif}
+              </p>
+            </SpecRow>
+            <SpecRow
+              icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
+              label="Tâche motrice"
+            >
+              <p className="text-xs text-foreground">{exercice.tache_motrice}</p>
+            </SpecRow>
+            <SpecRow
+              icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
+              label="Stimuli"
+              customized={stimuliOv.length > 0}
+            >
+              <StimuliDisplay
+                override={stimuliOv.length > 0 ? stimuliOv : null}
+                fallback={stimuliFallback}
+              />
+            </SpecRow>
+            <SpecRow
+              icon={<Brain className="h-3.5 w-3.5 text-primary" />}
+              label="Matériel"
+              customized={!!override.materiel}
+            >
+              <p className="text-xs text-foreground">{materielValue}</p>
+            </SpecRow>
+            {distancesOv && (
+              <SpecRow
+                icon={<Pencil className="h-3.5 w-3.5 text-primary" />}
+                label="Distances / dimensions"
+                customized
+              >
+                <DistanceDisplay override={distancesOv} fallback="—" />
+              </SpecRow>
+            )}
+            <SpecRow
+              icon={<Timer className="h-3.5 w-3.5 text-primary" />}
+              label="Format"
+            >
+              <p className="text-xs text-foreground">
+                {exercice.duree_serie} — {exercice.series} série
+                {exercice.series > 1 ? "s" : ""} · récup.{" "}
+                {exercice.recuperation_secondes}s
+              </p>
+            </SpecRow>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Footer CTA */}
+      <div className="border-t border-border bg-background px-5 py-3 pb-6">
+        {isLast ? (
+          <Button
+            className="w-full"
+            size="lg"
+            disabled={finishing}
+            onClick={onFinish}
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {finishing ? "Validation…" : "Terminer la séance"}
+          </Button>
+        ) : (
+          <Button className="w-full" size="lg" onClick={onNext}>
+            Exercice suivant <ArrowRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </motion.div>
   );
 }
