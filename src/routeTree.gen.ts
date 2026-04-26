@@ -20,7 +20,6 @@ import { Route as CoachSessionsRouteImport } from './routes/coach.sessions'
 import { Route as CoachProfilRouteImport } from './routes/coach.profil'
 import { Route as CoachPendingRouteImport } from './routes/coach.pending'
 import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
-import { Route as CoachExercicesRouteImport } from './routes/coach.exercices'
 import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
 import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
@@ -84,11 +83,6 @@ const CoachPendingRoute = CoachPendingRouteImport.update({
 const CoachJoueursRoute = CoachJoueursRouteImport.update({
   id: '/joueurs',
   path: '/joueurs',
-  getParentRoute: () => CoachRoute,
-} as any)
-const CoachExercicesRoute = CoachExercicesRouteImport.update({
-  id: '/exercices',
-  path: '/exercices',
   getParentRoute: () => CoachRoute,
 } as any)
 const CoachDashboardRoute = CoachDashboardRouteImport.update({
@@ -155,7 +149,6 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
-  '/coach/exercices': typeof CoachExercicesRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -178,7 +171,6 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
-  '/coach/exercices': typeof CoachExercicesRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -203,7 +195,6 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
-  '/coach/exercices': typeof CoachExercicesRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -228,7 +219,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
-    | '/coach/exercices'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -251,7 +241,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
-    | '/coach/exercices'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -275,7 +264,6 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
-    | '/coach/exercices'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -374,13 +362,6 @@ declare module '@tanstack/react-router' {
       path: '/joueurs'
       fullPath: '/coach/joueurs'
       preLoaderRoute: typeof CoachJoueursRouteImport
-      parentRoute: typeof CoachRoute
-    }
-    '/coach/exercices': {
-      id: '/coach/exercices'
-      path: '/exercices'
-      fullPath: '/coach/exercices'
-      preLoaderRoute: typeof CoachExercicesRouteImport
       parentRoute: typeof CoachRoute
     }
     '/coach/dashboard': {
@@ -482,7 +463,6 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface CoachRouteChildren {
   CoachDashboardRoute: typeof CoachDashboardRoute
-  CoachExercicesRoute: typeof CoachExercicesRoute
   CoachJoueursRoute: typeof CoachJoueursRoute
   CoachPendingRoute: typeof CoachPendingRoute
   CoachProfilRoute: typeof CoachProfilRoute
@@ -491,7 +471,6 @@ interface CoachRouteChildren {
 
 const CoachRouteChildren: CoachRouteChildren = {
   CoachDashboardRoute: CoachDashboardRoute,
-  CoachExercicesRoute: CoachExercicesRoute,
   CoachJoueursRoute: CoachJoueursRoute,
   CoachPendingRoute: CoachPendingRoute,
   CoachProfilRoute: CoachProfilRoute,

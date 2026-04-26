@@ -144,6 +144,7 @@ export type Database = {
           is_read: boolean
           message: string
           metadata: Json
+          session_type: string | null
           title: string
           type: string
           user_id: string
@@ -154,6 +155,7 @@ export type Database = {
           is_read?: boolean
           message: string
           metadata?: Json
+          session_type?: string | null
           title: string
           type: string
           user_id: string
@@ -164,6 +166,7 @@ export type Database = {
           is_read?: boolean
           message?: string
           metadata?: Json
+          session_type?: string | null
           title?: string
           type?: string
           user_id?: string
@@ -258,6 +261,7 @@ export type Database = {
           coach_id: string
           created_at: string
           exercice_ids: string[] | null
+          exercice_overrides: Json
           id: string
           note: string | null
           player_id: string
@@ -270,6 +274,7 @@ export type Database = {
           coach_id: string
           created_at?: string
           exercice_ids?: string[] | null
+          exercice_overrides?: Json
           id?: string
           note?: string | null
           player_id: string
@@ -282,6 +287,7 @@ export type Database = {
           coach_id?: string
           created_at?: string
           exercice_ids?: string[] | null
+          exercice_overrides?: Json
           id?: string
           note?: string | null
           player_id?: string

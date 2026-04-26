@@ -487,7 +487,7 @@ function CoachSessions() {
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           Espace Coach
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Sessions</h1>
+        <h1 className="text-2xl font-bold text-foreground">Planification</h1>
       </header>
 
       {/* Section 1 - Plan */}
