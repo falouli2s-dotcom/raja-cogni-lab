@@ -12,6 +12,8 @@ import {
   Activity,
   Search,
   ChevronRight,
+  ChevronDown,
+  Pencil,
   Zap,
   Shuffle,
   Database,
@@ -687,6 +689,88 @@ function CoachSessions() {
                     })
                   )}
                 </div>
+
+                {/* Per-exercise customization (overrides for this planning only) */}
+                {selectedExercices.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Personnaliser pour cette séance
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {selectedExercices.map((exId) => {
+                        const ex = exercices.find((e) => e.id === exId);
+                        if (!ex) return null;
+                        const ov = exerciceOverrides[exId] ?? {};
+                        const customizedCount = Object.keys(ov).length;
+                        const open = expandedOverrideId === exId;
+                        return (
+                          <div
+                            key={`ov-${exId}`}
+                            className="rounded-lg border border-border bg-card"
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedOverrideId(open ? null : exId)
+                              }
+                              className="flex w-full items-center gap-2 px-2.5 py-2 text-left"
+                            >
+                              <Pencil className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
+                                #{String(ex.numero).padStart(2, "0")} · {ex.titre}
+                              </span>
+                              {customizedCount > 0 && (
+                                <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold text-accent">
+                                  Modifié
+                                </span>
+                              )}
+                              <ChevronDown
+                                className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+                              />
+                            </button>
+                            {open && (
+                              <div className="space-y-2 border-t border-border px-2.5 py-2.5">
+                                <OverrideField
+                                  label="Stimuli"
+                                  placeholder={
+                                    ex.stimulus_type ?? "Couleur, son, indice visuel…"
+                                  }
+                                  value={ov.stimuli ?? ""}
+                                  onChange={(v) =>
+                                    setOverrideField(exId, "stimuli", v)
+                                  }
+                                />
+                                <OverrideField
+                                  label="Matériel"
+                                  placeholder={
+                                    ex.materiel ?? "Cônes, chasubles, support…"
+                                  }
+                                  value={ov.materiel ?? ""}
+                                  onChange={(v) =>
+                                    setOverrideField(exId, "materiel", v)
+                                  }
+                                />
+                                <OverrideField
+                                  label="Distances / dimensions"
+                                  placeholder="Ex : grille 5×5 m, plots à 8 m…"
+                                  value={ov.distances ?? ""}
+                                  onChange={(v) =>
+                                    setOverrideField(exId, "distances", v)
+                                  }
+                                />
+                                <p className="text-[10px] italic text-muted-foreground">
+                                  Ces réglages s'appliquent uniquement à cette séance.
+                                  L'exercice du catalogue reste inchangé.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <p className="mt-2 border-t border-border pt-2 text-center text-[11px] font-semibold text-muted-foreground">
                   {selectedExercices.length} exercice
                   {selectedExercices.length > 1 ? "s" : ""} sélectionné
