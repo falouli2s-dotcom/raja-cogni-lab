@@ -11,6 +11,7 @@ import {
   Timer,
   Sparkles,
   Play,
+  CheckCircle,
   CheckCircle2,
   ArrowRight,
   X,
@@ -175,9 +176,8 @@ function TrainingDetailPage() {
   const [exercices, setExercices] = useState<ExerciceRow[]>([]);
   const [coachName, setCoachName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [completing, setCompleting] = useState(false);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [activeExerciceId, setActiveExerciceId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -229,21 +229,21 @@ function TrainingDetailPage() {
     })();
   }, [planningId, navigate]);
 
-  async function handleFinish() {
-    if (!planning || completing) return;
-    setCompleting(true);
-    const { error } = await (supabase as any)
-      .from("sessions_planifiees")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", planning.id);
-    setCompleting(false);
-    if (error) {
-      toast.error("Impossible de marquer la séance comme terminée");
-      return;
-    }
-    toast.success("Séance terminée ! Bon travail 💪");
-    navigate({ to: "/exercises" });
-  }
+  // Fetch already-completed exercises for this planning to grey out cards
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await (supabase as any)
+        .from("completed_exercises")
+        .select("exercise_id")
+        .eq("user_id", user.id)
+        .eq("planning_id", planningId);
+      if (data) {
+        setCompletedIds(new Set(data.map((r: any) => r.exercise_id)));
+      }
+    })();
+  }, [planningId]);
 
   if (loading) {
     return (
@@ -321,136 +321,186 @@ function TrainingDetailPage() {
           const distancesOv = normalizeDistances(ov.distances);
           const materielValue = ov.materiel ?? ex.materiel ?? "—";
 
+          const isDone = completedIds.has(ex.id);
+          const isActive = activeExerciceId === ex.id;
           return (
-            <motion.article
-              key={ex.id}
-              initial={{ y: 6, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.04 * i }}
-              className="rounded-2xl border border-border bg-card p-4"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">
-                  #{String(ex.numero).padStart(2, "0")}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    {ex.titre}
-                  </p>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                      {ex.indicateur_cognitif}
-                    </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {ex.niveau}
-                    </span>
+            <div key={ex.id} className="flex flex-col">
+              <motion.article
+                initial={{ y: 6, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.04 * i }}
+                className={`rounded-2xl border border-border bg-card p-4 ${isDone ? "opacity-60" : ""}`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">
+                    #{String(ex.numero).padStart(2, "0")}
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {ex.titre}
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        {ex.indicateur_cognitif}
+                      </span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        {ex.niveau}
+                      </span>
+                    </div>
+                  </div>
+                  {isDone && (
+                    <CheckCircle className="h-5 w-5 shrink-0 text-primary" />
+                  )}
                 </div>
-              </div>
 
-              <div className="mt-3 space-y-2">
-                <SpecRow
-                  icon={<Target className="h-3.5 w-3.5 text-primary" />}
-                  label="Objectif cognitif"
-                >
-                  <p className="text-xs text-foreground">{ex.objectif_cognitif}</p>
-                </SpecRow>
-                <SpecRow
-                  icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
-                  label="Tâche motrice"
-                >
-                  <p className="text-xs text-foreground">{ex.tache_motrice}</p>
-                </SpecRow>
-                <SpecRow
-                  icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
-                  label="Stimuli"
-                  customized={stimuliOv.length > 0}
-                >
-                  <StimuliDisplay
-                    override={stimuliOv.length > 0 ? stimuliOv : null}
-                    fallback={stimuliFallback}
-                  />
-                </SpecRow>
-                <SpecRow
-                  icon={<Brain className="h-3.5 w-3.5 text-primary" />}
-                  label="Matériel"
-                  customized={!!ov.materiel}
-                >
-                  <p className="text-xs text-foreground">{materielValue}</p>
-                </SpecRow>
-                {distancesOv && (
+                <div className="mt-3 space-y-2">
                   <SpecRow
-                    icon={<Pencil className="h-3.5 w-3.5 text-primary" />}
-                    label="Distances / dimensions"
-                    customized
+                    icon={<Target className="h-3.5 w-3.5 text-primary" />}
+                    label="Objectif cognitif"
                   >
-                    <DistanceDisplay override={distancesOv} fallback="—" />
+                    <p className="text-xs text-foreground">{ex.objectif_cognitif}</p>
                   </SpecRow>
+                  <SpecRow
+                    icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
+                    label="Tâche motrice"
+                  >
+                    <p className="text-xs text-foreground">{ex.tache_motrice}</p>
+                  </SpecRow>
+                  <SpecRow
+                    icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
+                    label="Stimuli"
+                    customized={stimuliOv.length > 0}
+                  >
+                    <StimuliDisplay
+                      override={stimuliOv.length > 0 ? stimuliOv : null}
+                      fallback={stimuliFallback}
+                    />
+                  </SpecRow>
+                  <SpecRow
+                    icon={<Brain className="h-3.5 w-3.5 text-primary" />}
+                    label="Matériel"
+                    customized={!!ov.materiel}
+                  >
+                    <p className="text-xs text-foreground">{materielValue}</p>
+                  </SpecRow>
+                  {distancesOv && (
+                    <SpecRow
+                      icon={<Pencil className="h-3.5 w-3.5 text-primary" />}
+                      label="Distances / dimensions"
+                      customized
+                    >
+                      <DistanceDisplay override={distancesOv} fallback="—" />
+                    </SpecRow>
+                  )}
+                  <SpecRow
+                    icon={<Timer className="h-3.5 w-3.5 text-primary" />}
+                    label="Format"
+                  >
+                    <p className="text-xs text-foreground">
+                      {ex.duree_serie} — {ex.series} série
+                      {ex.series > 1 ? "s" : ""} · récup.{" "}
+                      {ex.recuperation_secondes}s
+                    </p>
+                  </SpecRow>
+                </div>
+              </motion.article>
+
+              {/* Per-exercise CTA */}
+              <button
+                disabled={isDone || isActive}
+                onClick={() => setActiveExerciceId(ex.id)}
+                className={[
+                  "mt-2 mb-4 flex w-full items-center justify-center gap-2",
+                  "rounded-xl py-3 text-sm font-semibold transition-all",
+                  isDone
+                    ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
+                    : "bg-primary text-primary-foreground active:scale-95",
+                ].join(" ")}
+              >
+                {isDone ? (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    Exercice terminé
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Commencer l'exercice
+                  </>
                 )}
-                <SpecRow
-                  icon={<Timer className="h-3.5 w-3.5 text-primary" />}
-                  label="Format"
-                >
-                  <p className="text-xs text-foreground">
-                    {ex.duree_serie} — {ex.series} série
-                    {ex.series > 1 ? "s" : ""} · récup.{" "}
-                    {ex.recuperation_secondes}s
-                  </p>
-                </SpecRow>
-              </div>
-            </motion.article>
+              </button>
+            </div>
           );
         })}
       </div>
 
-      {/* In-flow CTA (not fixed — pb on container clears BottomNav) */}
-      {exercices.length > 0 && (
-        isCompleted ? (
-          <div className="mt-6 mb-2 text-center">
-            <p className="text-sm font-medium text-muted-foreground">
-              ✓ Séance terminée
+      {/* Bottom completion summary (only when whole session is complete) */}
+      {exercices.length > 0 && isCompleted && (
+        <div className="mt-6 mb-2 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            ✓ Séance terminée
+          </p>
+          {planning.completed_at && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {fmtShort(planning.completed_at)}
             </p>
-            {planning.completed_at && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {fmtShort(planning.completed_at)}
-              </p>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={() => {
-              setCurrentIdx(0);
-              setRunning(true);
-            }}
-            className="mt-6 mb-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-base font-semibold text-primary-foreground transition-transform active:scale-95"
-          >
-            <Play className="h-5 w-5" />
-            Commencer les exercices
-          </button>
-        )
+          )}
+        </div>
       )}
 
-      {/* Full-screen exercise runner */}
-      <AnimatePresence>
-        {running && exercices[currentIdx] && (
-          <ExerciseRunner
-            exercice={exercices[currentIdx]}
-            override={overrides[exercices[currentIdx].id] ?? {}}
-            index={currentIdx}
-            total={exercices.length}
-            onClose={() => setRunning(false)}
-            onAdvance={() => {
-              const isLast = currentIdx >= exercices.length - 1;
-              if (isLast) {
-                setRunning(false);
-                handleFinish();
-              } else {
-                setCurrentIdx((i) => i + 1);
-              }
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {/* Full-screen ExercisePlayer overlay (per exercise) */}
+      {activeExerciceId && (() => {
+        const ex = exercices.find((e) => e.id === activeExerciceId);
+        if (!ex) return null;
+        const ov = overrides[ex.id] ?? {};
+        const stimuliOv = normalizeStimuli(ov.stimuli);
+        const mergedExercice = {
+          ...ex,
+          stimulus_type: resolveStimulusType(
+            stimuliOv.length > 0 ? stimuliOv : undefined,
+            ex.stimulus_type,
+          ),
+        } as any;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-background">
+            <ExercisePlayer
+              exercice={mergedExercice}
+              onClose={async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                  await (supabase as any)
+                    .from("completed_exercises")
+                    .insert({
+                      user_id: user.id,
+                      exercise_id: ex.id,
+                      series_completed: ex.series,
+                      completed_at: new Date().toISOString(),
+                      planning_id: planningId,
+                    });
+                }
+                const newCompleted = new Set([...completedIds, ex.id]);
+                setCompletedIds(newCompleted);
+                setActiveExerciceId(null);
+
+                const allDone = exercices.every((e) => newCompleted.has(e.id));
+                if (allDone) {
+                  await (supabase as any)
+                    .from("sessions_planifiees")
+                    .update({
+                      status: "completed",
+                      completed_at: new Date().toISOString(),
+                    })
+                    .eq("id", planningId);
+                  toast.success("Séance terminée ! Bon travail 💪");
+                } else {
+                  toast.success("Exercice terminé ✓");
+                }
+              }}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }
