@@ -403,54 +403,73 @@ function TrainingDetailPage() {
         })}
       </div>
 
-      {/* In-flow CTA (not fixed — pb on container clears BottomNav) */}
-      {exercices.length > 0 && (
-        isCompleted ? (
-          <div className="mt-6 mb-2 text-center">
-            <p className="text-sm font-medium text-muted-foreground">
-              ✓ Séance terminée
+      {/* Bottom completion summary (only when whole session is complete) */}
+      {exercices.length > 0 && isCompleted && (
+        <div className="mt-6 mb-2 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            ✓ Séance terminée
+          </p>
+          {planning.completed_at && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {fmtShort(planning.completed_at)}
             </p>
-            {planning.completed_at && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {fmtShort(planning.completed_at)}
-              </p>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={() => {
-              setCurrentIdx(0);
-              setRunning(true);
-            }}
-            className="mt-6 mb-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-base font-semibold text-primary-foreground transition-transform active:scale-95"
-          >
-            <Play className="h-5 w-5" />
-            Commencer les exercices
-          </button>
-        )
+          )}
+        </div>
       )}
 
-      {/* Full-screen exercise runner */}
-      <AnimatePresence>
-        {running && exercices[currentIdx] && (
-          <ExerciseRunner
-            exercice={exercices[currentIdx]}
-            override={overrides[exercices[currentIdx].id] ?? {}}
-            index={currentIdx}
-            total={exercices.length}
-            onClose={() => setRunning(false)}
-            onAdvance={() => {
-              const isLast = currentIdx >= exercices.length - 1;
-              if (isLast) {
-                setRunning(false);
-                handleFinish();
-              } else {
-                setCurrentIdx((i) => i + 1);
-              }
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {/* Full-screen ExercisePlayer overlay (per exercise) */}
+      {activeExerciceId && (() => {
+        const ex = exercices.find((e) => e.id === activeExerciceId);
+        if (!ex) return null;
+        const ov = overrides[ex.id] ?? {};
+        const stimuliOv = normalizeStimuli(ov.stimuli);
+        const mergedExercice = {
+          ...ex,
+          stimulus_type: resolveStimulusType(
+            stimuliOv.length > 0 ? stimuliOv : undefined,
+            ex.stimulus_type,
+          ),
+        } as any;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-background">
+            <ExercisePlayer
+              exercice={mergedExercice}
+              onClose={async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                  await (supabase as any)
+                    .from("completed_exercises")
+                    .insert({
+                      user_id: user.id,
+                      exercise_id: ex.id,
+                      series_completed: ex.series,
+                      completed_at: new Date().toISOString(),
+                      planning_id: planningId,
+                    });
+                }
+                const newCompleted = new Set([...completedIds, ex.id]);
+                setCompletedIds(newCompleted);
+                setActiveExerciceId(null);
+
+                const allDone = exercices.every((e) => newCompleted.has(e.id));
+                if (allDone) {
+                  await (supabase as any)
+                    .from("sessions_planifiees")
+                    .update({
+                      status: "completed",
+                      completed_at: new Date().toISOString(),
+                    })
+                    .eq("id", planningId);
+                  toast.success("Séance terminée ! Bon travail 💪");
+                } else {
+                  toast.success("Exercice terminé ✓");
+                }
+              }}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }
