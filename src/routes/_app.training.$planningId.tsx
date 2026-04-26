@@ -176,9 +176,8 @@ function TrainingDetailPage() {
   const [exercices, setExercices] = useState<ExerciceRow[]>([]);
   const [coachName, setCoachName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [completing, setCompleting] = useState(false);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [activeExerciceId, setActiveExerciceId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
