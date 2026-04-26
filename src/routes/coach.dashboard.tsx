@@ -480,7 +480,7 @@ function CoachDashboard() {
                     SGS {a.avgSGS}
                   </span>
                   <button
-                    onClick={() => navigate({ to: "/coach/exercices" })}
+                    onClick={() => navigate({ to: "/coach/sessions" })}
                     className="flex items-center gap-0.5 text-[10px] font-medium text-primary hover:underline"
                   >
                     Voir recommandations <ChevronRight className="h-3 w-3" />
