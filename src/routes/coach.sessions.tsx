@@ -745,17 +745,18 @@ function CoachSessions() {
                               />
                             </button>
                             {open && (
-                              <div className="space-y-2 border-t border-border px-2.5 py-2.5">
-                                <OverrideField
-                                  label="Stimuli"
-                                  placeholder={
-                                    ex.stimulus_type ?? "Couleur, son, indice visuel…"
-                                  }
-                                  value={ov.stimuli ?? ""}
-                                  onChange={(v) =>
-                                    setOverrideField(exId, "stimuli", v)
-                                  }
-                                />
+                              <div className="space-y-3 border-t border-border px-2.5 py-2.5">
+                                <div>
+                                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Stimuli
+                                  </label>
+                                  <StimuliPicker
+                                    value={normalizeStimuli(ov.stimuli)}
+                                    onChange={(next) =>
+                                      updateOverride(exId, { stimuli: next })
+                                    }
+                                  />
+                                </div>
                                 <OverrideField
                                   label="Matériel"
                                   placeholder={
@@ -763,17 +764,26 @@ function CoachSessions() {
                                   }
                                   value={ov.materiel ?? ""}
                                   onChange={(v) =>
-                                    setOverrideField(exId, "materiel", v)
+                                    updateOverride(exId, {
+                                      materiel: v.trim(),
+                                    })
                                   }
                                 />
-                                <OverrideField
-                                  label="Distances / dimensions"
-                                  placeholder="Ex : grille 5×5 m, plots à 8 m…"
-                                  value={ov.distances ?? ""}
-                                  onChange={(v) =>
-                                    setOverrideField(exId, "distances", v)
-                                  }
-                                />
+                                <div>
+                                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Distances / dimensions
+                                  </label>
+                                  <DistancePicker
+                                    value={
+                                      normalizeDistances(ov.distances) ?? null
+                                    }
+                                    onChange={(next: DistancesOverride | null) =>
+                                      updateOverride(exId, {
+                                        distances: next ?? undefined,
+                                      })
+                                    }
+                                  />
+                                </div>
                                 <p className="text-[10px] italic text-muted-foreground">
                                   Ces réglages s'appliquent uniquement à cette séance.
                                   L'exercice du catalogue reste inchangé.
