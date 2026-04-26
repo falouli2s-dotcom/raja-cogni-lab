@@ -1,11 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { BarChart2, Users, CalendarDays, Brain, Settings } from "lucide-react";
+import { BarChart2, Users, CalendarDays, Settings } from "lucide-react";
 
 const tabs = [
   { to: "/coach/dashboard", label: "Dashboard", icon: BarChart2 },
   { to: "/coach/joueurs", label: "Joueurs", icon: Users },
-  { to: "/coach/sessions", label: "Sessions", icon: CalendarDays },
-  { to: "/coach/exercices", label: "Exercices", icon: Brain },
+  { to: "/coach/sessions", label: "Planification", icon: CalendarDays },
   { to: "/coach/profil", label: "Profil", icon: Settings },
 ] as const;
 
@@ -22,6 +21,7 @@ export function CoachBottomNav() {
             <Link
               key={tab.to}
               to={tab.to}
+              aria-label={tab.label}
               className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
                 isActive
                   ? "text-primary"

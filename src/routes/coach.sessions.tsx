@@ -12,6 +12,8 @@ import {
   Activity,
   Search,
   ChevronRight,
+  ChevronDown,
+  Pencil,
   Zap,
   Shuffle,
   Database,
@@ -47,6 +49,13 @@ const TEST_LABELS: Record<string, string> = {
   anticipation: "Test d'Anticipation",
 };
 
+export type ExerciceOverride = {
+  stimuli?: string;
+  materiel?: string;
+  distances?: string;
+};
+export type ExerciceOverridesMap = Record<string, ExerciceOverride>;
+
 type PlayerInfo = {
   full_name: string | null;
   category: string | null;
@@ -60,6 +69,7 @@ type PlannedSession = {
   test_type: string | null;
   session_category: "session" | "exercices" | null;
   exercice_ids: string[] | null;
+  exercice_overrides: ExerciceOverridesMap | null;
   scheduled_at: string;
   status: "pending" | "completed" | "cancelled";
   note: string | null;
@@ -83,7 +93,11 @@ type Exercice = {
   titre: string;
   niveau: string;
   indicateur_cognitif: string;
+  stimulus_type?: string | null;
+  materiel?: string | null;
+  stimulus_detail?: any;
 };
+
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("fr-FR", {
@@ -110,6 +124,8 @@ function CoachSessions() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
   const [selectedExercices, setSelectedExercices] = useState<string[]>([]);
+  const [exerciceOverrides, setExerciceOverrides] = useState<ExerciceOverridesMap>({});
+  const [expandedOverrideId, setExpandedOverrideId] = useState<string | null>(null);
   const [exSearch, setExSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -158,7 +174,7 @@ function CoachSessions() {
     const { data: ps } = await (supabase as any)
       .from("sessions_planifiees")
       .select(
-        "id, player_id, test_type, session_category, exercice_ids, scheduled_at, status, note"
+        "id, player_id, test_type, session_category, exercice_ids, exercice_overrides, scheduled_at, status, note"
       )
       .eq("coach_id", uid)
       .order("scheduled_at", { ascending: true });
@@ -201,7 +217,7 @@ function CoachSessions() {
   async function loadExercices() {
     const { data } = await supabase
       .from("exercices")
-      .select("id, numero, titre, niveau, indicateur_cognitif")
+      .select("id, numero, titre, niveau, indicateur_cognitif, stimulus_type, materiel, stimulus_detail")
       .order("numero", { ascending: true });
     setExercices((data ?? []) as Exercice[]);
   }
@@ -228,9 +244,39 @@ function CoachSessions() {
   }, [exercices, exSearch]);
 
   function toggleExercice(id: string) {
-    setSelectedExercices((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSelectedExercices((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id];
+      // Re-adding an exercise resets its override to catalog defaults: drop it.
+      if (!next.includes(id)) {
+        setExerciceOverrides((cur) => {
+          const c = { ...cur };
+          delete c[id];
+          return c;
+        });
+        if (expandedOverrideId === id) setExpandedOverrideId(null);
+      }
+      return next;
+    });
+  }
+
+  function setOverrideField(
+    exId: string,
+    field: keyof ExerciceOverride,
+    value: string
+  ) {
+    setExerciceOverrides((prev) => {
+      const current = prev[exId] ?? {};
+      const trimmed = value.trim();
+      const nextEntry: ExerciceOverride = { ...current };
+      if (trimmed === "") delete nextEntry[field];
+      else nextEntry[field] = trimmed;
+      const next = { ...prev };
+      if (Object.keys(nextEntry).length === 0) delete next[exId];
+      else next[exId] = nextEntry;
+      return next;
+    });
   }
 
   const canSubmit =
@@ -247,6 +293,14 @@ function CoachSessions() {
       return;
     }
     setSubmitting(true);
+    // Only persist overrides for exercises actually included in this planning.
+    const overridesToSave: ExerciceOverridesMap = {};
+    if (category === "exercices") {
+      for (const exId of selectedExercices) {
+        const o = exerciceOverrides[exId];
+        if (o && Object.keys(o).length > 0) overridesToSave[exId] = o;
+      }
+    }
     const { error } = await (supabase as any)
       .from("sessions_planifiees")
       .insert({
@@ -255,6 +309,7 @@ function CoachSessions() {
         session_category: category,
         test_type: null,
         exercice_ids: category === "exercices" ? selectedExercices : null,
+        exercice_overrides: overridesToSave,
         scheduled_at: when.toISOString(),
         note: note.trim() || null,
       });
@@ -268,6 +323,8 @@ function CoachSessions() {
     setScheduledAt("");
     setNote("");
     setSelectedExercices([]);
+    setExerciceOverrides({});
+    setExpandedOverrideId(null);
     setExSearch("");
     setCategory("session");
     await loadAll(coachId);
@@ -487,7 +544,7 @@ function CoachSessions() {
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           Espace Coach
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Sessions</h1>
+        <h1 className="text-2xl font-bold text-foreground">Planification</h1>
       </header>
 
       {/* Section 1 - Plan */}
@@ -634,6 +691,88 @@ function CoachSessions() {
                     })
                   )}
                 </div>
+
+                {/* Per-exercise customization (overrides for this planning only) */}
+                {selectedExercices.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Personnaliser pour cette séance
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {selectedExercices.map((exId) => {
+                        const ex = exercices.find((e) => e.id === exId);
+                        if (!ex) return null;
+                        const ov = exerciceOverrides[exId] ?? {};
+                        const customizedCount = Object.keys(ov).length;
+                        const open = expandedOverrideId === exId;
+                        return (
+                          <div
+                            key={`ov-${exId}`}
+                            className="rounded-lg border border-border bg-card"
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedOverrideId(open ? null : exId)
+                              }
+                              className="flex w-full items-center gap-2 px-2.5 py-2 text-left"
+                            >
+                              <Pencil className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
+                                #{String(ex.numero).padStart(2, "0")} · {ex.titre}
+                              </span>
+                              {customizedCount > 0 && (
+                                <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-semibold text-accent">
+                                  Modifié
+                                </span>
+                              )}
+                              <ChevronDown
+                                className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+                              />
+                            </button>
+                            {open && (
+                              <div className="space-y-2 border-t border-border px-2.5 py-2.5">
+                                <OverrideField
+                                  label="Stimuli"
+                                  placeholder={
+                                    ex.stimulus_type ?? "Couleur, son, indice visuel…"
+                                  }
+                                  value={ov.stimuli ?? ""}
+                                  onChange={(v) =>
+                                    setOverrideField(exId, "stimuli", v)
+                                  }
+                                />
+                                <OverrideField
+                                  label="Matériel"
+                                  placeholder={
+                                    ex.materiel ?? "Cônes, chasubles, support…"
+                                  }
+                                  value={ov.materiel ?? ""}
+                                  onChange={(v) =>
+                                    setOverrideField(exId, "materiel", v)
+                                  }
+                                />
+                                <OverrideField
+                                  label="Distances / dimensions"
+                                  placeholder="Ex : grille 5×5 m, plots à 8 m…"
+                                  value={ov.distances ?? ""}
+                                  onChange={(v) =>
+                                    setOverrideField(exId, "distances", v)
+                                  }
+                                />
+                                <p className="text-[10px] italic text-muted-foreground">
+                                  Ces réglages s'appliquent uniquement à cette séance.
+                                  L'exercice du catalogue reste inchangé.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <p className="mt-2 border-t border-border pt-2 text-center text-[11px] font-semibold text-muted-foreground">
                   {selectedExercices.length} exercice
                   {selectedExercices.length > 1 ? "s" : ""} sélectionné
@@ -726,6 +865,13 @@ function CoachSessions() {
                         <p className="mt-1 text-xs text-foreground/80">
                           📅 {fmtDate(s.scheduled_at)}
                         </p>
+                        {s.exercice_overrides &&
+                          Object.keys(s.exercice_overrides).length > 0 && (
+                            <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                              <Pencil className="h-2.5 w-2.5" />
+                              Modifié pour cette séance
+                            </span>
+                          )}
                         {s.note && (
                           <p className="mt-1 text-xs italic text-muted-foreground">
                             « {s.note} »
@@ -1078,6 +1224,32 @@ function CoachSessions() {
           </>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function OverrideField({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </label>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-8 text-xs"
+      />
     </div>
   );
 }
