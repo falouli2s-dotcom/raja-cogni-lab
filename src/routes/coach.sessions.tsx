@@ -865,6 +865,13 @@ function CoachSessions() {
                         <p className="mt-1 text-xs text-foreground/80">
                           📅 {fmtDate(s.scheduled_at)}
                         </p>
+                        {s.exercice_overrides &&
+                          Object.keys(s.exercice_overrides).length > 0 && (
+                            <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                              <Pencil className="h-2.5 w-2.5" />
+                              Modifié pour cette séance
+                            </span>
+                          )}
                         {s.note && (
                           <p className="mt-1 text-xs italic text-muted-foreground">
                             « {s.note} »
