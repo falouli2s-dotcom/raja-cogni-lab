@@ -10,6 +10,8 @@ import {
   NIVEAU_COLORS,
   getTestIcon,
 } from "@/components/exercises/exercise-constants";
+import { ExportModal } from "@/components/coach/ExportModal";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/coach/joueur/$playerId")({
   component: CoachJoueurDetail,
@@ -37,6 +39,7 @@ function CoachJoueurDetail() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
   const [coachId, setCoachId] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
