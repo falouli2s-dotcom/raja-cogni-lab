@@ -108,6 +108,34 @@ function CoachJoueurDetail() {
     })();
   }, [playerId]);
 
+  // Real-time subscription: keep planning statuses up-to-date without a full
+  // page refetch when the player completes exercises.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`planning-updates-${playerId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "sessions_planifiees",
+          filter: `player_id=eq.${playerId}`,
+        },
+        (payload) => {
+          setPlannings((prev) =>
+            prev.map((p) =>
+              p.id === payload.new.id ? { ...p, ...payload.new } : p
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [playerId]);
+
   const pendingPlannings = plannings
     .filter((p) => p.status === "pending")
     .slice()
