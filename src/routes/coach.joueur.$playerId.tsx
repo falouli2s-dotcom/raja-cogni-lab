@@ -10,7 +10,6 @@ import {
   NIVEAU_COLORS,
   getTestIcon,
 } from "@/components/exercises/exercise-constants";
-import { ExportButton } from "@/components/coach/ExportButton";
 
 export const Route = createFileRoute("/coach/joueur/$playerId")({
   component: CoachJoueurDetail,
@@ -208,14 +207,7 @@ function CoachJoueurDetail() {
               )}
             </div>
           </div>
-          {coachId && (
-            <ExportButton
-              scope="player"
-              playerId={playerId}
-              coachId={coachId}
-              className="shrink-0"
-            />
-          )}
+
         </div>
       </header>
 
