@@ -42,17 +42,17 @@ export function ExportButton({
   const [loading, setLoading] = useState(false);
 
   async function handleGenerate() {
-    if (scope === "player" && !playerId) {
-      toast.error("Identifiant joueur manquant");
-      return;
-    }
-
     setLoading(true);
     try {
       if (scope === "player") {
+        const pid = playerId;
+        if (!pid) {
+          toast.error("Identifiant joueur manquant");
+          return;
+        }
         const data = await fetchPlayerExportData(
           supabase,
-          playerId!,
+          pid,
           dateFrom,
           dateTo
         );

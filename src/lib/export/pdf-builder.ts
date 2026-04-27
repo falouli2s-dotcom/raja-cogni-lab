@@ -203,7 +203,6 @@ export function generatePlayerPDF(data: PlayerExportData): void {
   let y = drawHeader(doc, "Rapport Cognitif Individuel");
 
   // Player identity block
-  const posText = data.position ? ` | ${data.position}` : "";
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   setTextColor(doc, WHITE);
@@ -213,7 +212,7 @@ export function generatePlayerPDF(data: PlayerExportData): void {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     setTextColor(doc, GRAY);
-    doc.text(posText.slice(3), MARGIN, y + 10);
+    doc.text(data.position, MARGIN, y + 10);
   }
 
   if (lastSession) {
