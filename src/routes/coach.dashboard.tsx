@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { groupTestSessions } from "@/lib/group-test-sessions";
 import { RadarChart } from "@/components/RadarChart";
 import type { CognitiveDimension } from "@/lib/sgs-engine";
+import { ExportButton } from "@/components/coach/ExportButton";
 
 export const Route = createFileRoute("/coach/dashboard")({
   component: CoachDashboard,
@@ -531,13 +532,18 @@ function CoachDashboard() {
       animate="visible"
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <motion.header variants={itemVariants} className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Bonjour, {firstName || "Coach"} 👋
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground capitalize">
-          Raja Casablanca · {today}
-        </p>
+      <motion.header variants={itemVariants} className="mb-6 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-foreground">
+            Bonjour, {firstName || "Coach"} 👋
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground capitalize">
+            Raja Casablanca · {today}
+          </p>
+        </div>
+        {coachId && (
+          <ExportButton scope="team" coachId={coachId} className="shrink-0 mt-1" />
+        )}
       </motion.header>
 
       {/* ── Section 1 — Stats globales (2×2 grid) ─────────────────────────── */}
