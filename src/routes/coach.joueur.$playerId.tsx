@@ -10,6 +10,7 @@ import {
   NIVEAU_COLORS,
   getTestIcon,
 } from "@/components/exercises/exercise-constants";
+import { ExportButton } from "@/components/coach/ExportButton";
 
 export const Route = createFileRoute("/coach/joueur/$playerId")({
   component: CoachJoueurDetail,
@@ -36,6 +37,7 @@ function CoachJoueurDetail() {
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
+  const [coachId, setCoachId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -45,6 +47,7 @@ function CoachJoueurDetail() {
       } = await supabase.auth.getUser();
       const coachUid = user?.id;
       if (!coachUid) return;
+      setCoachId(coachUid);
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -205,6 +208,14 @@ function CoachJoueurDetail() {
               )}
             </div>
           </div>
+          {coachId && (
+            <ExportButton
+              scope="player"
+              playerId={playerId}
+              coachId={coachId}
+              className="shrink-0"
+            />
+          )}
         </div>
       </header>
 
