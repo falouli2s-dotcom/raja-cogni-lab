@@ -717,27 +717,29 @@ function CoachDashboard() {
                     <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                 <XAxis
                   dataKey="week"
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                   axisLine={{ stroke: "hsl(var(--border))" }}
                   tickLine={{ stroke: "hsl(var(--border))" }}
                 />
                 <YAxis
                   domain={[0, 100]}
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                   axisLine={{ stroke: "hsl(var(--border))" }}
                   tickLine={{ stroke: "hsl(var(--border))" }}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "12px",
-                    fontSize: 12,
+                    borderRadius: "8px",
+                    fontSize: "12px",
                     color: "hsl(var(--foreground))",
                   }}
+                  labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                  cursor={{ stroke: "hsl(var(--border))" }}
                   formatter={(value: number, _: string, props: any) => [
                     `SGS moyen : ${value} · ${props.payload.sessions} session(s)`,
                     "",
@@ -783,12 +785,13 @@ function CoachDashboard() {
                   strokeDasharray="3 3"
                   horizontal={false}
                   stroke="hsl(var(--border))"
+                  opacity={0.5}
                 />
                 <XAxis
                   type="number"
                   domain={[0, 100]}
                   tickFormatter={(v) => `${v}%`}
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                   axisLine={{ stroke: "hsl(var(--border))" }}
                   tickLine={{ stroke: "hsl(var(--border))" }}
                 />
@@ -796,18 +799,20 @@ function CoachDashboard() {
                   type="category"
                   dataKey="name"
                   width={56}
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                   axisLine={{ stroke: "hsl(var(--border))" }}
                   tickLine={{ stroke: "hsl(var(--border))" }}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "12px",
-                    fontSize: 12,
+                    borderRadius: "8px",
+                    fontSize: "12px",
                     color: "hsl(var(--foreground))",
                   }}
+                  labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                  cursor={{ stroke: "hsl(var(--border))" }}
                   formatter={(value: number, _: string, props: any) => [
                     `${props.payload.completed} / ${props.payload.total} exercice(s) (${value}%)`,
                     "",

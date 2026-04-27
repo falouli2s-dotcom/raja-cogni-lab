@@ -510,27 +510,29 @@ function HistoryPage() {
             <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                   <XAxis
                     dataKey="date"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                     axisLine={{ stroke: "hsl(var(--border))" }}
-                    tickLine={false}
+                    tickLine={{ stroke: "hsl(var(--border))" }}
                   />
                   <YAxis
                     domain={[0, 100]}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                     axisLine={{ stroke: "hsl(var(--border))" }}
-                    tickLine={false}
+                    tickLine={{ stroke: "hsl(var(--border))" }}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
-                      borderRadius: "0.75rem",
+                      borderRadius: "8px",
                       fontSize: "12px",
+                      color: "hsl(var(--foreground))",
                     }}
-                    labelStyle={{ color: "hsl(var(--foreground))" }}
+                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                    cursor={{ stroke: "hsl(var(--border))" }}
                   />
                   <Line
                     type="monotone"
