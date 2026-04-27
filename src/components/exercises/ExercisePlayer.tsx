@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Pause, Play, SkipForward, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -183,11 +183,6 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
   const recoveryProgress =
     phaseDuration > 0 ? ((phaseDuration - timeLeft) / phaseDuration) * 100 : 0;
 
-  const handleComplete = useCallback(() => {
-    // Insert responsibility belongs to the onClose handler in _app.training.$planningId.tsx
-    // which has the planning_id context.
-  }, []);
-
   // Phase timer
   useEffect(() => {
     if (phase === "done" || paused) return;
@@ -200,7 +195,6 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
               return recoveryDuration;
             }
             setPhase("done");
-            handleComplete();
             return 0;
           }
           setCurrentSerie((s) => s + 1);
@@ -211,7 +205,7 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [phase, paused, currentSerie, totalSeries, recoveryDuration, serieDuration, handleComplete]);
+  }, [phase, paused, currentSerie, totalSeries, recoveryDuration, serieDuration]);
 
   // Stimulus generator with dynamic randomized interval — only during serie
   useEffect(() => {
@@ -250,7 +244,6 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
         setTimeLeft(recoveryDuration);
       } else {
         setPhase("done");
-        handleComplete();
       }
     } else if (phase === "recovery") {
       setCurrentSerie((s) => s + 1);
