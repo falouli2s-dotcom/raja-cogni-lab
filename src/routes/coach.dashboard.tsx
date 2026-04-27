@@ -32,7 +32,6 @@ import { toast } from "sonner";
 import { groupTestSessions } from "@/lib/group-test-sessions";
 import { RadarChart } from "@/components/RadarChart";
 import type { CognitiveDimension } from "@/lib/sgs-engine";
-import { ExportButton } from "@/components/coach/ExportButton";
 
 export const Route = createFileRoute("/coach/dashboard")({
   component: CoachDashboard,
@@ -541,9 +540,7 @@ function CoachDashboard() {
             Raja Casablanca · {today}
           </p>
         </div>
-        {coachId && (
-          <ExportButton scope="team" coachId={coachId} className="shrink-0 mt-1" />
-        )}
+
       </motion.header>
 
       {/* ── Section 1 — Stats globales (2×2 grid) ─────────────────────────── */}
