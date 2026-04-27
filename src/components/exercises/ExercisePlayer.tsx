@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Pause, Play, SkipForward, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import type { Exercice } from "@/routes/_app.exercises";
 
@@ -184,21 +183,10 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
   const recoveryProgress =
     phaseDuration > 0 ? ((phaseDuration - timeLeft) / phaseDuration) * 100 : 0;
 
-  const handleComplete = useCallback(async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("completed_exercises" as any).insert({
-          user_id: user.id,
-          exercise_id: ex.id,
-          series_completed: totalSeries,
-          completed_at: new Date().toISOString(),
-        } as any);
-      }
-    } catch {
-      // table may not exist yet
-    }
-  }, [ex.id, totalSeries]);
+  const handleComplete = useCallback(() => {
+    // Insert responsibility belongs to the onClose handler in _app.training.$planningId.tsx
+    // which has the planning_id context.
+  }, []);
 
   // Phase timer
   useEffect(() => {
