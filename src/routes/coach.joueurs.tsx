@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Trash2, Clock, X, Mail, Users } from "lucide-react";
+import { UserPlus, Trash2, Clock, X, Mail, Users, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ExportModal } from "@/components/coach/ExportModal";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/coach/joueurs")({
@@ -42,6 +43,9 @@ function CoachJoueurs() {
   const [sending, setSending] = useState(false);
   const [relations, setRelations] = useState<Relation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exportPlayer, setExportPlayer] = useState<
+    { id: string; full_name: string; position: string } | null
+  >(null);
 
   async function loadRelations(uid: string) {
     setLoading(true);
@@ -278,9 +282,26 @@ function CoachJoueurs() {
                     </div>
                   </div>
                   <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExportPlayer({
+                        id: r.player_id,
+                        full_name: r.profile?.full_name ?? "Joueur",
+                        position: r.profile?.position ?? "—",
+                      });
+                    }}
+                  >
+                    <FileText className="mr-1 h-3.5 w-3.5" /> Exporter PDF
+                  </Button>
+                  <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeRelation(r.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRelation(r.id);
+                    }}
                     className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" /> Retirer
@@ -341,6 +362,14 @@ function CoachJoueurs() {
             </AnimatePresence>
           </div>
         </section>
+      )}
+
+      {exportPlayer && coachId && (
+        <ExportModal
+          coachId={coachId}
+          player={exportPlayer}
+          onClose={() => setExportPlayer(null)}
+        />
       )}
     </div>
   );
