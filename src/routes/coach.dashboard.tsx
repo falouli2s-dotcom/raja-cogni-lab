@@ -10,10 +10,16 @@ import {
   ChevronRight,
   CalendarDays,
   Activity,
+  Dumbbell,
+  CheckSquare,
+  Trophy,
 } from "lucide-react";
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -24,6 +30,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { groupTestSessions } from "@/lib/group-test-sessions";
+import { RadarChart } from "@/components/RadarChart";
+import type { CognitiveDimension } from "@/lib/sgs-engine";
 
 export const Route = createFileRoute("/coach/dashboard")({
   component: CoachDashboard,
@@ -31,6 +39,8 @@ export const Route = createFileRoute("/coach/dashboard")({
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const WEEKS_TO_DISPLAY = 8;
+const MIN_CHART_HEIGHT = 80;
+const BAR_HEIGHT_PER_PLAYER = 40;
 
 // ─── Animation variants ───────────────────────────────────────────────────────
 const containerVariants = {
@@ -78,6 +88,19 @@ type RecentActivity = {
   created_at: string;
   score_global: number | null;
   player_name: string | null;
+};
+
+type ExerciceStats = {
+  totalPlanifies: number;
+  totalCompletes: number;
+  topExercice: { titre: string; count: number } | null;
+};
+
+type PlayerCompletionRate = {
+  name: string;
+  rate: number;
+  total: number;
+  completed: number;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -144,6 +167,9 @@ function CoachDashboard() {
   const [upcoming, setUpcoming] = useState<UpcomingSession[]>([]);
   const [recent, setRecent] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exerciceStats, setExerciceStats] = useState<ExerciceStats | null>(null);
+  const [playerRates, setPlayerRates] = useState<PlayerCompletionRate[]>([]);
+  const [teamRadar, setTeamRadar] = useState<CognitiveDimension[]>([]);
 
   const today = new Date().toLocaleDateString("fr-FR", {
     weekday: "long",
@@ -352,6 +378,131 @@ function CoachDashboard() {
         }));
         setRecent(recentRows);
       }
+
+      // ── Exercice stats (Section A) ────────────────────────────────────────
+      const { count: totalExPlan } = await (supabase as any)
+        .from("sessions_planifiees")
+        .select("id", { count: "exact", head: true })
+        .eq("coach_id", uid)
+        .eq("session_category", "exercices");
+
+      const { data: allExSessions } = await (supabase as any)
+        .from("sessions_planifiees")
+        .select("player_id, exercice_ids")
+        .eq("coach_id", uid)
+        .eq("session_category", "exercices");
+
+      let allCompletedEx: {
+        user_id: string;
+        exercise_id: string;
+        planning_id: string | null;
+      }[] = [];
+      if (playerIds.length > 0) {
+        const { data: cxData } = await (supabase as any)
+          .from("completed_exercises")
+          .select("user_id, exercise_id, planning_id")
+          .in("user_id", playerIds);
+        allCompletedEx = cxData ?? [];
+      }
+
+      // Card 2: distinct (exercise_id, planning_id) pairs
+      const uniqueCompletedPairs = new Set(
+        allCompletedEx.map((r) => `${r.exercise_id}::${r.planning_id ?? "null"}`)
+      );
+      const totalCompletes = uniqueCompletedPairs.size;
+
+      // Card 3: most assigned exercise
+      const exFreq: Record<string, number> = {};
+      for (const s of allExSessions ?? []) {
+        for (const id of ((s.exercice_ids as string[] | null) ?? [])) {
+          exFreq[id] = (exFreq[id] ?? 0) + 1;
+        }
+      }
+      const topEntry = Object.entries(exFreq).sort((a, b) => b[1] - a[1])[0];
+      let topExercice: { titre: string; count: number } | null = null;
+      if (topEntry) {
+        const { data: exData } = await (supabase as any)
+          .from("exercices")
+          .select("titre")
+          .eq("id", topEntry[0])
+          .maybeSingle();
+        if (exData?.titre) {
+          topExercice = { titre: exData.titre as string, count: topEntry[1] };
+        }
+      }
+      setExerciceStats({
+        totalPlanifies: totalExPlan ?? 0,
+        totalCompletes,
+        topExercice,
+      });
+
+      // ── Player completion rates (Section B) ──────────────────────────────
+      const playerRatesData: PlayerCompletionRate[] = playerIds
+        .map((pid) => {
+          const sessions = (allExSessions ?? []).filter(
+            (s: any) => s.player_id === pid
+          );
+          const total = sessions.reduce(
+            (sum: number, s: any) =>
+              sum + ((s.exercice_ids as string[] | null)?.length ?? 0),
+            0
+          );
+          const completedIds = new Set(
+            allCompletedEx
+              .filter((c) => c.user_id === pid && c.planning_id != null)
+              .map((c) => c.exercise_id)
+          );
+          const completed = completedIds.size;
+          const rate =
+            total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+          const name = (profilesMap.get(pid)?.full_name ?? "?")
+            .trim()
+            .split(/\s+/)[0];
+          return { name, rate, total, completed };
+        })
+        .sort((a, b) => b.rate - a.rate);
+      setPlayerRates(playerRatesData);
+
+      // ── Team cognitive radar (Section C) ─────────────────────────────────
+      const dimAccum: Record<string, number[]> = {};
+      for (const test of allTests) {
+        const brutes = test.donnees_brutes as Record<string, unknown> | null;
+        if (!brutes) continue;
+        const dims = brutes.dimensions as Record<string, number> | undefined;
+        if (!dims) continue;
+        for (const [k, v] of Object.entries(dims)) {
+          if (typeof v === "number") {
+            if (!dimAccum[k]) dimAccum[k] = [];
+            dimAccum[k].push(v);
+          }
+        }
+      }
+      const RADAR_KEYS: { key: string; label: string }[] = [
+        { key: "flexibility", label: "Flexibilité\ncognitive" },
+        { key: "attention", label: "Attention\nSélective" },
+        { key: "workingMemory", label: "Mémoire\nTravail" },
+        { key: "inhibition", label: "Inhibition" },
+        { key: "reactionTime", label: "Réaction" },
+        { key: "anticipation", label: "Anticipation" },
+      ];
+      const teamDims: CognitiveDimension[] = RADAR_KEYS.filter(
+        (r) => (dimAccum[r.key]?.length ?? 0) > 0
+      ).map((r) => {
+        const vals = dimAccum[r.key];
+        const avg = Math.round(
+          vals.reduce((a, b) => a + b, 0) / vals.length
+        );
+        const status: CognitiveDimension["status"] =
+          avg >= 75
+            ? "excellent"
+            : avg >= 50
+              ? "normal"
+              : avg >= 30
+                ? "limite"
+                : "faible";
+        return { key: r.key, label: r.label, score: avg, status };
+      });
+      setTeamRadar(teamDims);
     } catch (err: any) {
       toast.error(err?.message ?? "Erreur lors du chargement");
     } finally {
@@ -441,6 +592,58 @@ function CoachDashboard() {
               <p className="text-2xl font-bold text-muted-foreground">—</p>
             )}
             <p className="mt-0.5 text-xs text-muted-foreground">SGS moyen équipe</p>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Section A — Exercices stats row ──────────────────────────────────── */}
+      <motion.section variants={itemVariants} className="mb-6">
+        <h2 className="mb-3 text-sm font-semibold text-foreground">
+          Exercices
+        </h2>
+        <div className="grid grid-cols-3 gap-3">
+          {/* Total planifiés */}
+          <div className="rounded-2xl border border-border bg-card p-3">
+            <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10">
+              <Dumbbell className="h-4 w-4 text-blue-400" />
+            </div>
+            <p className="text-xl font-bold text-foreground">
+              {exerciceStats?.totalPlanifies ?? 0}
+            </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Planifiés</p>
+          </div>
+
+          {/* Complétés */}
+          <div className="rounded-2xl border border-border bg-card p-3">
+            <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10">
+              <CheckSquare className="h-4 w-4 text-emerald-400" />
+            </div>
+            <p className="text-xl font-bold text-foreground">
+              {exerciceStats?.totalCompletes ?? 0}
+            </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Complétés</p>
+          </div>
+
+          {/* Top exercice */}
+          <div className="rounded-2xl border border-border bg-card p-3">
+            <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10">
+              <Trophy className="h-4 w-4 text-amber-400" />
+            </div>
+            {exerciceStats?.topExercice ? (
+              <>
+                <p className="text-xs font-bold leading-tight text-foreground">
+                  {exerciceStats.topExercice.titre.length > 20
+                    ? exerciceStats.topExercice.titre.slice(0, 20) + "…"
+                    : exerciceStats.topExercice.titre}
+                </p>
+                <span className="mt-1 inline-block rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
+                  ×{exerciceStats.topExercice.count}
+                </span>
+              </>
+            ) : (
+              <p className="text-xl font-bold text-muted-foreground">—</p>
+            )}
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Top exercice</p>
           </div>
         </div>
       </motion.section>
@@ -555,6 +758,96 @@ function CoachDashboard() {
           )}
         </div>
       </motion.section>
+
+      {/* ── Section B — Taux de complétion par joueur ────────────────────────── */}
+      <motion.section variants={itemVariants} className="mb-6">
+        <h2 className="mb-3 text-sm font-semibold text-foreground">
+          Complétion des exercices par joueur
+        </h2>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          {playerRates.length === 0 || playerRates.every((p) => p.total === 0) ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Aucune donnée de complétion
+            </p>
+          ) : (
+            <ResponsiveContainer
+              width="100%"
+              height={Math.max(MIN_CHART_HEIGHT, playerRates.length * BAR_HEIGHT_PER_PLAYER)}
+            >
+              <BarChart
+                data={playerRates}
+                layout="vertical"
+                margin={{ top: 4, right: 44, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  horizontal={false}
+                  stroke="hsl(var(--border))"
+                />
+                <XAxis
+                  type="number"
+                  domain={[0, 100]}
+                  tickFormatter={(v) => `${v}%`}
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={56}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "12px",
+                    fontSize: 12,
+                    color: "hsl(var(--foreground))",
+                  }}
+                  formatter={(value: number, _: string, props: any) => [
+                    `${props.payload.completed} / ${props.payload.total} exercice(s) (${value}%)`,
+                    "",
+                  ]}
+                  labelFormatter={(label) => label}
+                />
+                <Bar dataKey="rate" radius={[0, 4, 4, 0]} maxBarSize={20}>
+                  {playerRates.map((entry, idx) => (
+                    <Cell
+                      key={idx}
+                      fill={
+                        entry.rate >= 70
+                          ? "#10b981"
+                          : entry.rate >= 40
+                            ? "#f59e0b"
+                            : "#f43f5e"
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </motion.section>
+
+      {/* ── Section C — Profil cognitif collectif ────────────────────────────── */}
+      {teamRadar.length > 0 && (
+        <motion.section variants={itemVariants} className="mb-6">
+          <h2 className="mb-1 text-sm font-semibold text-foreground">
+            Profil cognitif collectif
+          </h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Moyenne des scores par dimension — tous joueurs confondus
+          </p>
+          <div className="flex justify-center rounded-2xl border border-border bg-card p-4">
+            <RadarChart dimensions={teamRadar} size={260} />
+          </div>
+        </motion.section>
+      )}
 
       {/* ── Section 4 — Sessions à venir ──────────────────────────────────── */}
       <motion.section variants={itemVariants} className="mb-6">
