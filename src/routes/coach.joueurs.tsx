@@ -43,6 +43,9 @@ function CoachJoueurs() {
   const [sending, setSending] = useState(false);
   const [relations, setRelations] = useState<Relation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exportPlayer, setExportPlayer] = useState<
+    { id: string; full_name: string; position: string } | null
+  >(null);
 
   async function loadRelations(uid: string) {
     setLoading(true);
