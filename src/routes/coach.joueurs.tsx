@@ -363,6 +363,14 @@ function CoachJoueurs() {
           </div>
         </section>
       )}
+
+      {exportPlayer && coachId && (
+        <ExportModal
+          coachId={coachId}
+          player={exportPlayer}
+          onClose={() => setExportPlayer(null)}
+        />
+      )}
     </div>
   );
 }
