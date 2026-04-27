@@ -293,6 +293,114 @@ function drawSgsBadge(doc: jsPDF, score: number, x: number, y: number) {
   doc.text("/100", x, y + 8, { align: "center" });
 }
 
+// ─── Radar Chart (6-axis cognitive profile) ───────────────────────────────────
+
+/**
+ * Draws a 6-axis radar chart at (cx, cy) with given radius.
+ * scores[i] expected in 0-100, mapped to 0-r.
+ * Axis order: Réaction, Inhibition, Mémoire, Attention, Flexibilité, Anticipation.
+ */
+function drawRadar(
+  doc: jsPDF,
+  cx: number,
+  cy: number,
+  r: number,
+  scores: number[]
+): void {
+  const labels = ["Réaction", "Inhibition", "Mémoire", "Attention", "Flexibilité", "Anticipation"];
+  const n = 6;
+  const step = (2 * Math.PI) / n;
+  // Start from top (12 o'clock)
+  const angleAt = (i: number) => -Math.PI / 2 + i * step;
+
+  // Background polygon (light gray) + concentric guides at 25/50/75/100%
+  doc.setDrawColor(229, 231, 235); // #e5e7eb
+  doc.setLineWidth(0.2);
+  for (const ratio of [0.25, 0.5, 0.75, 1]) {
+    const pts: [number, number][] = [];
+    for (let i = 0; i < n; i++) {
+      const a = angleAt(i);
+      pts.push([cx + Math.cos(a) * r * ratio, cy + Math.sin(a) * r * ratio]);
+    }
+    for (let i = 0; i < n; i++) {
+      const [x1, y1] = pts[i];
+      const [x2, y2] = pts[(i + 1) % n];
+      doc.line(x1, y1, x2, y2);
+    }
+  }
+
+  // Axis lines
+  for (let i = 0; i < n; i++) {
+    const a = angleAt(i);
+    doc.line(cx, cy, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+  }
+
+  // Data polygon points
+  const dataPts: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const s = Math.max(0, Math.min(100, scores[i] ?? 0));
+    const a = angleAt(i);
+    const dist = (s / 100) * r;
+    dataPts.push([cx + Math.cos(a) * dist, cy + Math.sin(a) * dist]);
+  }
+
+  // Filled green polygon at opacity 0.4 (using GState)
+  const anyDoc = doc as any;
+  let gs: any;
+  try {
+    gs = new (jsPDF as any).GState({ opacity: 0.4 });
+    anyDoc.setGState(gs);
+  } catch {
+    /* GState may be unavailable; fall back to solid fill */
+  }
+  doc.setFillColor(25, 140, 61); // #198c3d Raja green
+  // Use lines() with start point for filled polygon
+  const startX = dataPts[0][0];
+  const startY = dataPts[0][1];
+  const rel: [number, number][] = [];
+  for (let i = 1; i < n; i++) {
+    rel.push([dataPts[i][0] - dataPts[i - 1][0], dataPts[i][1] - dataPts[i - 1][1]]);
+  }
+  rel.push([startX - dataPts[n - 1][0], startY - dataPts[n - 1][1]]);
+  doc.lines(rel, startX, startY, [1, 1], "F", true);
+
+  // Reset opacity
+  try {
+    const gs2 = new (jsPDF as any).GState({ opacity: 1 });
+    anyDoc.setGState(gs2);
+  } catch { /* noop */ }
+
+  // Stroked outline (solid green)
+  doc.setDrawColor(25, 140, 61);
+  doc.setLineWidth(0.5);
+  for (let i = 0; i < n; i++) {
+    const [x1, y1] = dataPts[i];
+    const [x2, y2] = dataPts[(i + 1) % n];
+    doc.line(x1, y1, x2, y2);
+  }
+
+  // Score dots
+  doc.setFillColor(25, 140, 61);
+  for (const [x, y] of dataPts) {
+    doc.circle(x, y, 1, "F");
+  }
+
+  // Axis labels
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(31, 41, 55); // #1f2937
+  for (let i = 0; i < n; i++) {
+    const a = angleAt(i);
+    const lx = cx + Math.cos(a) * (r + 8);
+    const ly = cy + Math.sin(a) * (r + 8) + 1;
+    let align: "left" | "right" | "center" = "center";
+    const cosA = Math.cos(a);
+    if (cosA > 0.2) align = "left";
+    else if (cosA < -0.2) align = "right";
+    doc.text(labels[i], lx, ly, { align });
+  }
+}
+
 // ─── Player Info Block ────────────────────────────────────────────────────────
 
 function drawPlayerInfoBlock(doc: jsPDF, player: PlayerData, y: number): number {
