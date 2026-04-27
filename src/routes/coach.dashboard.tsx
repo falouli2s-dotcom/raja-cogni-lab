@@ -789,16 +789,16 @@ function CoachDashboard() {
                   domain={[0, 100]}
                   tickFormatter={(v) => `${v}%`}
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={{ stroke: "hsl(var(--border))" }}
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
                   width={56}
                   tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={{ stroke: "hsl(var(--border))" }}
                 />
                 <Tooltip
                   contentStyle={{
