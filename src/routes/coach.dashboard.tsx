@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { groupTestSessions } from "@/lib/group-test-sessions";
 import { RadarChart } from "@/components/RadarChart";
+import { ExportModal } from "@/components/coach/ExportModal";
 import type { CognitiveDimension } from "@/lib/sgs-engine";
 
 export const Route = createFileRoute("/coach/dashboard")({
@@ -170,6 +171,7 @@ function CoachDashboard() {
   const [exerciceStats, setExerciceStats] = useState<ExerciceStats | null>(null);
   const [playerRates, setPlayerRates] = useState<PlayerCompletionRate[]>([]);
   const [teamRadar, setTeamRadar] = useState<CognitiveDimension[]>([]);
+  const [teamExportOpen, setTeamExportOpen] = useState(false);
 
   const today = new Date().toLocaleDateString("fr-FR", {
     weekday: "long",
@@ -540,8 +542,22 @@ function CoachDashboard() {
             Raja Casablanca · {today}
           </p>
         </div>
-
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setTeamExportOpen(true)}
+          className="shrink-0"
+        >
+          📄 Exporter rapport équipe
+        </Button>
       </motion.header>
+
+      {teamExportOpen && coachId && (
+        <ExportModal
+          coachId={coachId}
+          onClose={() => setTeamExportOpen(false)}
+        />
+      )}
 
       {/* ── Section 1 — Stats globales (2×2 grid) ─────────────────────────── */}
       <motion.section variants={itemVariants} className="mb-6">
