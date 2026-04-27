@@ -526,6 +526,14 @@ export async function exportPlayerReport(
   y = drawPlayerInfoBlock(doc, player, y);
   y += 4;
 
+  // Radar chart (6 axes) — between SGS badge and dimension bars
+  if (latest) {
+    y = drawSectionTitle(doc, "Radar cognitif — 6 dimensions", y);
+    const radarCy = y + 42;
+    drawRadar(doc, w / 2, radarCy, 35, latest.dimensions.map((d) => d.score));
+    y = radarCy + 45;
+  }
+
   // Dimensions bar chart
   if (latest) {
     y = drawSectionTitle(doc, "Profil cognitif — Dernière session", y);
