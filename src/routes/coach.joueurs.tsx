@@ -282,9 +282,26 @@ function CoachJoueurs() {
                     </div>
                   </div>
                   <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExportPlayer({
+                        id: r.player_id,
+                        full_name: r.profile?.full_name ?? "Joueur",
+                        position: r.profile?.position ?? "—",
+                      });
+                    }}
+                  >
+                    <FileText className="mr-1 h-3.5 w-3.5" /> Exporter PDF
+                  </Button>
+                  <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeRelation(r.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRelation(r.id);
+                    }}
                     className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" /> Retirer
