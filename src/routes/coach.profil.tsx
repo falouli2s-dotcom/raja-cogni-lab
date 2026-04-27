@@ -1,10 +1,34 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { LogOut, Pencil, Check, X, Users, ChevronRight } from "lucide-react";
+import {
+  LogOut,
+  Pencil,
+  Check,
+  X,
+  ChevronRight,
+  Shield,
+  Bell,
+  Palette,
+  Eye,
+  EyeOff,
+  Camera,
+  Trash2,
+  Loader2,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/coach/profil")({
@@ -27,6 +51,14 @@ type PlayerItem = {
   position: string | null;
 };
 
+type SheetType = "security" | "notifications" | "appearance" | null;
+
+interface NotifPrefs {
+  rappels: boolean;
+  resultats: boolean;
+  exercices: boolean;
+}
+
 function initials(name?: string | null) {
   if (!name) return "?";
   return name
@@ -36,6 +68,14 @@ function initials(name?: string | null) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+function pathFromPublicUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const marker = "/storage/v1/object/public/avatars/";
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  return url.substring(idx + marker.length).split("?")[0];
 }
 
 function CoachProfil() {
@@ -50,10 +90,34 @@ function CoachProfil() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Edit mode
+  // Edit mode (name)
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Sheets
+  const [openSheet, setOpenSheet] = useState<SheetType>(null);
+
+  // Avatar
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deletingAvatar, setDeletingAvatar] = useState(false);
+
+  // Security
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [savingSecurity, setSavingSecurity] = useState(false);
+
+  // Notifications
+  const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>({
+    rappels: true,
+    resultats: false,
+    exercices: false,
+  });
+  const [savingNotifs, setSavingNotifs] = useState(false);
+
+  // Theme
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     (async () => {
@@ -114,6 +178,25 @@ function CoachProfil() {
 
       setLoading(false);
     })();
+
+    // Notif prefs
+    try {
+      const stored = localStorage.getItem("cogni_coach_notif_prefs");
+      if (stored) setNotifPrefs(JSON.parse(stored));
+    } catch {}
+
+    // Theme (shared key with player profile)
+    const storedTheme = localStorage.getItem("cogni_theme") as
+      | "light"
+      | "dark"
+      | null;
+    if (storedTheme) {
+      setTheme(storedTheme);
+    } else {
+      setTheme(
+        document.documentElement.classList.contains("dark") ? "dark" : "light"
+      );
+    }
   }, []);
 
   async function handleSave() {
@@ -151,6 +234,146 @@ function CoachProfil() {
     navigate({ to: "/login", replace: true });
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !profile) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner une image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image trop volumineuse (max 5 Mo)");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const oldPath = pathFromPublicUrl(profile.avatar_url);
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const newPath = `${profile.id}/avatar-${Date.now()}.${ext}`;
+
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(newPath, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(newPath);
+      const publicUrl = pub.publicUrl;
+
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", profile.id);
+      if (updErr) throw updErr;
+
+      if (oldPath && oldPath !== newPath) {
+        await supabase.storage.from("avatars").remove([oldPath]);
+      }
+
+      setProfile((p) =>
+        p ? { ...p, avatar_url: `${publicUrl}?v=${Date.now()}` } : p
+      );
+      toast.success("Photo de profil mise à jour");
+    } catch (err: any) {
+      toast.error(err.message || "Échec de l'upload");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function handleAvatarDelete() {
+    if (!profile?.avatar_url) return;
+    setDeletingAvatar(true);
+    try {
+      const oldPath = pathFromPublicUrl(profile.avatar_url);
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", profile.id);
+      if (updErr) throw updErr;
+      if (oldPath) {
+        await supabase.storage.from("avatars").remove([oldPath]);
+      }
+      setProfile((p) => (p ? { ...p, avatar_url: null } : p));
+      toast.success("Photo supprimée");
+    } catch (err: any) {
+      toast.error(err.message || "Échec de la suppression");
+    } finally {
+      setDeletingAvatar(false);
+    }
+  }
+
+  async function handleSaveSecurity() {
+    if (newPassword.length < 8) {
+      toast.error("8 caractères minimum");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+    setSavingSecurity(true);
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    setSavingSecurity(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    toast.success("Mot de passe mis à jour");
+    setOpenSheet(null);
+  }
+
+  function handleSaveNotifs() {
+    setSavingNotifs(true);
+    localStorage.setItem(
+      "cogni_coach_notif_prefs",
+      JSON.stringify(notifPrefs)
+    );
+    setTimeout(() => {
+      setSavingNotifs(false);
+      toast.success("Préférences enregistrées");
+      setOpenSheet(null);
+    }, 300);
+  }
+
+  function handleSetTheme(t: "light" | "dark") {
+    setTheme(t);
+    localStorage.setItem("cogni_theme", t);
+    if (t === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    toast.success(t === "dark" ? "Mode sombre activé" : "Mode clair activé");
+    setOpenSheet(null);
+  }
+
+  const menuItems = [
+    {
+      icon: Shield,
+      label: "Sécurité",
+      action: () => setOpenSheet("security"),
+    },
+    {
+      icon: Bell,
+      label: "Notifications",
+      action: () => setOpenSheet("notifications"),
+    },
+    {
+      icon: Palette,
+      label: "Apparence",
+      action: () => setOpenSheet("appearance"),
+    },
+  ];
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -174,16 +397,37 @@ function CoachProfil() {
         animate={{ y: 0, opacity: 1 }}
         className="mb-6 flex flex-col items-center gap-3"
       >
-        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-2xl font-bold text-primary">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={profile.full_name ?? ""}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            initials(profile?.full_name)
-          )}
+        <div className="relative">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-2xl font-bold text-primary">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.full_name ?? ""}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              initials(profile?.full_name)
+            )}
+          </div>
+          <label
+            htmlFor="avatar-upload"
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform active:scale-95"
+            aria-label="Changer la photo"
+          >
+            {uploadingAvatar ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Camera className="h-3.5 w-3.5" />
+            )}
+          </label>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+            disabled={uploadingAvatar || deletingAvatar}
+          />
         </div>
         <div className="text-center">
           <p className="text-lg font-bold text-foreground">
@@ -192,6 +436,18 @@ function CoachProfil() {
           <span className="mt-0.5 inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary capitalize">
             {profile?.role ?? "Coach"}
           </span>
+          {profile?.avatar_url && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={handleAvatarDelete}
+                disabled={deletingAvatar || uploadingAvatar}
+                className="inline-flex items-center gap-1 text-xs font-medium text-destructive transition-opacity active:opacity-70 disabled:opacity-50"
+              >
+                <Trash2 className="h-3 w-3" /> Supprimer la photo
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -204,7 +460,11 @@ function CoachProfil() {
       >
         <StatCard emoji="👥" label="Joueurs" value={stats.playersCount} />
         <StatCard emoji="📋" label="Sessions" value={stats.sessionsTotal} />
-        <StatCard emoji="✅" label="Complétées" value={stats.sessionsCompleted} />
+        <StatCard
+          emoji="✅"
+          label="Complétées"
+          value={stats.sessionsCompleted}
+        />
       </motion.div>
 
       {/* Personal info */}
@@ -253,12 +513,7 @@ function CoachProfil() {
             onChange={setEditName}
           />
           <div className="h-px bg-border" />
-          <InfoField
-            label="Email"
-            value={email}
-            editing={false}
-            disabled
-          />
+          <InfoField label="Email" value={email} editing={false} disabled />
           {profile?.category && (
             <>
               <div className="h-px bg-border" />
@@ -283,6 +538,35 @@ function CoachProfil() {
           )}
         </div>
       </motion.section>
+
+      {/* Settings menu */}
+      <motion.div
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.14 }}
+        className="mb-6 flex flex-col rounded-2xl border border-border bg-card"
+      >
+        {menuItems.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={i}
+              onClick={item.action}
+              className={`flex items-center justify-between px-4 py-4 text-left transition-colors active:bg-muted ${
+                i !== menuItems.length - 1 ? "border-b border-border" : ""
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Icon className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">
+                  {item.label}
+                </span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          );
+        })}
+      </motion.div>
 
       {/* Players */}
       {players.length > 0 && (
@@ -348,6 +632,176 @@ function CoachProfil() {
           <LogOut className="mr-2 h-4 w-4" /> Déconnexion
         </Button>
       </motion.div>
+
+      {/* === SHEETS === */}
+
+      {/* Security */}
+      <Sheet
+        open={openSheet === "security"}
+        onOpenChange={(o) => !o && setOpenSheet(null)}
+      >
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Sécurité</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Nouveau mot de passe
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 8 caractères"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Confirmer le mot de passe
+              </label>
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirmer"
+              />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-xs text-destructive mt-1">
+                  Les mots de passe ne correspondent pas
+                </p>
+              )}
+            </div>
+            <Button
+              onClick={handleSaveSecurity}
+              disabled={
+                savingSecurity ||
+                newPassword.length < 8 ||
+                newPassword !== confirmPassword
+              }
+              className="h-12 w-full text-base font-semibold mt-2"
+            >
+              {savingSecurity ? "Mise à jour..." : "Mettre à jour"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Notifications */}
+      <Sheet
+        open={openSheet === "notifications"}
+        onOpenChange={(o) => !o && setOpenSheet(null)}
+      >
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Notifications</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 flex flex-col gap-1">
+            {[
+              { key: "rappels" as const, label: "Rappels de session" },
+              { key: "resultats" as const, label: "Résultats de tests" },
+              { key: "exercices" as const, label: "Nouveaux exercices" },
+            ].map((item) => (
+              <div
+                key={item.key}
+                className="flex items-center justify-between py-3 border-b border-border last:border-0"
+              >
+                <span className="text-sm font-medium text-foreground">
+                  {item.label}
+                </span>
+                <Switch
+                  checked={notifPrefs[item.key]}
+                  onCheckedChange={(v) =>
+                    setNotifPrefs((p) => ({ ...p, [item.key]: v }))
+                  }
+                />
+              </div>
+            ))}
+            <Button
+              onClick={handleSaveNotifs}
+              disabled={savingNotifs}
+              className="h-12 w-full text-base font-semibold mt-4"
+            >
+              {savingNotifs ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Appearance */}
+      <Sheet
+        open={openSheet === "appearance"}
+        onOpenChange={(o) => !o && setOpenSheet(null)}
+      >
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Apparence</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleSetTheme("light")}
+              className={cn(
+                "flex flex-col items-center gap-3 rounded-2xl border-2 p-6 transition-colors",
+                theme === "light"
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-card"
+              )}
+            >
+              <Sun
+                className={cn(
+                  "h-8 w-8",
+                  theme === "light" ? "text-primary" : "text-muted-foreground"
+                )}
+              />
+              <span
+                className={cn(
+                  "text-sm font-semibold",
+                  theme === "light" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Clair
+              </span>
+            </button>
+            <button
+              onClick={() => handleSetTheme("dark")}
+              className={cn(
+                "flex flex-col items-center gap-3 rounded-2xl border-2 p-6 transition-colors",
+                theme === "dark"
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-card"
+              )}
+            >
+              <Moon
+                className={cn(
+                  "h-8 w-8",
+                  theme === "dark" ? "text-primary" : "text-muted-foreground"
+                )}
+              />
+              <span
+                className={cn(
+                  "text-sm font-semibold",
+                  theme === "dark" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Sombre
+              </span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
