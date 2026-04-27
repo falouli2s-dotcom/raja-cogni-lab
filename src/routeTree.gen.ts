@@ -20,7 +20,6 @@ import { Route as CoachSessionsRouteImport } from './routes/coach.sessions'
 import { Route as CoachProfilRouteImport } from './routes/coach.profil'
 import { Route as CoachPendingRouteImport } from './routes/coach.pending'
 import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
-import { Route as CoachJoueurPlayerIdRouteImport } from './routes/coach.joueur.$playerId'
 import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
 import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
@@ -29,6 +28,7 @@ import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
 import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
 import { Route as AppSessionsIndexRouteImport } from './routes/_app.sessions.index'
+import { Route as CoachJoueurPlayerIdRouteImport } from './routes/coach.joueur.$playerId'
 import { Route as AppTrainingPlanningIdRouteImport } from './routes/_app.training.$planningId'
 import { Route as AppTestsSessionRouteImport } from './routes/_app.tests.session'
 import { Route as AppSessionsSessionIdRouteImport } from './routes/_app.sessions.$sessionId'
@@ -87,11 +87,6 @@ const CoachJoueursRoute = CoachJoueursRouteImport.update({
   path: '/joueurs',
   getParentRoute: () => CoachRoute,
 } as any)
-const CoachJoueurPlayerIdRoute = CoachJoueurPlayerIdRouteImport.update({
-  id: '/joueur/$playerId',
-  path: '/joueur/$playerId',
-  getParentRoute: () => CoachRoute,
-} as any)
 const CoachDashboardRoute = CoachDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -132,6 +127,11 @@ const AppSessionsIndexRoute = AppSessionsIndexRouteImport.update({
   path: '/sessions/',
   getParentRoute: () => AppRoute,
 } as any)
+const CoachJoueurPlayerIdRoute = CoachJoueurPlayerIdRouteImport.update({
+  id: '/joueur/$playerId',
+  path: '/joueur/$playerId',
+  getParentRoute: () => CoachRoute,
+} as any)
 const AppTrainingPlanningIdRoute = AppTrainingPlanningIdRouteImport.update({
   id: '/training/$planningId',
   path: '/training/$planningId',
@@ -161,7 +161,6 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
-  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -169,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/training/$planningId': typeof AppTrainingPlanningIdRoute
+  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/sessions/': typeof AppSessionsIndexRoute
   '/tests/': typeof AppTestsIndexRoute
 }
@@ -185,7 +185,6 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
-  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -193,6 +192,7 @@ export interface FileRoutesByTo {
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/training/$planningId': typeof AppTrainingPlanningIdRoute
+  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/sessions': typeof AppSessionsIndexRoute
   '/tests': typeof AppTestsIndexRoute
 }
@@ -211,7 +211,6 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
   '/coach/dashboard': typeof CoachDashboardRoute
-  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
   '/coach/profil': typeof CoachProfilRoute
@@ -219,6 +218,7 @@ export interface FileRoutesById {
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/_app/tests/session': typeof AppTestsSessionRoute
   '/_app/training/$planningId': typeof AppTrainingPlanningIdRoute
+  '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/_app/sessions/': typeof AppSessionsIndexRoute
   '/_app/tests/': typeof AppTestsIndexRoute
 }
@@ -237,7 +237,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
-    | '/coach/joueur/$playerId'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -245,6 +244,7 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/training/$planningId'
+    | '/coach/joueur/$playerId'
     | '/sessions/'
     | '/tests/'
   fileRoutesByTo: FileRoutesByTo
@@ -261,7 +261,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
-    | '/coach/joueur/$playerId'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -269,6 +268,7 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/training/$planningId'
+    | '/coach/joueur/$playerId'
     | '/sessions'
     | '/tests'
   id:
@@ -286,7 +286,6 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/admin/coaches'
     | '/coach/dashboard'
-    | '/coach/joueur/$playerId'
     | '/coach/joueurs'
     | '/coach/pending'
     | '/coach/profil'
@@ -294,6 +293,7 @@ export interface FileRouteTypes {
     | '/_app/sessions/$sessionId'
     | '/_app/tests/session'
     | '/_app/training/$planningId'
+    | '/coach/joueur/$playerId'
     | '/_app/sessions/'
     | '/_app/tests/'
   fileRoutesById: FileRoutesById
@@ -388,13 +388,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoachJoueursRouteImport
       parentRoute: typeof CoachRoute
     }
-    '/coach/joueur/$playerId': {
-      id: '/coach/joueur/$playerId'
-      path: '/joueur/$playerId'
-      fullPath: '/coach/joueur/$playerId'
-      preLoaderRoute: typeof CoachJoueurPlayerIdRouteImport
-      parentRoute: typeof CoachRoute
-    }
     '/coach/dashboard': {
       id: '/coach/dashboard'
       path: '/dashboard'
@@ -451,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSessionsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/coach/joueur/$playerId': {
+      id: '/coach/joueur/$playerId'
+      path: '/joueur/$playerId'
+      fullPath: '/coach/joueur/$playerId'
+      preLoaderRoute: typeof CoachJoueurPlayerIdRouteImport
+      parentRoute: typeof CoachRoute
+    }
     '/_app/training/$planningId': {
       id: '/_app/training/$planningId'
       path: '/training/$planningId'
@@ -503,20 +503,20 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface CoachRouteChildren {
   CoachDashboardRoute: typeof CoachDashboardRoute
-  CoachJoueurPlayerIdRoute: typeof CoachJoueurPlayerIdRoute
   CoachJoueursRoute: typeof CoachJoueursRoute
   CoachPendingRoute: typeof CoachPendingRoute
   CoachProfilRoute: typeof CoachProfilRoute
   CoachSessionsRoute: typeof CoachSessionsRoute
+  CoachJoueurPlayerIdRoute: typeof CoachJoueurPlayerIdRoute
 }
 
 const CoachRouteChildren: CoachRouteChildren = {
   CoachDashboardRoute: CoachDashboardRoute,
-  CoachJoueurPlayerIdRoute: CoachJoueurPlayerIdRoute,
   CoachJoueursRoute: CoachJoueursRoute,
   CoachPendingRoute: CoachPendingRoute,
   CoachProfilRoute: CoachProfilRoute,
   CoachSessionsRoute: CoachSessionsRoute,
+  CoachJoueurPlayerIdRoute: CoachJoueurPlayerIdRoute,
 }
 
 const CoachRouteWithChildren = CoachRoute._addFileChildren(CoachRouteChildren)
