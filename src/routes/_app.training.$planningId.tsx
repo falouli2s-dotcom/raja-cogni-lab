@@ -496,13 +496,23 @@ function TrainingDetailPage() {
                   const allDone = (count ?? 0) >= totalExercises;
 
                   if (allDone) {
-                    await (supabase as any)
-                      .from("sessions_planifiees")
-                      .update({
-                        status: "completed",
-                        completed_at: new Date().toISOString(),
-                      })
-                      .eq("id", planningId);
+                    const { error: updateError, count: updateCount } =
+                      await (supabase as any)
+                        .from("sessions_planifiees")
+                        .update({
+                          status: "completed",
+                          completed_at: new Date().toISOString(),
+                        })
+                        .eq("id", planningId);
+
+                    if (updateError || (updateCount !== null && updateCount === 0)) {
+                      console.error(
+                        "[Planning] status update failed — RLS?",
+                        updateError,
+                        "rows affected:",
+                        updateCount,
+                      );
+                    }
                     toast.success("Séance terminée ! Bon travail 💪");
                   } else {
                     toast.success("Exercice terminé ✓");
