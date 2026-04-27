@@ -291,18 +291,18 @@ export const PDFExportTemplate = forwardRef<HTMLDivElement, PDFExportTemplatePro
         <div style={{ height: 180, width: "100%" }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10, fill: TEXT }}
-                axisLine={{ stroke: BORDER }}
-                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                tickLine={{ stroke: "hsl(var(--border))" }}
               />
               <YAxis
                 domain={[0, 100]}
-                tick={{ fontSize: 10, fill: TEXT }}
-                axisLine={{ stroke: BORDER }}
-                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                tickLine={{ stroke: "hsl(var(--border))" }}
               />
               <Line
                 type="monotone"
@@ -319,7 +319,7 @@ export const PDFExportTemplate = forwardRef<HTMLDivElement, PDFExportTemplatePro
                       cy={cy}
                       r={4}
                       fill={scoreColor(payload.score)}
-                      stroke="#ffffff"
+                      stroke="hsl(var(--card))"
                       strokeWidth={2}
                     />
                   );
