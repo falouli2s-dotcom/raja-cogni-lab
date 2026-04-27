@@ -107,7 +107,7 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
 
 export async function fetchTeamExportData(coachId: string): Promise<PlayerData[]> {
   // 1. Get player IDs from coach_players
-  const { data: links, error: linkErr } = await supabase
+  const { data: links, error: linkErr } = await (supabase as any)
     .from("coach_players")
     .select("player_id")
     .eq("coach_id", coachId);
