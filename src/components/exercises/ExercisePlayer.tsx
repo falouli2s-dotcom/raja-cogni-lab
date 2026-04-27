@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Pause, Play, SkipForward, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import type { Exercice } from "@/routes/_app.exercises";
 
@@ -184,22 +183,6 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
   const recoveryProgress =
     phaseDuration > 0 ? ((phaseDuration - timeLeft) / phaseDuration) * 100 : 0;
 
-  const handleComplete = useCallback(async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("completed_exercises" as any).insert({
-          user_id: user.id,
-          exercise_id: ex.id,
-          series_completed: totalSeries,
-          completed_at: new Date().toISOString(),
-        } as any);
-      }
-    } catch {
-      // table may not exist yet
-    }
-  }, [ex.id, totalSeries]);
-
   // Phase timer
   useEffect(() => {
     if (phase === "done" || paused) return;
@@ -212,7 +195,6 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
               return recoveryDuration;
             }
             setPhase("done");
-            handleComplete();
             return 0;
           }
           setCurrentSerie((s) => s + 1);
@@ -223,7 +205,7 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [phase, paused, currentSerie, totalSeries, recoveryDuration, serieDuration, handleComplete]);
+  }, [phase, paused, currentSerie, totalSeries, recoveryDuration, serieDuration]);
 
   // Stimulus generator with dynamic randomized interval — only during serie
   useEffect(() => {
@@ -262,7 +244,6 @@ export function ExercisePlayer({ exercice: ex, onClose }: Props) {
         setTimeLeft(recoveryDuration);
       } else {
         setPhase("done");
-        handleComplete();
       }
     } else if (phase === "recovery") {
       setCurrentSerie((s) => s + 1);
