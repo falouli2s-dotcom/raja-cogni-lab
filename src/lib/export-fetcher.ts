@@ -33,10 +33,10 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
   if (profileErr || !profile) throw new Error("Joueur introuvable");
 
   // 2. Sessions (with results)
-  const { data: sessions, error: sessErr } = await supabase
+  const { data: sessions, error: sessErr } = await (supabase as any)
     .from("sessions_test")
     .select("id, created_at, resultats_test(*)")
-    .eq("player_id", playerId)
+    .eq("user_id", playerId)
     .order("created_at", { ascending: true });
 
   if (sessErr) throw new Error("Erreur lors de la récupération des sessions");
