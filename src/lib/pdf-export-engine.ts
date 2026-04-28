@@ -649,7 +649,7 @@ export async function exportPlayerReport(
   // Dimensions bar chart
   if (latest) {
     y = drawSectionTitle(doc, "Profil cognitif — Dernière session", y);
-    y = drawDimensionBars(doc, latest.dimensions, y);
+    y = drawDimensionBars(doc, latest.dimensions, y, getAvgRT(latest));
     y += 6;
   }
 
