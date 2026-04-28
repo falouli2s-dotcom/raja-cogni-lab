@@ -536,6 +536,43 @@ function drawDetailedAnnex(doc: jsPDF, player: PlayerData, y: number): number {
   const simonRows = latest.tests.simon.map((m) => [m.metrique, String(m.valeur)]);
   y = drawTable(doc, ["Métrique", "Valeur"], simonRows, y, [80, 40]);
 
+  // Simon raw RT data
+  if (latest.simonRawTrials && latest.simonRawTrials.length > 0) {
+    y = drawSectionTitle(doc, "Données brutes — Temps de réaction (Simon Task)", y);
+    const rawRows = latest.simonRawTrials.map((t) => [
+      String(t.trialNumber),
+      t.type,
+      t.stimulus,
+      t.side,
+      t.response,
+      t.rt != null ? String(t.rt) : "—",
+      t.correct ? "✓" : "✗",
+    ]);
+
+    // Compute summary
+    const valid = latest.simonRawTrials.filter((t) => t.rt != null && t.correct);
+    const cong = valid.filter((t) => t.type === "Congruent");
+    const inco = valid.filter((t) => t.type === "Incongruent");
+    const avg = (arr: SimonRawTrial[]) =>
+      arr.length ? Math.round(arr.reduce((s, t) => s + (t.rt ?? 0), 0) / arr.length) : 0;
+    const avgC = avg(cong);
+    const avgI = avg(inco);
+    const effect = avgI - avgC;
+    rawRows.push(
+      ["", "", "", "", "Avg TR Congruent", `${avgC} ms`, ""],
+      ["", "", "", "", "Avg TR Incongruent", `${avgI} ms`, ""],
+      ["", "", "", "", "Simon Effect", `${effect} ms`, ""]
+    );
+
+    y = drawTable(
+      doc,
+      ["Essai #", "Type", "Stimulus", "Côté", "Réponse", "TR (ms)", "Correct ?"],
+      rawRows,
+      y,
+      [16, 24, 22, 20, 24, 22, 22]
+    );
+  }
+
   // N-Back
   y = drawSectionTitle(doc, "N-Back 2 (Mémoire de travail)", y);
   const nbackRows = latest.tests.nback.map((m) => [m.metrique, String(m.valeur)]);
