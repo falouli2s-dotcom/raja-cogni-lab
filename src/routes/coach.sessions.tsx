@@ -314,6 +314,7 @@ function CoachSessions() {
       return;
     }
     setSubmitting(true);
+    setSubmitResults([]);
     // Only persist overrides for exercises actually included in this planning.
     const overridesToSave: ExerciceOverridesMap = {};
     if (category === "exercices") {
@@ -322,37 +323,49 @@ function CoachSessions() {
         if (o && Object.keys(o).length > 0) overridesToSave[exId] = o;
       }
     }
-    const rows = playerIds.map((pid) => ({
-      coach_id: coachId,
-      player_id: pid,
-      session_category: category,
-      test_type: null,
-      exercice_ids: category === "exercices" ? selectedExercices : null,
-      exercice_overrides: overridesToSave,
-      scheduled_at: when.toISOString(),
-      note: note.trim() || null,
-    }));
-    const { error } = await (supabase as any)
-      .from("sessions_planifiees")
-      .insert(rows);
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message ?? "Erreur lors de la planification");
-      return;
-    }
-    toast.success(
-      playerIds.length > 1
-        ? `${playerIds.length} sessions planifiées ✓`
-        : "Session planifiée ✓"
+
+    // Insert per-player so we can report individual success/error.
+    const results = await Promise.all(
+      playerIds.map(async (pid) => {
+        const row = {
+          coach_id: coachId,
+          player_id: pid,
+          session_category: category,
+          test_type: null,
+          exercice_ids: category === "exercices" ? selectedExercices : null,
+          exercice_overrides: overridesToSave,
+          scheduled_at: when.toISOString(),
+          note: note.trim() || null,
+        };
+        const { error } = await (supabase as any)
+          .from("sessions_planifiees")
+          .insert(row);
+        return {
+          playerId: pid,
+          playerName: displayName(pid),
+          ok: !error,
+          error: error?.message,
+        };
+      })
     );
-    setPlayerIds([]);
-    setScheduledAt("");
-    setNote("");
-    setSelectedExercices([]);
-    setExerciceOverrides({});
-    setExpandedOverrideId(null);
-    setExSearch("");
-    setCategory("session");
+    setSubmitting(false);
+    setSubmitResults(results);
+
+    const okIds = new Set(results.filter((r) => r.ok).map((r) => r.playerId));
+    if (okIds.size > 0) {
+      // Keep only failed players selected so the coach can retry quickly.
+      setPlayerIds((prev) => prev.filter((id) => !okIds.has(id)));
+    }
+    if (okIds.size === playerIds.length) {
+      // Full success: reset the form like before.
+      setScheduledAt("");
+      setNote("");
+      setSelectedExercices([]);
+      setExerciceOverrides({});
+      setExpandedOverrideId(null);
+      setExSearch("");
+      setCategory("session");
+    }
     await loadAll(coachId);
   }
 
