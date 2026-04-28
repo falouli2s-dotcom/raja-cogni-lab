@@ -139,6 +139,9 @@ function CoachSessions() {
   const [expandedOverrideId, setExpandedOverrideId] = useState<string | null>(null);
   const [exSearch, setExSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitResults, setSubmitResults] = useState<
+    Array<{ playerId: string; playerName: string; ok: boolean; error?: string }>
+  >([]);
 
   // Modal: detail of a test session with radar
   const [selectedSession, setSelectedSession] = useState<TestSession | null>(null);
@@ -311,6 +314,7 @@ function CoachSessions() {
       return;
     }
     setSubmitting(true);
+    setSubmitResults([]);
     // Only persist overrides for exercises actually included in this planning.
     const overridesToSave: ExerciceOverridesMap = {};
     if (category === "exercices") {
@@ -319,37 +323,49 @@ function CoachSessions() {
         if (o && Object.keys(o).length > 0) overridesToSave[exId] = o;
       }
     }
-    const rows = playerIds.map((pid) => ({
-      coach_id: coachId,
-      player_id: pid,
-      session_category: category,
-      test_type: null,
-      exercice_ids: category === "exercices" ? selectedExercices : null,
-      exercice_overrides: overridesToSave,
-      scheduled_at: when.toISOString(),
-      note: note.trim() || null,
-    }));
-    const { error } = await (supabase as any)
-      .from("sessions_planifiees")
-      .insert(rows);
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message ?? "Erreur lors de la planification");
-      return;
-    }
-    toast.success(
-      playerIds.length > 1
-        ? `${playerIds.length} sessions planifiées ✓`
-        : "Session planifiée ✓"
+
+    // Insert per-player so we can report individual success/error.
+    const results = await Promise.all(
+      playerIds.map(async (pid) => {
+        const row = {
+          coach_id: coachId,
+          player_id: pid,
+          session_category: category,
+          test_type: null,
+          exercice_ids: category === "exercices" ? selectedExercices : null,
+          exercice_overrides: overridesToSave,
+          scheduled_at: when.toISOString(),
+          note: note.trim() || null,
+        };
+        const { error } = await (supabase as any)
+          .from("sessions_planifiees")
+          .insert(row);
+        return {
+          playerId: pid,
+          playerName: displayName(pid),
+          ok: !error,
+          error: error?.message,
+        };
+      })
     );
-    setPlayerIds([]);
-    setScheduledAt("");
-    setNote("");
-    setSelectedExercices([]);
-    setExerciceOverrides({});
-    setExpandedOverrideId(null);
-    setExSearch("");
-    setCategory("session");
+    setSubmitting(false);
+    setSubmitResults(results);
+
+    const okIds = new Set(results.filter((r) => r.ok).map((r) => r.playerId));
+    if (okIds.size > 0) {
+      // Keep only failed players selected so the coach can retry quickly.
+      setPlayerIds((prev) => prev.filter((id) => !okIds.has(id)));
+    }
+    if (okIds.size === playerIds.length) {
+      // Full success: reset the form like before.
+      setScheduledAt("");
+      setNote("");
+      setSelectedExercices([]);
+      setExerciceOverrides({});
+      setExpandedOverrideId(null);
+      setExSearch("");
+      setCategory("session");
+    }
     await loadAll(coachId);
   }
 
@@ -898,6 +914,53 @@ function CoachSessions() {
             <Button type="submit" disabled={submitting || !canSubmit}>
               {submitting ? "Planification..." : "Planifier"}
             </Button>
+
+            {submitResults.length > 0 && (
+              <div className="mt-2 rounded-lg border border-border bg-muted/30 p-3">
+                <div className="mb-2 text-xs font-semibold text-muted-foreground">
+                  Résultat de la planification
+                  <span className="ml-1 text-foreground">
+                    ({submitResults.filter((r) => r.ok).length}/
+                    {submitResults.length} réussies)
+                  </span>
+                </div>
+                <ul className="flex flex-col gap-1.5">
+                  {submitResults.map((r) => (
+                    <li
+                      key={r.playerId}
+                      className="flex items-start gap-2 text-sm"
+                    >
+                      {r.ok ? (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                      ) : (
+                        <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-500" />
+                      )}
+                      <div className="flex-1">
+                        <span className="font-medium text-foreground">
+                          {r.playerName}
+                        </span>
+                        {r.ok ? (
+                          <span className="ml-2 text-xs text-emerald-500">
+                            Planifiée
+                          </span>
+                        ) : (
+                          <span className="ml-2 text-xs text-rose-500">
+                            Échec{r.error ? ` — ${r.error}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setSubmitResults([])}
+                  className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
+                >
+                  Masquer
+                </button>
+              </div>
+            )}
           </form>
         )}
       </motion.section>
