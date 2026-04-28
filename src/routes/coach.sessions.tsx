@@ -814,20 +814,71 @@ function CoachSessions() {
               </div>
             )}
 
-            <Select value={playerId} onValueChange={setPlayerId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un joueur" />
-              </SelectTrigger>
-              <SelectContent>
-                {players.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.full_name ??
-                      profilesMap.get(p.id)?.category ??
-                      "Joueur sans nom"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between font-normal"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="truncate">
+                      {playerIds.length === 0
+                        ? "Sélectionner des joueurs"
+                        : playerIds.length === 1
+                        ? displayName(playerIds[0])
+                        : `${playerIds.length} joueurs sélectionnés`}
+                    </span>
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs text-muted-foreground">
+                  <span>{playerIds.length} / {players.length} sélectionné{playerIds.length > 1 ? "s" : ""}</span>
+                  <button
+                    type="button"
+                    className="font-medium text-primary hover:underline"
+                    onClick={() =>
+                      setPlayerIds(
+                        playerIds.length === players.length ? [] : players.map((p) => p.id)
+                      )
+                    }
+                  >
+                    {playerIds.length === players.length ? "Tout désélectionner" : "Tout sélectionner"}
+                  </button>
+                </div>
+                <div className="max-h-64 overflow-y-auto py-1">
+                  {players.length === 0 && (
+                    <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+                      Aucun joueur
+                    </p>
+                  )}
+                  {players.map((p) => {
+                    const checked = playerIds.includes(p.id);
+                    const label =
+                      p.full_name ?? profilesMap.get(p.id)?.category ?? "Joueur sans nom";
+                    return (
+                      <label
+                        key={p.id}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-accent"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => {
+                            setPlayerIds((prev) =>
+                              v ? [...prev, p.id] : prev.filter((x) => x !== p.id)
+                            );
+                          }}
+                        />
+                        <span className="text-sm">{label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <Input
               type="datetime-local"
