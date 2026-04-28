@@ -131,7 +131,7 @@ function CoachSessions() {
 
   // form
   const [category, setCategory] = useState<"session" | "exercices">("session");
-  const [playerId, setPlayerId] = useState("");
+  const [playerIds, setPlayerIds] = useState<string[]>([]);
   const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
   const [selectedExercices, setSelectedExercices] = useState<string[]>([]);
