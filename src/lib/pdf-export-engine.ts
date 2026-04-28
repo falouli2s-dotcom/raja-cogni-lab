@@ -231,7 +231,17 @@ function drawDimensionBars(
   return y + 4;
 }
 
-/** Mini table renderer. */
+/** Ensures `needed` mm of vertical space; otherwise starts a new page. Returns the (possibly reset) Y. */
+function ensureSpace(doc: jsPDF, y: number, needed: number, topMargin = 15): number {
+  const pageH = doc.internal.pageSize.getHeight();
+  if (y + needed > pageH - 15) {
+    doc.addPage();
+    return topMargin;
+  }
+  return y;
+}
+
+/** Mini table renderer with automatic page breaks. */
 function drawTable(
   doc: jsPDF,
   headers: string[],
@@ -243,25 +253,42 @@ function drawTable(
   const margin = 10;
   const tableW = w - margin * 2;
   const widths = colWidths ?? headers.map(() => tableW / headers.length);
-  let y = startY;
   const rowH = 7;
+  const pageH = doc.internal.pageSize.getHeight();
 
-  // Header row
-  doc.setFillColor(...COLOR.primary);
-  doc.rect(margin, y, tableW, rowH, "F");
-  doc.setTextColor(...COLOR.white);
-  doc.setFontSize(7.5);
-  doc.setFont("helvetica", "bold");
+  let y = startY;
 
-  let x = margin;
-  headers.forEach((h, i) => {
-    doc.text(h, x + 2, y + 5);
-    x += widths[i];
-  });
-  y += rowH;
+  const drawHeaderRow = () => {
+    doc.setFillColor(...COLOR.primary);
+    doc.rect(margin, y, tableW, rowH, "F");
+    doc.setTextColor(...COLOR.white);
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "bold");
+    let x = margin;
+    headers.forEach((h, i) => {
+      doc.text(h, x + 2, y + 5);
+      x += widths[i];
+    });
+    y += rowH;
+  };
 
-  // Data rows
+  let sectionStart = y;
+  drawHeaderRow();
+
   rows.forEach((row, ri) => {
+    // Page break if next row won't fit
+    if (y + rowH > pageH - 15) {
+      // Close border on current page
+      doc.setDrawColor(...COLOR.border);
+      doc.setLineWidth(0.3);
+      doc.rect(margin, sectionStart, tableW, y - sectionStart, "S");
+
+      doc.addPage();
+      y = 15;
+      sectionStart = y;
+      drawHeaderRow();
+    }
+
     if (ri % 2 === 0) {
       doc.setFillColor(...COLOR.light);
       doc.rect(margin, y, tableW, rowH, "F");
@@ -278,10 +305,10 @@ function drawTable(
     y += rowH;
   });
 
-  // Border
+  // Final border
   doc.setDrawColor(...COLOR.border);
   doc.setLineWidth(0.3);
-  doc.rect(margin, startY, tableW, y - startY, "S");
+  doc.rect(margin, sectionStart, tableW, y - sectionStart, "S");
 
   return y + 4;
 }
