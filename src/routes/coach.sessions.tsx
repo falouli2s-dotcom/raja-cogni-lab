@@ -298,7 +298,7 @@ function CoachSessions() {
 
 
   const canSubmit =
-    !!playerId &&
+    playerIds.length > 0 &&
     !!scheduledAt &&
     (category === "session" || selectedExercices.length >= 1);
 
@@ -319,25 +319,30 @@ function CoachSessions() {
         if (o && Object.keys(o).length > 0) overridesToSave[exId] = o;
       }
     }
+    const rows = playerIds.map((pid) => ({
+      coach_id: coachId,
+      player_id: pid,
+      session_category: category,
+      test_type: null,
+      exercice_ids: category === "exercices" ? selectedExercices : null,
+      exercice_overrides: overridesToSave,
+      scheduled_at: when.toISOString(),
+      note: note.trim() || null,
+    }));
     const { error } = await (supabase as any)
       .from("sessions_planifiees")
-      .insert({
-        coach_id: coachId,
-        player_id: playerId,
-        session_category: category,
-        test_type: null,
-        exercice_ids: category === "exercices" ? selectedExercices : null,
-        exercice_overrides: overridesToSave,
-        scheduled_at: when.toISOString(),
-        note: note.trim() || null,
-      });
+      .insert(rows);
     setSubmitting(false);
     if (error) {
       toast.error(error.message ?? "Erreur lors de la planification");
       return;
     }
-    toast.success("Session planifiée ✓");
-    setPlayerId("");
+    toast.success(
+      playerIds.length > 1
+        ? `${playerIds.length} sessions planifiées ✓`
+        : "Session planifiée ✓"
+    );
+    setPlayerIds([]);
     setScheduledAt("");
     setNote("");
     setSelectedExercices([]);
