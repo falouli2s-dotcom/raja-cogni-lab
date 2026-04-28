@@ -797,12 +797,19 @@ export async function exportPlayerReport(
   y = drawPlayerInfoBlock(doc, player, y);
   y += 4;
 
-  // Radar chart (6 axes) — between SGS badge and dimension bars
+  // Radar chart (CogniLab style) — between SGS badge and dimension bars
   if (latest) {
     y = drawSectionTitle(doc, "Radar cognitif — 6 dimensions", y);
-    const radarCy = y + 42;
-    drawRadar(doc, w / 2, radarCy, 35, latest.dimensions.map((d) => d.score));
-    y = radarCy + 45;
+    const radarCy = y + 50;
+    await drawCognitiveRadar(
+      doc,
+      w / 2,
+      radarCy,
+      35,
+      latest.dimensions.map((d) => d.score),
+      latest.sgs_score
+    );
+    y = radarCy + 55;
   }
 
   // Dimensions bar chart
