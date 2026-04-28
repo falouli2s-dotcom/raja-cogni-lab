@@ -819,6 +819,11 @@ export async function exportTeamReport(
 
   y += 6;
 
+  // Team SGS evolution (line chart)
+  y = drawSectionTitle(doc, "Évolution du SGS moyen équipe", y);
+  y = drawTeamSgsTrend(doc, players, y);
+  y += 4;
+
   // Dimension averages
   y = drawSectionTitle(doc, "Moyennes par dimension (toute l'équipe)", y);
   const dimLabels = ["TR", "Inhibition", "Mém. travail", "Attention", "Flexibilité", "Anticipation"];
