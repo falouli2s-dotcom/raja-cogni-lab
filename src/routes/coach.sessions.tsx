@@ -139,6 +139,9 @@ function CoachSessions() {
   const [expandedOverrideId, setExpandedOverrideId] = useState<string | null>(null);
   const [exSearch, setExSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitResults, setSubmitResults] = useState<
+    Array<{ playerId: string; playerName: string; ok: boolean; error?: string }>
+  >([]);
 
   // Modal: detail of a test session with radar
   const [selectedSession, setSelectedSession] = useState<TestSession | null>(null);
