@@ -699,10 +699,12 @@ export async function exportTeamReport(
     const s = latestSession(p);
     const trend = sgsTrend(p);
     const trendStr = trend === null ? "—" : trend > 0 ? `+${trend}` : String(trend);
+    const rt = getAvgRT(s);
     return [
       p.full_name,
       p.position,
       s ? String(s.sgs_score) : "—",
+      rt != null ? `${rt} ms` : "—",
       trendStr,
       s ? fmtDate(s.date) : "—",
     ];
@@ -710,10 +712,10 @@ export async function exportTeamReport(
 
   y = drawTable(
     doc,
-    ["Joueur", "Poste", "SGS", "Tendance", "Dernière session"],
+    ["Joueur", "Poste", "SGS", "TR (ms)", "Tendance", "Dernière session"],
     teamRows,
     y,
-    [55, 28, 18, 22, 36]
+    [48, 26, 16, 20, 20, 32]
   );
 
   y += 6;
@@ -731,7 +733,7 @@ export async function exportTeamReport(
     );
     return { label, score: avg, percentile };
   });
-  y = drawDimensionBars(doc, dimAvgs, y);
+  y = drawDimensionBars(doc, dimAvgs, y, teamAvgRT(players));
 
   // ── Per-player pages ──────────────────────────────────────────────────────
   for (const player of players) {
