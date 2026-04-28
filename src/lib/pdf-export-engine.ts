@@ -746,7 +746,7 @@ export async function exportTeamReport(
     const latest = latestSession(player);
     if (latest) {
       yp = drawSectionTitle(doc, "Profil cognitif", yp);
-      yp = drawDimensionBars(doc, latest.dimensions, yp);
+      yp = drawDimensionBars(doc, latest.dimensions, yp, getAvgRT(latest));
       yp += 4;
     }
 
