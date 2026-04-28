@@ -5,6 +5,8 @@ import {
   CalendarPlus,
   Clock,
   X,
+  Users,
+  Check,
   CheckCircle2,
   XCircle,
   History,
@@ -35,6 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
   StimuliPicker,
@@ -127,7 +131,7 @@ function CoachSessions() {
 
   // form
   const [category, setCategory] = useState<"session" | "exercices">("session");
-  const [playerId, setPlayerId] = useState("");
+  const [playerIds, setPlayerIds] = useState<string[]>([]);
   const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
   const [selectedExercices, setSelectedExercices] = useState<string[]>([]);
@@ -294,7 +298,7 @@ function CoachSessions() {
 
 
   const canSubmit =
-    !!playerId &&
+    playerIds.length > 0 &&
     !!scheduledAt &&
     (category === "session" || selectedExercices.length >= 1);
 
@@ -315,25 +319,30 @@ function CoachSessions() {
         if (o && Object.keys(o).length > 0) overridesToSave[exId] = o;
       }
     }
+    const rows = playerIds.map((pid) => ({
+      coach_id: coachId,
+      player_id: pid,
+      session_category: category,
+      test_type: null,
+      exercice_ids: category === "exercices" ? selectedExercices : null,
+      exercice_overrides: overridesToSave,
+      scheduled_at: when.toISOString(),
+      note: note.trim() || null,
+    }));
     const { error } = await (supabase as any)
       .from("sessions_planifiees")
-      .insert({
-        coach_id: coachId,
-        player_id: playerId,
-        session_category: category,
-        test_type: null,
-        exercice_ids: category === "exercices" ? selectedExercices : null,
-        exercice_overrides: overridesToSave,
-        scheduled_at: when.toISOString(),
-        note: note.trim() || null,
-      });
+      .insert(rows);
     setSubmitting(false);
     if (error) {
       toast.error(error.message ?? "Erreur lors de la planification");
       return;
     }
-    toast.success("Session planifiée ✓");
-    setPlayerId("");
+    toast.success(
+      playerIds.length > 1
+        ? `${playerIds.length} sessions planifiées ✓`
+        : "Session planifiée ✓"
+    );
+    setPlayerIds([]);
     setScheduledAt("");
     setNote("");
     setSelectedExercices([]);
@@ -805,20 +814,71 @@ function CoachSessions() {
               </div>
             )}
 
-            <Select value={playerId} onValueChange={setPlayerId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un joueur" />
-              </SelectTrigger>
-              <SelectContent>
-                {players.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.full_name ??
-                      profilesMap.get(p.id)?.category ??
-                      "Joueur sans nom"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between font-normal"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="truncate">
+                      {playerIds.length === 0
+                        ? "Sélectionner des joueurs"
+                        : playerIds.length === 1
+                        ? displayName(playerIds[0])
+                        : `${playerIds.length} joueurs sélectionnés`}
+                    </span>
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs text-muted-foreground">
+                  <span>{playerIds.length} / {players.length} sélectionné{playerIds.length > 1 ? "s" : ""}</span>
+                  <button
+                    type="button"
+                    className="font-medium text-primary hover:underline"
+                    onClick={() =>
+                      setPlayerIds(
+                        playerIds.length === players.length ? [] : players.map((p) => p.id)
+                      )
+                    }
+                  >
+                    {playerIds.length === players.length ? "Tout désélectionner" : "Tout sélectionner"}
+                  </button>
+                </div>
+                <div className="max-h-64 overflow-y-auto py-1">
+                  {players.length === 0 && (
+                    <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+                      Aucun joueur
+                    </p>
+                  )}
+                  {players.map((p) => {
+                    const checked = playerIds.includes(p.id);
+                    const label =
+                      p.full_name ?? profilesMap.get(p.id)?.category ?? "Joueur sans nom";
+                    return (
+                      <label
+                        key={p.id}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-accent"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => {
+                            setPlayerIds((prev) =>
+                              v ? [...prev, p.id] : prev.filter((x) => x !== p.id)
+                            );
+                          }}
+                        />
+                        <span className="text-sm">{label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <Input
               type="datetime-local"
