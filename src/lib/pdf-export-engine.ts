@@ -115,6 +115,25 @@ function sgsTrend(player: PlayerData): number | null {
   return last - prev;
 }
 
+/** Extracts avg_rt (ms) from a session's Simon Task metrics. Returns null if missing. */
+function getAvgRT(session: SessionResult | null | undefined): number | null {
+  if (!session) return null;
+  const m = session.tests.simon.find(
+    (x) => x.metrique === "avg_rt" || x.metrique === "avgRT" || x.metrique === "avg_rt_ms"
+  );
+  if (!m || !Number.isFinite(Number(m.valeur))) return null;
+  return Math.round(Number(m.valeur));
+}
+
+/** Average avg_rt across players' latest sessions. */
+function teamAvgRT(players: PlayerData[]): number | null {
+  const vals = players
+    .map((p) => getAvgRT(latestSession(p)))
+    .filter((v): v is number => v !== null && v > 0);
+  if (vals.length === 0) return null;
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+
 // ─── Color palette (Raja green + dark theme on white PDF) ─────────────────────
 
 const COLOR = {
