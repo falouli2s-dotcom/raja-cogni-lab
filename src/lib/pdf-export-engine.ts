@@ -174,6 +174,12 @@ function drawFooter(doc: jsPDF, pageNum: number, totalPages: number) {
 }
 
 function drawSectionTitle(doc: jsPDF, text: string, y: number): number {
+  // Auto page break — keep title with at least one row of content
+  const pageH = doc.internal.pageSize.getHeight();
+  if (y + 20 > pageH - 15) {
+    doc.addPage();
+    y = 15;
+  }
   const w = doc.internal.pageSize.getWidth();
   doc.setFillColor(...COLOR.light);
   doc.rect(10, y, w - 20, 8, "F");
