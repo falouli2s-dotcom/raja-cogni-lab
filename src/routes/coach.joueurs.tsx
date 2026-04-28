@@ -1,10 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Trash2, Clock, X, Mail, Users, FileText } from "lucide-react";
+import { UserPlus, Trash2, Clock, X, Mail, Users, FileText, MoreVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ExportModal } from "@/components/coach/ExportModal";
 import { toast } from "sonner";
 
