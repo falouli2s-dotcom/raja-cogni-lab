@@ -914,6 +914,53 @@ function CoachSessions() {
             <Button type="submit" disabled={submitting || !canSubmit}>
               {submitting ? "Planification..." : "Planifier"}
             </Button>
+
+            {submitResults.length > 0 && (
+              <div className="mt-2 rounded-lg border border-border bg-muted/30 p-3">
+                <div className="mb-2 text-xs font-semibold text-muted-foreground">
+                  Résultat de la planification
+                  <span className="ml-1 text-foreground">
+                    ({submitResults.filter((r) => r.ok).length}/
+                    {submitResults.length} réussies)
+                  </span>
+                </div>
+                <ul className="flex flex-col gap-1.5">
+                  {submitResults.map((r) => (
+                    <li
+                      key={r.playerId}
+                      className="flex items-start gap-2 text-sm"
+                    >
+                      {r.ok ? (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                      ) : (
+                        <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-500" />
+                      )}
+                      <div className="flex-1">
+                        <span className="font-medium text-foreground">
+                          {r.playerName}
+                        </span>
+                        {r.ok ? (
+                          <span className="ml-2 text-xs text-emerald-500">
+                            Planifiée
+                          </span>
+                        ) : (
+                          <span className="ml-2 text-xs text-rose-500">
+                            Échec{r.error ? ` — ${r.error}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setSubmitResults([])}
+                  className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
+                >
+                  Masquer
+                </button>
+              </div>
+            )}
           </form>
         )}
       </motion.section>
