@@ -24,6 +24,16 @@ export interface TestMetric {
   details?: Record<string, unknown>;
 }
 
+export interface SimonRawTrial {
+  trialNumber: number;
+  type: string;          // "Congruent" | "Incongruent"
+  stimulus: string;      // "Vert" | "Rouge"
+  side: string;          // "Gauche" | "Droite"
+  response: string;
+  rt: number | null;
+  correct: boolean;
+}
+
 export interface SessionResult {
   session_id: string;
   date: string;
@@ -34,6 +44,7 @@ export interface SessionResult {
     nback: TestMetric[];
     tmt: TestMetric[];
   };
+  simonRawTrials?: SimonRawTrial[];
 }
 
 export interface PlayerData {
