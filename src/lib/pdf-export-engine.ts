@@ -368,113 +368,173 @@ function drawSgsBadge(doc: jsPDF, score: number, x: number, y: number) {
   doc.text("/100", x, y + 8, { align: "center" });
 }
 
-// ─── Radar Chart (6-axis cognitive profile) ───────────────────────────────────
+// ─── Cognitive Radar (CogniLab style — SVG → PNG → embedded) ─────────────────
 
 /**
- * Draws a 6-axis radar chart at (cx, cy) with given radius.
- * scores[i] expected in 0-100, mapped to 0-r.
- * Axis order: Réaction, Inhibition, Mémoire, Attention, Flexibilité, Anticipation.
+ * Six axes in fixed order, matching the order produced by export-fetcher:
+ *   [reactionTime, inhibition, workingMemory, attention, flexibility, anticipation]
+ * Labels mirror the CogniLab report (sgs-engine).
  */
-function drawRadar(
-  doc: jsPDF,
-  cx: number,
-  cy: number,
-  r: number,
-  scores: number[]
-): void {
-  const labels = ["Réaction", "Inhibition", "Mémoire", "Attention", "Flexibilité", "Anticipation"];
-  const n = 6;
-  const step = (2 * Math.PI) / n;
-  // Start from top (12 o'clock)
-  const angleAt = (i: number) => -Math.PI / 2 + i * step;
+const RADAR_AXIS_LABELS = [
+  "Temps de Réaction",
+  "Contrôle Inhibiteur",
+  "Mémoire de Travail",
+  "Attention Sélective",
+  "Flexibilité Cognitive",
+  "Anticipation Perceptuelle",
+];
 
-  // Background polygon (light gray) + concentric guides at 25/50/75/100%
-  doc.setDrawColor(229, 231, 235); // #e5e7eb
-  doc.setLineWidth(0.2);
-  for (const ratio of [0.25, 0.5, 0.75, 1]) {
-    const pts: [number, number][] = [];
-    for (let i = 0; i < n; i++) {
-      const a = angleAt(i);
-      pts.push([cx + Math.cos(a) * r * ratio, cy + Math.sin(a) * r * ratio]);
-    }
-    for (let i = 0; i < n; i++) {
-      const [x1, y1] = pts[i];
-      const [x2, y2] = pts[(i + 1) % n];
-      doc.line(x1, y1, x2, y2);
-    }
+function radarLevelColor(score: number): string {
+  if (score >= 75) return "#16a34a";
+  if (score >= 50) return "#198c3d";
+  if (score >= 30) return "#d97706";
+  return "#dc2626";
+}
+
+/**
+ * Builds a self-contained SVG string of the CogniLab cognitive radar.
+ * Uses absolute hex colors and inline font-families — safe for canvas rasterization.
+ */
+function buildCognitiveRadarSvg(scores: number[], sgsScore: number): string {
+  const cx = 200;
+  const cy = 200;
+  const maxR = 140;
+  const n = 6;
+  const angles = Array.from({ length: n }, (_, i) => (360 / n) * i);
+  const polar = (deg: number, r: number) => {
+    const a = ((deg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  };
+
+  const ringPcts = [20, 40, 60, 80, 100];
+
+  // Concentric rings + their numeric labels
+  let rings = "";
+  for (const pct of ringPcts) {
+    const r = (pct / 100) * maxR;
+    const pts = angles.map((a) => polar(a, r));
+    const path =
+      pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+    rings += `<path d="${path}" fill="none" stroke="#dde3ec" stroke-width="1"/>`;
+    rings += `<text x="${cx + 4}" y="${cy - r + 4}" fill="#94a3b8" font-size="8" font-family="monospace">${pct}</text>`;
   }
 
   // Axis lines
+  let axes = "";
   for (let i = 0; i < n; i++) {
-    const a = angleAt(i);
-    doc.line(cx, cy, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    const p = polar(angles[i], maxR);
+    axes += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#dde3ec" stroke-width="1" stroke-dasharray="3,3"/>`;
   }
 
-  // Data polygon points
-  const dataPts: [number, number][] = [];
+  // Data polygon
+  const dataPts = scores.slice(0, n).map((s, i) => {
+    const v = Math.max(0, Math.min(100, s ?? 0));
+    return polar(angles[i], (v / 100) * maxR);
+  });
+  const dataPath =
+    dataPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+
+  // Data dots (single-series, color by level)
+  let dots = "";
   for (let i = 0; i < n; i++) {
-    const s = Math.max(0, Math.min(100, scores[i] ?? 0));
-    const a = angleAt(i);
-    const dist = (s / 100) * r;
-    dataPts.push([cx + Math.cos(a) * dist, cy + Math.sin(a) * dist]);
+    const s = scores[i] ?? 0;
+    const color = radarLevelColor(s);
+    const p = dataPts[i];
+    dots += `
+      <circle cx="${p.x}" cy="${p.y}" r="8" fill="${color}" opacity="0.15"/>
+      <circle cx="${p.x}" cy="${p.y}" r="5" fill="#f8fafc" stroke="${color}" stroke-width="2"/>
+      <circle cx="${p.x}" cy="${p.y}" r="2.5" fill="${color}"/>`;
   }
 
-  // Filled green polygon at opacity 0.4 (using GState)
-  const anyDoc = doc as any;
-  let gs: any;
-  try {
-    gs = new (jsPDF as any).GState({ opacity: 0.4 });
-    anyDoc.setGState(gs);
-  } catch {
-    /* GState may be unavailable; fall back to solid fill */
-  }
-  doc.setFillColor(25, 140, 61); // #198c3d Raja green
-  // Use lines() with start point for filled polygon
-  const startX = dataPts[0][0];
-  const startY = dataPts[0][1];
-  const rel: [number, number][] = [];
-  for (let i = 1; i < n; i++) {
-    rel.push([dataPts[i][0] - dataPts[i - 1][0], dataPts[i][1] - dataPts[i - 1][1]]);
-  }
-  rel.push([startX - dataPts[n - 1][0], startY - dataPts[n - 1][1]]);
-  doc.lines(rel, startX, startY, [1, 1], "F", true);
-
-  // Reset opacity
-  try {
-    const gs2 = new (jsPDF as any).GState({ opacity: 1 });
-    anyDoc.setGState(gs2);
-  } catch { /* noop */ }
-
-  // Stroked outline (solid green)
-  doc.setDrawColor(25, 140, 61);
-  doc.setLineWidth(0.5);
+  // Axis labels (name + numeric value)
+  let labels = "";
   for (let i = 0; i < n; i++) {
-    const [x1, y1] = dataPts[i];
-    const [x2, y2] = dataPts[(i + 1) % n];
-    doc.line(x1, y1, x2, y2);
+    const lp = polar(angles[i], maxR + 32);
+    const anchor =
+      Math.abs(lp.x - cx) < 10 ? "middle" : lp.x < cx ? "end" : "start";
+    const score = Math.round(scores[i] ?? 0);
+    const color = radarLevelColor(score);
+    const name = RADAR_AXIS_LABELS[i] ?? "";
+    labels += `
+      <text x="${lp.x}" y="${lp.y}" text-anchor="${anchor}" dominant-baseline="middle"
+            fill="#475569" font-size="10" font-family="Inter, Arial, sans-serif" font-weight="600">${name}</text>
+      <text x="${lp.x}" y="${lp.y + 12}" text-anchor="${anchor}" dominant-baseline="middle"
+            fill="${color}" font-size="11" font-family="monospace" font-weight="700">${score}</text>`;
   }
 
-  // Score dots
-  doc.setFillColor(25, 140, 61);
-  for (const [x, y] of dataPts) {
-    doc.circle(x, y, 1, "F");
-  }
+  // Center SGS chip
+  const center = `
+    <circle cx="${cx}" cy="${cy}" r="28" fill="#ffffff" stroke="#dde3ec" stroke-width="1"/>
+    <text x="${cx}" y="${cy - 7}" text-anchor="middle" fill="#475569"
+          font-size="7" font-family="Inter, Arial, sans-serif" font-weight="600" letter-spacing="1">SGS</text>
+    <text x="${cx}" y="${cy + 9}" text-anchor="middle" fill="#0f172a"
+          font-size="18" font-family="monospace" font-weight="700">${Math.round(sgsScore)}</text>`;
 
-  // Axis labels
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(31, 41, 55); // #1f2937
-  for (let i = 0; i < n; i++) {
-    const a = angleAt(i);
-    const lx = cx + Math.cos(a) * (r + 8);
-    const ly = cy + Math.sin(a) * (r + 8) + 1;
-    let align: "left" | "right" | "center" = "center";
-    const cosA = Math.cos(a);
-    if (cosA > 0.2) align = "left";
-    else if (cosA < -0.2) align = "right";
-    doc.text(labels[i], lx, ly, { align });
-  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="600" height="600">
+    <rect width="400" height="400" fill="#ffffff"/>
+    ${rings}
+    ${axes}
+    <path d="${dataPath}" fill="rgba(25,140,61,0.25)" stroke="#198c3d" stroke-width="2" stroke-linejoin="round"/>
+    ${dots}
+    ${labels}
+    ${center}
+  </svg>`;
 }
+
+/** Rasterizes an SVG string to a PNG data URL via an offscreen canvas. */
+async function svgToPngDataUrl(svg: string, pxSize = 600): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = pxSize;
+        canvas.height = pxSize;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          reject(new Error("Canvas 2D context unavailable"));
+          return;
+        }
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pxSize, pxSize);
+        ctx.drawImage(img, 0, 0, pxSize, pxSize);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/png"));
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+    };
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(e);
+    };
+    img.src = url;
+  });
+}
+
+/**
+ * Async helper: renders the CogniLab radar at (cx, cy) with given mm radius.
+ * Replaces the previous vector drawRadar() with the rich CogniLab visual.
+ */
+async function drawCognitiveRadar(
+  doc: jsPDF,
+  cx: number,
+  cy: number,
+  rMm: number,
+  scores: number[],
+  sgsScore: number
+): Promise<void> {
+  const svg = buildCognitiveRadarSvg(scores, sgsScore);
+  const png = await svgToPngDataUrl(svg, 700);
+  // Render larger than rMm to include axis labels + center chip; SVG viewBox 400 ≈ 2*(maxR+padding)
+  const sizeMm = rMm * 2.6;
+  doc.addImage(png, "PNG", cx - sizeMm / 2, cy - sizeMm / 2, sizeMm, sizeMm);
+}
+
 
 // ─── Team SGS Evolution (line chart) ─────────────────────────────────────────
 
