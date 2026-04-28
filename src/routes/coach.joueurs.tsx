@@ -1,10 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Trash2, Clock, X, Mail, Users, FileText } from "lucide-react";
+import { UserPlus, Trash2, Clock, X, Mail, Users, FileText, MoreVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ExportModal } from "@/components/coach/ExportModal";
 import { toast } from "sonner";
 
@@ -281,31 +287,41 @@ function CoachJoueurs() {
                       )}
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExportPlayer({
-                        id: r.player_id,
-                        full_name: r.profile?.full_name ?? "Joueur",
-                        position: r.profile?.position ?? "—",
-                      });
-                    }}
-                  >
-                    <FileText className="mr-1 h-3.5 w-3.5" /> Exporter PDF
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeRelation(r.id);
-                    }}
-                    className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
-                  >
-                    <Trash2 className="mr-1 h-3.5 w-3.5" /> Retirer
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Actions"
+                        className="h-8 w-8"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExportPlayer({
+                            id: r.player_id,
+                            full_name: r.profile?.full_name ?? "Joueur",
+                            position: r.profile?.position ?? "—",
+                          });
+                        }}
+                      >
+                        <FileText className="mr-2 h-4 w-4" /> Exporter PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRelation(r.id);
+                        }}
+                        className="text-red-500 focus:text-red-500"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" /> Retirer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </motion.div>
               ))}
             </AnimatePresence>
