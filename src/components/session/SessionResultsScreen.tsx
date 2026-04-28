@@ -86,6 +86,17 @@ export function SessionResultsScreen() {
               avg_congruent: (result.data as SimonResultData).avgCongruent,
               avg_incongruent: (result.data as SimonResultData).avgIncongruent,
               accuracy: (result.data as SimonResultData).accuracy,
+              raw_trials: (result.rawTrials ?? []).map((t: any) => ({
+                trialNumber: t.trialNumber,
+                type: t.isCongruent ? "Congruent" : "Incongruent",
+                stimulus: t.color === "green" ? "Vert" : "Rouge",
+                side: t.position === "left" ? "Gauche" : "Droite",
+                response: t.responded
+                  ? (t.correct ? (t.color === "green" ? "Vert" : "Rouge") : (t.color === "green" ? "Rouge" : "Vert"))
+                  : "—",
+                rt: t.responseTime,
+                correct: !!t.correct,
+              })),
             } : result.testId === "nback" ? {
               hits: (result.data as NBackResultData).hits,
               misses: (result.data as NBackResultData).misses,

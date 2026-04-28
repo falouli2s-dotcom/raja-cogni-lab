@@ -141,6 +141,9 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
           nback: toMetrics(nbackRow),
           tmt: toMetrics(tmtRow),
         },
+        simonRawTrials: Array.isArray(simonResult?.details?.raw_trials)
+          ? simonResult.details.raw_trials
+          : [],
       };
     }
   );
