@@ -217,7 +217,8 @@ function drawSectionTitle(doc: jsPDF, text: string, y: number): number {
 function drawDimensionBars(
   doc: jsPDF,
   dimensions: DimensionScore[],
-  startY: number
+  startY: number,
+  avgRtMs?: number | null
 ): number {
   const w = doc.internal.pageSize.getWidth();
   const barW = w - 80;
@@ -249,6 +250,17 @@ function drawDimensionBars(
     // Percentile
     doc.setTextColor(...COLOR.muted);
     doc.text(`P${dim.percentile}`, w - 14, y + 4, { align: "right" });
+
+    // Inline avg_rt (ms) on the reaction-time row
+    const isRtRow =
+      dim.label === "TR" ||
+      dim.label === "Temps de réaction" ||
+      dim.label.toLowerCase().startsWith("temps de réaction");
+    if (isRtRow && avgRtMs != null && avgRtMs > 0) {
+      doc.setTextColor(55, 65, 81); // dark gray
+      doc.setFontSize(7);
+      doc.text(`(${avgRtMs} ms)`, w - 28, y + 4, { align: "right" });
+    }
 
     y += 9;
   });
