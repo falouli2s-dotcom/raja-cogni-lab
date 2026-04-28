@@ -115,6 +115,25 @@ function sgsTrend(player: PlayerData): number | null {
   return last - prev;
 }
 
+/** Extracts avg_rt (ms) from a session's Simon Task metrics. Returns null if missing. */
+function getAvgRT(session: SessionResult | null | undefined): number | null {
+  if (!session) return null;
+  const m = session.tests.simon.find(
+    (x) => x.metrique === "avg_rt" || x.metrique === "avgRT" || x.metrique === "avg_rt_ms"
+  );
+  if (!m || !Number.isFinite(Number(m.valeur))) return null;
+  return Math.round(Number(m.valeur));
+}
+
+/** Average avg_rt across players' latest sessions. */
+function teamAvgRT(players: PlayerData[]): number | null {
+  const vals = players
+    .map((p) => getAvgRT(latestSession(p)))
+    .filter((v): v is number => v !== null && v > 0);
+  if (vals.length === 0) return null;
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+
 // ─── Color palette (Raja green + dark theme on white PDF) ─────────────────────
 
 const COLOR = {
@@ -198,7 +217,8 @@ function drawSectionTitle(doc: jsPDF, text: string, y: number): number {
 function drawDimensionBars(
   doc: jsPDF,
   dimensions: DimensionScore[],
-  startY: number
+  startY: number,
+  avgRtMs?: number | null
 ): number {
   const w = doc.internal.pageSize.getWidth();
   const barW = w - 80;
@@ -230,6 +250,17 @@ function drawDimensionBars(
     // Percentile
     doc.setTextColor(...COLOR.muted);
     doc.text(`P${dim.percentile}`, w - 14, y + 4, { align: "right" });
+
+    // Inline avg_rt (ms) on the reaction-time row
+    const isRtRow =
+      dim.label === "TR" ||
+      dim.label === "Temps de réaction" ||
+      dim.label.toLowerCase().startsWith("temps de réaction");
+    if (isRtRow && avgRtMs != null && avgRtMs > 0) {
+      doc.setTextColor(55, 65, 81); // dark gray
+      doc.setFontSize(7);
+      doc.text(`(${avgRtMs} ms)`, w - 28, y + 4, { align: "right" });
+    }
 
     y += 9;
   });
@@ -618,7 +649,7 @@ export async function exportPlayerReport(
   // Dimensions bar chart
   if (latest) {
     y = drawSectionTitle(doc, "Profil cognitif — Dernière session", y);
-    y = drawDimensionBars(doc, latest.dimensions, y);
+    y = drawDimensionBars(doc, latest.dimensions, y, getAvgRT(latest));
     y += 6;
   }
 
@@ -668,10 +699,12 @@ export async function exportTeamReport(
     const s = latestSession(p);
     const trend = sgsTrend(p);
     const trendStr = trend === null ? "—" : trend > 0 ? `+${trend}` : String(trend);
+    const rt = getAvgRT(s);
     return [
       p.full_name,
       p.position,
       s ? String(s.sgs_score) : "—",
+      rt != null ? `${rt} ms` : "—",
       trendStr,
       s ? fmtDate(s.date) : "—",
     ];
@@ -679,10 +712,10 @@ export async function exportTeamReport(
 
   y = drawTable(
     doc,
-    ["Joueur", "Poste", "SGS", "Tendance", "Dernière session"],
+    ["Joueur", "Poste", "SGS", "TR (ms)", "Tendance", "Dernière session"],
     teamRows,
     y,
-    [55, 28, 18, 22, 36]
+    [48, 26, 16, 20, 20, 32]
   );
 
   y += 6;
@@ -700,7 +733,7 @@ export async function exportTeamReport(
     );
     return { label, score: avg, percentile };
   });
-  y = drawDimensionBars(doc, dimAvgs, y);
+  y = drawDimensionBars(doc, dimAvgs, y, teamAvgRT(players));
 
   // ── Per-player pages ──────────────────────────────────────────────────────
   for (const player of players) {
@@ -713,7 +746,7 @@ export async function exportTeamReport(
     const latest = latestSession(player);
     if (latest) {
       yp = drawSectionTitle(doc, "Profil cognitif", yp);
-      yp = drawDimensionBars(doc, latest.dimensions, yp);
+      yp = drawDimensionBars(doc, latest.dimensions, yp, getAvgRT(latest));
       yp += 4;
     }
 
