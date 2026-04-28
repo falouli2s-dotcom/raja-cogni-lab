@@ -476,6 +476,105 @@ function drawRadar(
   }
 }
 
+// ─── Team SGS Evolution (line chart) ─────────────────────────────────────────
+
+/**
+ * Draws a line chart of the team-average SGS over time.
+ * Aggregates ALL sessions across players, groups by day, averages SGS.
+ */
+function drawTeamSgsTrend(
+  doc: jsPDF,
+  players: PlayerData[],
+  startY: number
+): number {
+  const buckets = new Map<string, number[]>();
+  for (const p of players) {
+    for (const s of p.sessions) {
+      if (!s.date || !Number.isFinite(Number(s.sgs_score))) continue;
+      const day = s.date.slice(0, 10);
+      if (!buckets.has(day)) buckets.set(day, []);
+      buckets.get(day)!.push(Number(s.sgs_score));
+    }
+  }
+
+  const points = Array.from(buckets.entries())
+    .map(([day, vals]) => ({
+      day,
+      avg: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length),
+    }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+
+  if (points.length === 0) {
+    doc.setTextColor(...COLOR.muted);
+    doc.setFontSize(8);
+    doc.text("Aucune donnée d'évolution disponible.", 14, startY + 5);
+    return startY + 12;
+  }
+
+  const w = doc.internal.pageSize.getWidth();
+  const margin = 14;
+  const chartX = margin + 16;
+  const chartW = w - margin * 2 - 18;
+  const chartH = 50;
+  const chartY = startY;
+  const chartBottom = chartY + chartH;
+
+  doc.setDrawColor(...COLOR.border);
+  doc.setLineWidth(0.3);
+  doc.rect(chartX, chartY, chartW, chartH, "S");
+
+  // Y-axis gridlines + labels (0/25/50/75/100)
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...COLOR.muted);
+  for (const v of [0, 25, 50, 75, 100]) {
+    const yy = chartBottom - (v / 100) * chartH;
+    if (v !== 0 && v !== 100) {
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.15);
+      doc.line(chartX, yy, chartX + chartW, yy);
+    }
+    doc.text(String(v), chartX - 2, yy + 1.5, { align: "right" });
+  }
+
+  const n = points.length;
+  const xAt = (i: number) =>
+    n === 1 ? chartX + chartW / 2 : chartX + (i / (n - 1)) * chartW;
+  const yAt = (v: number) => chartBottom - (Math.max(0, Math.min(100, v)) / 100) * chartH;
+
+  // Line
+  doc.setDrawColor(0, 128, 64);
+  doc.setLineWidth(0.8);
+  for (let i = 0; i < n - 1; i++) {
+    doc.line(xAt(i), yAt(points[i].avg), xAt(i + 1), yAt(points[i + 1].avg));
+  }
+  // Dots
+  doc.setFillColor(0, 128, 64);
+  for (let i = 0; i < n; i++) {
+    doc.circle(xAt(i), yAt(points[i].avg), 1.2, "F");
+  }
+  // Value labels
+  doc.setFontSize(6.5);
+  doc.setTextColor(...COLOR.dark);
+  for (let i = 0; i < n; i++) {
+    doc.text(String(points[i].avg), xAt(i), yAt(points[i].avg) - 2, { align: "center" });
+  }
+
+  // X-axis date labels (max ~6)
+  const maxLabels = Math.min(n, 6);
+  const stride = Math.max(1, Math.ceil(n / maxLabels));
+  doc.setFontSize(6);
+  doc.setTextColor(...COLOR.muted);
+  for (let i = 0; i < n; i += stride) {
+    doc.text(fmtDate(points[i].day), xAt(i), chartBottom + 4, { align: "center" });
+  }
+  if ((n - 1) % stride !== 0) {
+    doc.text(fmtDate(points[n - 1].day), xAt(n - 1), chartBottom + 4, { align: "center" });
+  }
+
+  return chartBottom + 8;
+}
+
 // ─── Player Info Block ────────────────────────────────────────────────────────
 
 function drawPlayerInfoBlock(doc: jsPDF, player: PlayerData, y: number): number {
@@ -719,6 +818,11 @@ export async function exportTeamReport(
   );
 
   y += 6;
+
+  // Team SGS evolution (line chart)
+  y = drawSectionTitle(doc, "Évolution du SGS moyen équipe", y);
+  y = drawTeamSgsTrend(doc, players, y);
+  y += 4;
 
   // Dimension averages
   y = drawSectionTitle(doc, "Moyennes par dimension (toute l'équipe)", y);
