@@ -51,19 +51,6 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
             </div>
 
             <div className="px-5 pb-10">
-              {ex.image_url && (
-                <div className="mb-4 -mx-1 overflow-hidden rounded-2xl bg-muted aspect-video">
-                  <img
-                    src={ex.image_url}
-                    alt={ex.titre}
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.currentTarget.parentElement as HTMLElement).style.display = "none";
-                    }}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
               {/* Title */}
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <Badge variant="outline" className={`text-[10px] border ${BLOC_COLORS[ex.bloc] || ""}`}>
