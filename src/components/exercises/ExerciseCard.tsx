@@ -35,7 +35,7 @@ export function ExerciseCard({ exercice: ex, index, onClick }: Props) {
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).style.display = "none";
             }}
-            className="h-16 w-16 rounded-xl object-cover bg-muted shrink-0"
+            className="w-24 aspect-video rounded-xl object-cover bg-muted shrink-0"
           />
         )}
         <div className="flex-1 min-w-0">
