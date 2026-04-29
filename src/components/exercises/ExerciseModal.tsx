@@ -84,6 +84,19 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
               {/* Tâche motrice */}
               <Section icon={<Dumbbell className="h-4 w-4" />} title="Tâche motrice">
                 <p className="text-sm text-foreground/90">{ex.tache_motrice}</p>
+                {ex.image_url && (
+                  <div className="mt-3 overflow-hidden rounded-xl bg-background aspect-video">
+                    <img
+                      src={ex.image_url}
+                      alt={`Illustration : ${ex.titre}`}
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.currentTarget.parentElement as HTMLElement).style.display = "none";
+                      }}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                )}
               </Section>
 
               {/* Stimulus & Règle */}
