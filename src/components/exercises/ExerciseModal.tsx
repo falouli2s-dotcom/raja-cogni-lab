@@ -52,7 +52,7 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
 
             <div className="px-5 pb-10">
               {ex.image_url && (
-                <div className="mb-4 -mx-1 overflow-hidden rounded-2xl bg-muted aspect-video">
+                <div className="mb-4 flex justify-center">
                   <img
                     src={ex.image_url}
                     alt={ex.titre}
@@ -60,7 +60,7 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
                     onError={(e) => {
                       (e.currentTarget.parentElement as HTMLElement).style.display = "none";
                     }}
-                    className="h-full w-full object-cover"
+                    className="h-32 w-32 object-contain rounded-xl bg-muted"
                   />
                 </div>
               )}
