@@ -1,0 +1,1 @@
+UPDATE public.exercices SET image_url = 'https://dbabzfwftdnutoclfvnq.supabase.co/storage/v1/object/public/exercise-images/' || numero::text || '.png' WHERE numero IS NOT NULL;
