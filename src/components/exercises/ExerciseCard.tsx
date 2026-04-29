@@ -26,7 +26,18 @@ export function ExerciseCard({ exercice: ex, index, onClick }: Props) {
       className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-lg active:scale-[0.98]"
     >
       {/* Header row */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-3">
+        {ex.image_url && (
+          <img
+            src={ex.image_url}
+            alt={ex.titre}
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+            className="h-16 w-16 rounded-xl object-cover bg-muted shrink-0"
+          />
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <Badge variant="outline" className={`text-[10px] border ${blocColor}`}>
