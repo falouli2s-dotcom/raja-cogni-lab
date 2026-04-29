@@ -1,0 +1,1 @@
+ALTER TABLE public.exercices ADD COLUMN image_url TEXT;

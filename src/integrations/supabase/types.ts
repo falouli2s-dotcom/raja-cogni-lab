@@ -113,6 +113,7 @@ export type Database = {
           created_at: string
           duree_serie: string
           id: string
+          image_url: string | null
           indicateur_cognitif: string
           materiel: string | null
           niveau: string
@@ -135,6 +136,7 @@ export type Database = {
           created_at?: string
           duree_serie?: string
           id?: string
+          image_url?: string | null
           indicateur_cognitif?: string
           materiel?: string | null
           niveau?: string
@@ -157,6 +159,7 @@ export type Database = {
           created_at?: string
           duree_serie?: string
           id?: string
+          image_url?: string | null
           indicateur_cognitif?: string
           materiel?: string | null
           niveau?: string
