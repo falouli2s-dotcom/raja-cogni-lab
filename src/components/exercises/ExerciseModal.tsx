@@ -51,19 +51,6 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
             </div>
 
             <div className="px-5 pb-10">
-              {ex.image_url && (
-                <div className="mb-4 -mx-1 overflow-hidden rounded-2xl bg-muted aspect-video">
-                  <img
-                    src={ex.image_url}
-                    alt={ex.titre}
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.currentTarget.parentElement as HTMLElement).style.display = "none";
-                    }}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
               {/* Title */}
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <Badge variant="outline" className={`text-[10px] border ${BLOC_COLORS[ex.bloc] || ""}`}>
@@ -97,6 +84,19 @@ export function ExerciseModal({ exercice: ex, onClose }: Props) {
               {/* Tâche motrice */}
               <Section icon={<Dumbbell className="h-4 w-4" />} title="Tâche motrice">
                 <p className="text-sm text-foreground/90">{ex.tache_motrice}</p>
+                {ex.image_url && (
+                  <div className="mt-3 overflow-hidden rounded-xl bg-background aspect-video">
+                    <img
+                      src={ex.image_url}
+                      alt={`Illustration : ${ex.titre}`}
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.currentTarget.parentElement as HTMLElement).style.display = "none";
+                      }}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                )}
               </Section>
 
               {/* Stimulus & Règle */}
