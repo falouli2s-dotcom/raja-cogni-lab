@@ -706,7 +706,7 @@ function drawSessionHistoryTable(doc: jsPDF, player: PlayerData, y: number): num
     "Flexibilité", // 5 dimensions — sixth deferred to v2
   ];
   const w = doc.internal.pageSize.getWidth() - 20;
-  const colWidths = [22, 14, 16, 22, 24, 22, 22, 24];
+  const colWidths = [22, 14, 16, 22, 24, 22, 22];
 
   return drawTable(doc, headers, rows, y, colWidths);
 }

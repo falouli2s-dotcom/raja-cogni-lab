@@ -16,8 +16,7 @@ ALTER TABLE public.exercices
   ADD COLUMN IF NOT EXISTS active boolean DEFAULT true;
 UPDATE public.exercices
 SET active = false
-WHERE categorie::text = 'anticipation'
-   OR titre ILIKE '%anticipat%';
+WHERE titre ILIKE '%anticipat%';
 -- Note: if the table uses categorie enum directly and active column exists.
 -- Adjust column names to match actual schema.
 
