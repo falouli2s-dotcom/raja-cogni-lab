@@ -16,7 +16,6 @@ const DIMENSION_LABELS: Record<string, string> = {
   workingMemory: "Mémoire de travail",
   flexibility: "Flexibilité",
   attention: "Attention",
-  anticipation: "Anticipation",
 };
 
 // ─── Single player ────────────────────────────────────────────────────────────
@@ -95,14 +94,13 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
 
       const sgs = computeSGS(scores);
 
-      // Order matches the radar/labels: Réaction, Inhibition, Mémoire, Attention, Flexibilité, Anticipation
+      // Order matches the radar/labels: Réaction, Inhibition, Mémoire, Attention, Flexibilité
       const orderedKeys = [
         "reactionTime",
         "inhibition",
         "workingMemory",
         "attention",
         "flexibility",
-        "anticipation",
       ];
       const dimensions: DimensionScore[] = orderedKeys.map((key) => {
         const d = sgs.dimensions.find((x) => x.key === key);

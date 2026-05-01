@@ -42,14 +42,13 @@ interface RadarChartProps {
   overlays?: RadarOverlay[];
 }
 
-// Scientific weights matching sgs-engine WEIGHTS (sum = 1.0)
+// Scientific weights matching sgs-engine WEIGHTS (sum = 1.00)
 const WEIGHTS: Record<string, number> = {
-  flexibility: 0.25,
-  attention: 0.2,
-  workingMemory: 0.2,
-  inhibition: 0.15,
-  reactionTime: 0.1,
-  anticipation: 0.1,
+  flexibility: 0.28,
+  attention: 0.22,
+  workingMemory: 0.22,
+  inhibition: 0.17,
+  reactionTime: 0.11,
 };
 
 function polarToXY(angleDeg: number, r: number, cx: number, cy: number) {
