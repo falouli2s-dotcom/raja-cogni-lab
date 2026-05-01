@@ -41,7 +41,6 @@ export const TEST_ICONS: Record<string, string> = {
   "TMT B": "🔀",
   "CRT": "⏱",
   "Go/No-Go": "🎯",
-  "Anticipation Task": "👁",
 };
 
 export function getTestIcon(alignment: string): string {

@@ -145,7 +145,6 @@ const TEST_LABELS: Record<string, string> = {
   n_back: "N-Back 2",
   tmt: "Trail Making Test",
   crt: "Choice Reaction Time",
-  anticipation: "Test d'Anticipation",
 };
 
 const DIMENSION_LABELS: Record<string, string> = {
@@ -154,7 +153,6 @@ const DIMENSION_LABELS: Record<string, string> = {
   workingMemory: "Mémoire de travail",
   inhibition: "Inhibition",
   reactionTime: "Temps de réaction",
-  anticipation: "Anticipation",
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -485,7 +483,6 @@ function CoachDashboard() {
         { key: "workingMemory", label: "Mémoire\nTravail" },
         { key: "inhibition", label: "Inhibition" },
         { key: "reactionTime", label: "Réaction" },
-        { key: "anticipation", label: "Anticipation" },
       ];
       const teamDims: CognitiveDimension[] = RADAR_KEYS.filter(
         (r) => (dimAccum[r.key]?.length ?? 0) > 0

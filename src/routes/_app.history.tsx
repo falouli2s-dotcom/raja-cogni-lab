@@ -16,7 +16,6 @@ import {
   Zap,
   GitBranch,
   Eye,
-  Crosshair,
   BarChart3,
   Sparkles,
   Download,
@@ -63,7 +62,6 @@ const DIMENSIONS = [
   { key: "workingMemory", label: "Mémoire de Travail", icon: Brain },
   { key: "flexibility", label: "Flexibilité Cognitive", icon: GitBranch },
   { key: "attention", label: "Attention Sélective", icon: Eye },
-  { key: "anticipation", label: "Anticipation Perceptuelle", icon: Crosshair },
 ] as const;
 
 const PERIOD_LABELS: Record<"7d" | "30d" | "all", string> = {
