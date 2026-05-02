@@ -395,6 +395,10 @@ export type Database = {
         Returns: number
       }
       is_admin: { Args: never; Returns: boolean }
+      recompute_sgs_global_backfill: {
+        Args: { p_sid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       dominant_foot: "Droit" | "Gauche" | "Les deux"
