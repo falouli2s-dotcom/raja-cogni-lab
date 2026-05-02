@@ -13,7 +13,6 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as CompleteProfileRouteImport } from './routes/complete-profile'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -22,7 +21,6 @@ import { Route as CoachProfilRouteImport } from './routes/coach.profil'
 import { Route as CoachPendingRouteImport } from './routes/coach.pending'
 import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
 import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
@@ -53,11 +51,6 @@ const LoginRoute = LoginRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompleteProfileRoute = CompleteProfileRouteImport.update({
-  id: '/complete-profile',
-  path: '/complete-profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachRoute = CoachRouteImport.update({
@@ -98,11 +91,6 @@ const CoachDashboardRoute = CoachDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => CoachRoute,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCoachesRoute = AdminCoachesRouteImport.update({
   id: '/admin/coaches',
@@ -163,7 +151,6 @@ const AppSessionsSessionIdRoute = AppSessionsSessionIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/coach': typeof CoachRouteWithChildren
-  '/complete-profile': typeof CompleteProfileRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -173,7 +160,6 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
@@ -189,7 +175,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/coach': typeof CoachRouteWithChildren
-  '/complete-profile': typeof CompleteProfileRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -199,7 +184,6 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
@@ -217,7 +201,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/coach': typeof CoachRouteWithChildren
-  '/complete-profile': typeof CompleteProfileRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -227,7 +210,6 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
@@ -245,7 +227,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/coach'
-    | '/complete-profile'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -255,7 +236,6 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/admin/coaches'
-    | '/auth/callback'
     | '/coach/dashboard'
     | '/coach/joueurs'
     | '/coach/pending'
@@ -271,7 +251,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/coach'
-    | '/complete-profile'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -281,7 +260,6 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/admin/coaches'
-    | '/auth/callback'
     | '/coach/dashboard'
     | '/coach/joueurs'
     | '/coach/pending'
@@ -298,7 +276,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/coach'
-    | '/complete-profile'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -308,7 +285,6 @@ export interface FileRouteTypes {
     | '/_app/home'
     | '/_app/profile'
     | '/admin/coaches'
-    | '/auth/callback'
     | '/coach/dashboard'
     | '/coach/joueurs'
     | '/coach/pending'
@@ -326,13 +302,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   CoachRoute: typeof CoachRouteWithChildren
-  CompleteProfileRoute: typeof CompleteProfileRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AdminCoachesRoute: typeof AdminCoachesRoute
-  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -363,13 +337,6 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/complete-profile': {
-      id: '/complete-profile'
-      path: '/complete-profile'
-      fullPath: '/complete-profile'
-      preLoaderRoute: typeof CompleteProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coach': {
@@ -427,13 +394,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/coach/dashboard'
       preLoaderRoute: typeof CoachDashboardRouteImport
       parentRoute: typeof CoachRoute
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/admin/coaches': {
       id: '/admin/coaches'
@@ -565,13 +525,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   CoachRoute: CoachRouteWithChildren,
-  CompleteProfileRoute: CompleteProfileRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AdminCoachesRoute: AdminCoachesRoute,
-  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

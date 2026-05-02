@@ -36,6 +36,7 @@ const DIM_LABELS: Record<string, string> = {
   workingMemory: "Mémoire",
   inhibition: "Inhibition",
   attention: "Attention",
+  anticipation: "Anticipation",
 };
 
 function getGreeting(): string {

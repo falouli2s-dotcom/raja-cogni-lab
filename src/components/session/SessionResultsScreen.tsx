@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
-import { Brain, Clock, Zap, GitBranch, Eye, TrendingUp, Home } from "lucide-react";
+import { Brain, Clock, Zap, GitBranch, Eye, Crosshair, TrendingUp, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadarChart } from "@/components/RadarChart";
 import { useSession, saveSessionToHistory } from "@/lib/session-manager";
@@ -16,6 +16,7 @@ const dimensionIcons: Record<string, typeof Brain> = {
   workingMemory: Brain,
   flexibility: GitBranch,
   attention: Eye,
+  anticipation: Crosshair,
 };
 
 function getRecommendations(sgs: SGSResult): string[] {

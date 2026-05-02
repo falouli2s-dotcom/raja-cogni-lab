@@ -371,8 +371,8 @@ function drawSgsBadge(doc: jsPDF, score: number, x: number, y: number) {
 // ─── Cognitive Radar (CogniLab style — SVG → PNG → embedded) ─────────────────
 
 /**
- * Five axes in fixed order, matching the order produced by export-fetcher:
- *   [reactionTime, inhibition, workingMemory, attention, flexibility]
+ * Six axes in fixed order, matching the order produced by export-fetcher:
+ *   [reactionTime, inhibition, workingMemory, attention, flexibility, anticipation]
  * Labels mirror the CogniLab report (sgs-engine).
  */
 const RADAR_AXIS_LABELS = [
@@ -381,6 +381,7 @@ const RADAR_AXIS_LABELS = [
   "Mémoire de Travail",
   "Attention Sélective",
   "Flexibilité Cognitive",
+  "Anticipation Perceptuelle",
 ];
 
 function radarLevelColor(score: number): string {
@@ -703,10 +704,11 @@ function drawSessionHistoryTable(doc: jsPDF, player: PlayerData, y: number): num
     "Inhibition",
     "Mém. travail",
     "Attention",
-    "Flexibilité", // 5 dimensions — sixth deferred to v2
+    "Flexibilité",
+    "Anticipation",
   ];
   const w = doc.internal.pageSize.getWidth() - 20;
-  const colWidths = [22, 14, 16, 22, 24, 22, 22];
+  const colWidths = [22, 14, 16, 22, 24, 22, 22, 24];
 
   return drawTable(doc, headers, rows, y, colWidths);
 }
@@ -891,7 +893,7 @@ export async function exportTeamReport(
 
   // Dimension averages
   y = drawSectionTitle(doc, "Moyennes par dimension (toute l'équipe)", y);
-  const dimLabels = ["TR", "Inhibition", "Mém. travail", "Attention", "Flexibilité"];
+  const dimLabels = ["TR", "Inhibition", "Mém. travail", "Attention", "Flexibilité", "Anticipation"];
   const dimAvgs: DimensionScore[] = dimLabels.map((label, i) => {
     const vals = players
       .map((p) => latestSession(p)?.dimensions[i]?.score)

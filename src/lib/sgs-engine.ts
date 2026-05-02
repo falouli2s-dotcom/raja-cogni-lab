@@ -16,13 +16,14 @@ export interface SGSResult {
   date: string;
 }
 
-// Scientific weights (sum = 1.00) — based on cognitive synthesis for football
+// Scientific weights (sum = 1.0) — based on cognitive synthesis for football
 const WEIGHTS: Record<string, number> = {
-  flexibility: 0.28,
-  attention: 0.22,
-  workingMemory: 0.22,
-  inhibition: 0.17,
-  reactionTime: 0.11,
+  flexibility: 0.25,
+  attention: 0.20,
+  workingMemory: 0.20,
+  inhibition: 0.15,
+  reactionTime: 0.10,
+  anticipation: 0.10,
 };
 
 /**
@@ -161,11 +162,18 @@ export function computeSGS(scores: TestScores): SGSResult {
     status: getStatus(attentionScore),
   });
 
-  // TODO [v2 — Anticipation Perceptuelle]:
-  // Valid measurement requires a temporal occlusion paradigm on real football
-  // video sequences (Van Maarseveen et al., 2018). Not implementable via
-  // Simon Task, N-Back or TMT. Weight redistributed to 5 remaining dimensions.
-  // When implemented, add dedicated video-test engine and re-introduce here.
+  // 6. Anticipation Perceptuelle — proxy: N-Back hit rate (no dedicated test yet)
+  const anticipationScore = scores.nback
+    ? normalizeNBackAccuracy(scores.nback.accuracy)
+    : 50;
+  dimensions.push({
+    key: "anticipation",
+    label: "Anticipation Perceptuelle",
+    score: anticipationScore,
+    raw: scores.nback?.accuracy,
+    unit: "%",
+    status: getStatus(anticipationScore),
+  });
 
   // Weighted global score
   const global = Math.round(
