@@ -61,7 +61,6 @@ const TEST_LABELS: Record<string, string> = {
   n_back: "N-Back 2",
   tmt: "Trail Making Test",
   crt: "Choice Reaction Time",
-  anticipation: "Test d'Anticipation",
 };
 
 // ExerciceOverride / ExerciceOverridesMap imported from "@/lib/exercise-overrides"
@@ -544,7 +543,6 @@ function CoachSessions() {
     { key: "workingMemory", label: "Mémoire de\ntravail", short: "Mémoire", Icon: Database },
     { key: "inhibition", label: "Contrôle\ninhibiteur", short: "Inhibition", Icon: ShieldCheck },
     { key: "attention", label: "Attention\nsélective", short: "Attention", Icon: Eye },
-    { key: "anticipation", label: "Anticipation\nperceptuelle", short: "Anticipation", Icon: Target },
   ];
 
   const radarDimensions: CognitiveDimension[] = RADAR_AXES.map((a) => {
