@@ -187,6 +187,34 @@ function RegisterPage() {
     navigate({ to: "/verify-email", search: { email }, replace: true });
   }
 
+  async function handleGoogleSignUp(intendedRole: Role) {
+    setError("");
+    setLoading(true);
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+        // Persist intended role across the OAuth round-trip
+        // (read back in /auth/callback to write into user metadata)
+      },
+    });
+    if (oauthError) {
+      setError(oauthError.message);
+      setLoading(false);
+      return;
+    }
+    // Stash intended role for the callback (cleared after use)
+    try {
+      sessionStorage.setItem("cogniraja_intended_role", intendedRole);
+    } catch {
+      // ignore
+    }
+  }
+
   // ROLE SELECTION SCREEN
   if (role === null) {
     return (
@@ -233,6 +261,46 @@ function RegisterPage() {
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </button>
+        </div>
+
+        {/* Quick sign-up via Google */}
+        <div className="mt-8">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-background px-3 text-xs uppercase tracking-wider text-muted-foreground">
+                Ou inscription rapide
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              onClick={() => handleGoogleSignUp("joueur")}
+              className="h-11 gap-2"
+            >
+              <GoogleIcon />
+              <span className="text-xs">Joueur</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              onClick={() => handleGoogleSignUp("coach")}
+              className="h-11 gap-2"
+            >
+              <GoogleIcon />
+              <span className="text-xs">Coach</span>
+            </Button>
+          </div>
+          {error && (
+            <p className="mt-3 text-center text-sm text-destructive">{error}</p>
+          )}
         </div>
 
         <div className="mt-8 text-center">
