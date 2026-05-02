@@ -29,6 +29,7 @@ export interface SimonResultData {
   simonEffect: number;
   accuracy: number;
   errorRate: number;
+  incongruentErrorRate: number;
   totalTrials: number;
   correctCount: number;
   missedCount: number;

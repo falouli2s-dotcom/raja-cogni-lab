@@ -112,19 +112,52 @@ export function SessionResultsScreen() {
               errors_b: (result.data as TMTCombinedResults).partB.errors,
             };
 
-            await supabase.from("resultats_test").insert({
+            // Build per-metric rows. The DB trigger `recompute_sgs_after_insert`
+            // reads these rows by exact `metrique` strings to compute SGS.
+            // The first row of each test also carries the legacy summary
+            // `details` payload consumed by other screens.
+            type MetricRow = { metrique: string; valeur: number; unite: string };
+            let metricRows: MetricRow[] = [];
+
+            if (result.testId === "simon") {
+              const d = result.data as SimonResultData;
+              metricRows = [
+                { metrique: "avgRT", valeur: d.avgRT, unite: "ms" },
+                { metrique: "simonEffect", valeur: d.simonEffect, unite: "ms" },
+                { metrique: "incongruentErrorRate", valeur: d.incongruentErrorRate, unite: "ratio" },
+                { metrique: "simon_effect", valeur: d.simonEffect, unite: "ms" }, // legacy summary
+              ];
+            } else if (result.testId === "nback") {
+              const d = result.data as NBackResultData;
+              metricRows = [
+                { metrique: "dPrime", valeur: d.dPrime, unite: "z" },
+                { metrique: "falseAlarms", valeur: d.falseAlarms, unite: "count" },
+                { metrique: "totalTrials", valeur: d.totalTrials, unite: "count" },
+                { metrique: "totalTargets", valeur: d.totalTargets, unite: "count" },
+                { metrique: "target_error_rate", valeur: d.targetErrorRate, unite: "%" }, // legacy summary
+              ];
+            } else {
+              const d = result.data as TMTCombinedResults;
+              metricRows = [
+                { metrique: "ratioBA", valeur: d.ratioBA, unite: "ratio" },
+                { metrique: "timeA", valeur: d.partA.completionTime, unite: "ms" },
+                { metrique: "ratio_ba", valeur: d.ratioBA, unite: "ratio" }, // legacy summary
+              ];
+            }
+
+            const rowsToInsert = metricRows.map((m, i) => ({
               session_id: dbSession.id,
               user_id: user.id,
               test_type: result.testId,
-              metrique: result.testId === "simon" ? "simon_effect"
-                : result.testId === "nback" ? "target_error_rate"
-                : "ratio_ba",
-              valeur: result.testId === "simon" ? (result.data as SimonResultData).simonEffect
-                : result.testId === "nback" ? (result.data as NBackResultData).targetErrorRate
-                : (result.data as TMTCombinedResults).ratioBA,
-              unite: result.testId === "tmt" ? "ratio" : result.testId === "simon" ? "ms" : "%",
-              details: details as any,
-            });
+              metrique: m.metrique,
+              valeur: m.valeur,
+              unite: m.unite,
+              // Attach the rich `details` payload only on the first row to
+              // avoid duplicating it across every metric row.
+              details: i === 0 ? (details as any) : null,
+            }));
+
+            await supabase.from("resultats_test").insert(rowsToInsert);
           }
         }
 
