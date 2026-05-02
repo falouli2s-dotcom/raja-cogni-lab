@@ -184,11 +184,9 @@ function CompleteProfilePage() {
                   <SelectValue placeholder="Choisir une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="U13">U13</SelectItem>
-                  <SelectItem value="U15">U15</SelectItem>
-                  <SelectItem value="U17">U17</SelectItem>
-                  <SelectItem value="U19">U19</SelectItem>
-                  <SelectItem value="Senior">Senior</SelectItem>
+                  {(["U13", "U14", "U15", "U16", "U17", "U18", "U21"] as const).map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
