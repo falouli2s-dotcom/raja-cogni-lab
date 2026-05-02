@@ -20,6 +20,7 @@ interface TMTTestProps {
 export function TMTTest({ onComplete }: TMTTestProps) {
   const { supported: fsSupported, request: requestFullscreen } = useFullscreen();
   const containerRef = useRef<HTMLDivElement>(null);
+  const nodeTapsRef = useRef<{ nodeId: string | number; timestamp: number }[]>([]);
   const [phase, setPhase] = useState<Phase>("training-A");
   const [nodes, setNodes] = useState<TMTNode[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -78,6 +79,7 @@ export function TMTTest({ onComplete }: TMTTestProps) {
     setStartTime(performance.now());
     setFeedback(null);
     setErrorNode(null);
+    nodeTapsRef.current = [];
   }, [phase, dimensions]);
 
   const handleNodeTap = useCallback((node: TMTNode) => {
@@ -85,6 +87,7 @@ export function TMTTest({ onComplete }: TMTTestProps) {
 
     if (node.order === currentIndex) {
       // Correct
+      nodeTapsRef.current.push({ nodeId: node.id, timestamp: performance.now() });
       setCompletedIndices((prev) => [...prev, node.order]);
       const nextIndex = currentIndex + 1;
 
@@ -102,6 +105,7 @@ export function TMTTest({ onComplete }: TMTTestProps) {
           errors,
           nodesCompleted: nodes.length,
           totalNodes: nodes.length,
+          nodeTaps: [...nodeTapsRef.current],
         };
 
         switch (phase) {
