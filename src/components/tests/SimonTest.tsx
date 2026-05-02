@@ -30,8 +30,11 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   const [allRealTrials, setAllRealTrials] = useState<SimonTrial[]>([]);
 
   const stimulusStartRef = useRef<number>(0);
+  const touchTimestampRef = useRef<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const responded = useRef(false);
+  const leftZoneRef = useRef<HTMLButtonElement>(null);
+  const rightZoneRef = useRef<HTMLButtonElement>(null);
 
   const isTraining = phase === "training";
   const totalTrials = currentTrials.length;
@@ -105,7 +108,10 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     responded.current = true;
     clearTimeout(timeoutRef.current);
 
-    const rt = performance.now() - stimulusStartRef.current;
+    // Prefer touchstart timestamp (captured before React state update); fall back to now()
+    const responseTimestamp = touchTimestampRef.current ?? performance.now();
+    touchTimestampRef.current = null;
+    const rt = responseTimestamp - stimulusStartRef.current;
     const isCorrect = chosenColor === currentTrial.color;
 
     const trial: SimonTrial = {
@@ -127,6 +133,23 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       advanceTrial(trial);
     }
   }, [showStimulus, currentTrial, isTraining, advanceTrial]);
+
+  // FIX 4: Capture touchstart timestamp BEFORE React state update for precise RT
+  useEffect(() => {
+    const left = leftZoneRef.current;
+    const right = rightZoneRef.current;
+    if (!left || !right) return;
+
+    const onTouchLeft = () => { touchTimestampRef.current = performance.now(); };
+    const onTouchRight = () => { touchTimestampRef.current = performance.now(); };
+
+    left.addEventListener("touchstart", onTouchLeft, { passive: true });
+    right.addEventListener("touchstart", onTouchRight, { passive: true });
+    return () => {
+      left.removeEventListener("touchstart", onTouchLeft);
+      right.removeEventListener("touchstart", onTouchRight);
+    };
+  }, []);
 
   useEffect(() => {
     if ((phase === "training" || phase === "real") && trialIndex < totalTrials) {
