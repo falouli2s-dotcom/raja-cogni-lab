@@ -28,9 +28,11 @@ export function NBackTest({ onComplete }: NBackTestProps) {
   );
 
   const stimulusStartRef = useRef<number>(0);
+  const touchTimestampRef = useRef<number | null>(null);
   const respondedRef = useRef(false);
   const acceptingResponseRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const yesButtonRef = useRef<HTMLButtonElement>(null);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
 
@@ -150,7 +152,10 @@ export function NBackTest({ onComplete }: NBackTestProps) {
     acceptingResponseRef.current = false;
     clearTimeout(timerRef.current);
 
-    const rt = performance.now() - stimulusStartRef.current;
+    // Prefer touchstart timestamp (captured before React state update); fall back to now()
+    const responseTimestamp = touchTimestampRef.current ?? performance.now();
+    touchTimestampRef.current = null;
+    const rt = responseTimestamp - stimulusStartRef.current;
     const trial = processTrial(answer, rt);
 
     if (trial) {
@@ -165,6 +170,15 @@ export function NBackTest({ onComplete }: NBackTestProps) {
       }
     }
   }, [processTrial, isTraining, advanceTrial]);
+
+  // FIX 4: Capture touchstart timestamp on OUI button BEFORE React state update
+  useEffect(() => {
+    const yes = yesButtonRef.current;
+    if (!yes) return;
+    const onTouch = () => { touchTimestampRef.current = performance.now(); };
+    yes.addEventListener("touchstart", onTouch, { passive: true });
+    return () => yes.removeEventListener("touchstart", onTouch);
+  }, []);
 
   // Keyboard
   useEffect(() => {
@@ -318,6 +332,7 @@ export function NBackTest({ onComplete }: NBackTestProps) {
       {/* Response buttons */}
       <div className="flex gap-4 px-6 pb-8">
         <button
+          ref={yesButtonRef}
           onPointerDown={() => handleResponse("yes")}
           className="flex h-20 flex-1 flex-col items-center justify-center rounded-2xl text-lg font-bold transition-transform active:scale-95"
           style={{ backgroundColor: "oklch(0.637 0.177 152.535)", color: "white" }}
