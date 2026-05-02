@@ -34,6 +34,7 @@ export interface TMTResult {
   errors: number;
   nodesCompleted: number;
   totalNodes: number;
+  nodeTaps: { nodeId: string | number; timestamp: number }[];
 }
 
 export interface TMTCombinedResults {

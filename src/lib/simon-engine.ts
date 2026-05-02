@@ -64,7 +64,20 @@ export function generateTrials(count: number): Omit<SimonTrial, "responseTime" |
   return trials.map((t, i) => ({ ...t, trialNumber: i + 1 }));
 }
 
-export function computeSimonResults(trials: SimonTrial[]) {
+export interface SimonResults {
+  avgRT: number;
+  avgCongruent: number;
+  avgIncongruent: number;
+  simonEffect: number;
+  accuracy: number;
+  errorRate: number;
+  incongruentErrorRate: number;
+  totalTrials: number;
+  correctCount: number;
+  missedCount: number;
+}
+
+export function computeSimonResults(trials: SimonTrial[]): SimonResults {
   const validTrials = trials.filter((t) => t.responded && t.responseTime !== null);
   const correctTrials = validTrials.filter((t) => t.correct);
   const congruent = correctTrials.filter((t) => t.isCongruent);
@@ -86,6 +99,13 @@ export function computeSimonResults(trials: SimonTrial[]) {
   const accuracy = validTrials.length > 0 ? correctTrials.length / validTrials.length : 0;
   const errorRate = 1 - accuracy;
 
+  // Incongruent-specific error rate (computed over all responded incongruent trials)
+  const incongruentResponded = validTrials.filter((t) => !t.isCongruent);
+  const incongruentErrors = incongruentResponded.filter((t) => !t.correct).length;
+  const incongruentErrorRate = incongruentResponded.length > 0
+    ? Number((incongruentErrors / incongruentResponded.length).toFixed(3))
+    : 0;
+
   return {
     avgRT: Math.round(avgRT),
     avgCongruent: Math.round(avgCongruent),
@@ -93,6 +113,7 @@ export function computeSimonResults(trials: SimonTrial[]) {
     simonEffect: Math.round(simonEffect),
     accuracy: Math.round(accuracy * 100),
     errorRate: Math.round(errorRate * 100),
+    incongruentErrorRate,
     totalTrials: trials.length,
     correctCount: correctTrials.length,
     missedCount: trials.filter((t) => !t.responded).length,
