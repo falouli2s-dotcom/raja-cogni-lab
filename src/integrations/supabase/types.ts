@@ -349,6 +349,8 @@ export type Database = {
           duree_totale: number | null
           id: string
           score_global: number | null
+          sgs_score: number | null
+          status: string
           test_type: string
           user_id: string
         }
@@ -358,6 +360,8 @@ export type Database = {
           duree_totale?: number | null
           id?: string
           score_global?: number | null
+          sgs_score?: number | null
+          status?: string
           test_type: string
           user_id: string
         }
@@ -367,6 +371,8 @@ export type Database = {
           duree_totale?: number | null
           id?: string
           score_global?: number | null
+          sgs_score?: number | null
+          status?: string
           test_type?: string
           user_id?: string
         }
@@ -383,6 +389,10 @@ export type Database = {
           full_name: string
           id: string
         }[]
+      }
+      get_metric: {
+        Args: { p_metrique: string; p_session_id: string; p_test_type: string }
+        Returns: number
       }
       is_admin: { Args: never; Returns: boolean }
     }
