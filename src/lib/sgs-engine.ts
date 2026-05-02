@@ -18,12 +18,11 @@ export interface SGSResult {
 
 // Scientific weights (sum = 1.0) — based on cognitive synthesis for football
 const WEIGHTS: Record<string, number> = {
-  flexibility: 0.25,
-  attention: 0.20,
-  workingMemory: 0.20,
-  inhibition: 0.15,
-  reactionTime: 0.10,
-  anticipation: 0.10,
+  flexibility: 0.28,
+  attention: 0.22,
+  workingMemory: 0.22,
+  inhibition: 0.17,
+  reactionTime: 0.11,
 };
 
 /**
@@ -160,19 +159,6 @@ export function computeSGS(scores: TestScores): SGSResult {
     raw: attentionRaw,
     unit: "s",
     status: getStatus(attentionScore),
-  });
-
-  // 6. Anticipation Perceptuelle — proxy: N-Back hit rate (no dedicated test yet)
-  const anticipationScore = scores.nback
-    ? normalizeNBackAccuracy(scores.nback.accuracy)
-    : 50;
-  dimensions.push({
-    key: "anticipation",
-    label: "Anticipation Perceptuelle",
-    score: anticipationScore,
-    raw: scores.nback?.accuracy,
-    unit: "%",
-    status: getStatus(anticipationScore),
   });
 
   // Weighted global score
