@@ -65,7 +65,7 @@ function AuthCallbackPage() {
           .eq("id", user.id)
           .maybeSingle();
         if (data) {
-          profile = data as typeof profile;
+          profile = data as { role: string; birth_date: string | null };
           break;
         }
         await new Promise((r) => setTimeout(r, 300));

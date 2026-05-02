@@ -21,6 +21,7 @@ import { Route as CoachProfilRouteImport } from './routes/coach.profil'
 import { Route as CoachPendingRouteImport } from './routes/coach.pending'
 import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
 import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
@@ -92,6 +93,11 @@ const CoachDashboardRoute = CoachDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => CoachRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCoachesRoute = AdminCoachesRouteImport.update({
   id: '/admin/coaches',
   path: '/admin/coaches',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/admin/coaches': typeof AdminCoachesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/coach/dashboard': typeof CoachDashboardRoute
   '/coach/joueurs': typeof CoachJoueursRoute
   '/coach/pending': typeof CoachPendingRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/admin/coaches'
+    | '/auth/callback'
     | '/coach/dashboard'
     | '/coach/joueurs'
     | '/coach/pending'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/admin/coaches'
+    | '/auth/callback'
     | '/coach/dashboard'
     | '/coach/joueurs'
     | '/coach/pending'
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/_app/home'
     | '/_app/profile'
     | '/admin/coaches'
+    | '/auth/callback'
     | '/coach/dashboard'
     | '/coach/joueurs'
     | '/coach/pending'
@@ -307,6 +319,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AdminCoachesRoute: typeof AdminCoachesRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -394,6 +407,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/coach/dashboard'
       preLoaderRoute: typeof CoachDashboardRouteImport
       parentRoute: typeof CoachRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/coaches': {
       id: '/admin/coaches'
@@ -530,6 +550,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AdminCoachesRoute: AdminCoachesRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
