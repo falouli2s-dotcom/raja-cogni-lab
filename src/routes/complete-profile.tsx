@@ -215,7 +215,7 @@ function CompleteProfilePage() {
                 <SelectContent>
                   <SelectItem value="Droit">Droit</SelectItem>
                   <SelectItem value="Gauche">Gauche</SelectItem>
-                  <SelectItem value="Ambidextre">Ambidextre</SelectItem>
+                  <SelectItem value="Les deux">Les deux</SelectItem>
                 </SelectContent>
               </Select>
             </div>
