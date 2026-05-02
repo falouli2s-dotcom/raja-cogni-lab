@@ -1,0 +1,142 @@
+@startuml CogniRaja_CasUtilisation
+
+skinparam backgroundColor #FAFAFA
+skinparam ActorBorderColor #2D6A4F
+skinparam ActorBackgroundColor #D8F3DC
+skinparam UsecaseBorderColor #1B4332
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ArrowColor #40916C
+skinparam NoteBackgroundColor #F0FFF4
+skinparam NoteBorderColor #95D5B2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam packageBorderColor #74C69D
+skinparam packageBackgroundColor #F8FFF9
+
+title CogniRaja — Diagramme de Cas d'Utilisation
+
+' ── Acteurs ──────────────────────────────────────────
+actor "Joueur" as Joueur
+actor "Coach" as Coach
+actor "Admin" as Admin
+actor "Système\n(Supabase / Moteurs)" as Systeme
+
+' ── Système : périmètre global ───────────────────────
+rectangle "Application CogniRaja" {
+
+  ' Authentification (commun)
+  package "Authentification" {
+    usecase "S'inscrire / Se connecter" as UC_Login
+    usecase "Réinitialiser le mot de passe" as UC_ResetPwd
+    usecase "Vérifier l'email" as UC_VerifyEmail
+  }
+
+  ' Espace Joueur
+  package "Espace Joueur" {
+    usecase "Démarrer une session de tests" as UC_StartSession
+    usecase "Passer le Simon Task" as UC_Simon
+    usecase "Passer le N-Back 2" as UC_NBack
+    usecase "Passer le TMT A+B" as UC_TMT
+    usecase "Consulter les résultats SGS" as UC_ViewSGS
+    usecase "Voir les exercices recommandés" as UC_ViewExercices
+    usecase "Compléter un exercice terrain" as UC_CompleteExercice
+    usecase "Consulter l'historique cognitif" as UC_History
+    usecase "Exporter le rapport PDF" as UC_ExportPDF
+    usecase "Gérer son profil" as UC_Profil
+  }
+
+  ' Espace Coach
+  package "Espace Coach" {
+    usecase "Accéder au tableau de bord" as UC_Dashboard
+    usecase "Consulter le roster des joueurs" as UC_Roster
+    usecase "Voir le profil cognitif d'un joueur" as UC_PlayerProfile
+    usecase "Assigner une session de test" as UC_AssignSession
+    usecase "Créer un plan d'entraînement" as UC_CreatePlan
+    usecase "Consulter les statistiques équipe" as UC_TeamStats
+    usecase "Exporter le rapport joueur PDF" as UC_CoachExportPDF
+  }
+
+  ' Espace Admin
+  package "Espace Admin" {
+    usecase "Gérer les comptes coaches" as UC_ManageCoaches
+    usecase "Approuver / Refuser un coach" as UC_ApproveCoach
+  }
+
+  ' Actions Système
+  package "Traitement Système" {
+    usecase "Calculer le Score Global\nSynthétique (SGS)" as UC_ComputeSGS
+    usecase "Générer les recommandations\nd'exercices (règle-based)" as UC_GenReco
+    usecase "Envoyer des notifications" as UC_Notif
+    usecase "Appliquer les politiques RLS\n(Row Level Security)" as UC_RLS
+  }
+
+}
+
+' ── Relations Joueur ─────────────────────────────────
+Joueur --> UC_Login
+Joueur --> UC_StartSession
+Joueur --> UC_ViewSGS
+Joueur --> UC_ViewExercices
+Joueur --> UC_CompleteExercice
+Joueur --> UC_History
+Joueur --> UC_ExportPDF
+Joueur --> UC_Profil
+Joueur --> UC_ResetPwd
+
+' Inclusion : une session inclut les 3 tests
+UC_StartSession ..> UC_Simon        : <<include>>
+UC_StartSession ..> UC_NBack        : <<include>>
+UC_StartSession ..> UC_TMT          : <<include>>
+UC_StartSession ..> UC_ComputeSGS   : <<include>>
+
+' Extension : résultats étendent le calcul SGS
+UC_ComputeSGS ..> UC_GenReco        : <<include>>
+UC_GenReco     ..> UC_ViewExercices : <<extend>>
+
+' ── Relations Coach ──────────────────────────────────
+Coach --> UC_Login
+Coach --> UC_Dashboard
+Coach --> UC_Roster
+Coach --> UC_PlayerProfile
+Coach --> UC_AssignSession
+Coach --> UC_CreatePlan
+Coach --> UC_TeamStats
+Coach --> UC_CoachExportPDF
+Coach --> UC_ViewSGS
+Coach --> UC_ResetPwd
+
+UC_AssignSession ..> UC_Notif : <<include>>
+UC_CreatePlan    ..> UC_Notif : <<include>>
+
+' ── Relations Admin ──────────────────────────────────
+Admin --> UC_Login
+Admin --> UC_ManageCoaches
+UC_ManageCoaches ..> UC_ApproveCoach : <<include>>
+UC_ApproveCoach  ..> UC_Notif        : <<include>>
+
+' ── Relations Système ────────────────────────────────
+Systeme --> UC_ComputeSGS
+Systeme --> UC_GenReco
+Systeme --> UC_Notif
+Systeme --> UC_RLS
+Systeme --> UC_VerifyEmail
+
+note right of UC_ComputeSGS
+  SGS = 5 dimensions cognitives
+  pondérées (score 0-100) :
+  • Flexibilité (28%) — TMT B/A
+  • Attention (22%) — TMT-A temps
+  • Mémoire de travail (22%) — N-Back
+  • Inhibition (17%) — effet Simon
+  • Temps de réaction (11%) — Simon avgRT
+end note
+
+note right of UC_GenReco
+  Règles basées sur seuils :
+  • ratio B/A > 2.5 → exercices flexibilité
+  • erreurs N-Back > 30% → dual-task
+  • effet Simon > 80ms → stop-signal
+  • TR > 450ms → réaction balle
+end note
+
+@enduml
