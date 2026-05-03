@@ -40,6 +40,9 @@ export function buildTestScoresFromRows(rows: Row[]): TestScores {
       avgRT: Number(get("simon", "avgRT") ?? simonDetails?.avg_rt ?? 0),
       simonEffect: Number(simonEffect ?? 0),
       accuracy: Number(simonDetails?.accuracy ?? 0),
+      incongruentErrorRate: Number(
+        get("simon", "incongruentErrorRate") ?? simonDetails?.incongruent_error_rate ?? 0
+      ),
     };
   }
 
@@ -62,6 +65,7 @@ export function buildTestScoresFromRows(rows: Row[]): TestScores {
       ratioBA: Number(ratioBA ?? 0),
       timeA: Number(get("tmt", "timeA") ?? tmtDetails?.time_a ?? 0),
       timeB: Number(tmtDetails?.time_b ?? 0),
+      partAErrors: Number(get("tmt", "partAErrors") ?? tmtDetails?.errors_a ?? 0),
     };
   }
 
