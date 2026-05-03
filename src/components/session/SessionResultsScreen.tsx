@@ -139,7 +139,7 @@ export function SessionResultsScreen() {
               metricRows = [
                 { metrique: "ratioBA", valeur: d.ratioBA, unite: "ratio" },
                 { metrique: "timeA", valeur: d.partA.completionTime, unite: "ms" },
-                { metrique: "ratio_ba", valeur: d.ratioBA, unite: "ratio" }, // legacy summary
+                
               ];
             }
 
