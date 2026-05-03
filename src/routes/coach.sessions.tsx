@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { RadarChart } from "@/components/RadarChart";
 import { computeSGS, type CognitiveDimension, type TestScores } from "@/lib/sgs-engine";
+import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 import { groupTestSessions } from "@/lib/group-test-sessions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -496,32 +497,7 @@ function CoachSessions() {
       .select("test_type, metrique, valeur, details")
       .in("session_id", t.raw_ids);
 
-    const scores: TestScores = {};
-    for (const r of (results ?? []) as Array<{
-      test_type: string;
-      valeur: number | null;
-      details: any;
-    }>) {
-      if (r.test_type === "simon" && r.details) {
-        scores.simon = {
-          avgRT: Number(r.details.avg_rt ?? 0),
-          simonEffect: Number(r.valeur ?? 0),
-          accuracy: Number(r.details.accuracy ?? 0),
-        };
-      } else if (r.test_type === "nback" && r.details) {
-        scores.nback = {
-          accuracy: Number(r.details.accuracy ?? 0),
-          targetErrorRate: Number(r.valeur ?? 0),
-          dPrime: Number(r.details.d_prime ?? 0),
-        };
-      } else if (r.test_type === "tmt" && r.details) {
-        scores.tmt = {
-          ratioBA: Number(r.valeur ?? 0),
-          timeA: Number(r.details.time_a ?? 0),
-          timeB: Number(r.details.time_b ?? 0),
-        };
-      }
-    }
+    const scores = buildTestScoresFromRows((results ?? []) as any);
 
     const sgs = computeSGS(scores);
     const scoreMap: Record<string, number> = {};

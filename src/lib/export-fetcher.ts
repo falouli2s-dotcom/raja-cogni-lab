@@ -7,6 +7,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { computeSGS, type TestScores } from "./sgs-engine";
+import { buildTestScoresFromRows } from "./build-test-scores";
 import type { PlayerData, SessionResult, DimensionScore, TestMetric } from "./pdf-export-engine";
 
 // Maps sgs-engine dimension keys (in fixed order) to display labels for the radar/bars.
@@ -59,40 +60,26 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
       // SGS: score_global is duplicated on every row of the same session.
       const sgsScore = Math.round(Number(groupRows[0]?.score_global ?? 0));
 
-      // Build TestScores for sgs-engine from the raw metrics + details
-      const scores: TestScores = {};
+      // Build TestScores for sgs-engine from the EAV metric rows.
+      // Flatten resultats_test from each test row (each test row has its own
+      // results array attached via the join), then map by `metrique`.
+      const allResults = groupRows.flatMap((g) =>
+        ((g.resultats_test ?? []) as any[]).map((rt) => ({
+          test_type: g.test_type,
+          metrique: rt.metrique,
+          valeur: rt.valeur,
+          details: rt.details,
+        }))
+      );
+      const scores: TestScores = buildTestScoresFromRows(allResults);
+      const sgs = computeSGS(scores);
 
       const simonRow = groupRows.find((g) => g.test_type === "simon");
-      const simonResult = simonRow?.resultats_test?.[0];
-      if (simonResult?.details) {
-        scores.simon = {
-          avgRT: Number(simonResult.details.avg_rt ?? 0),
-          simonEffect: Number(simonResult.valeur ?? 0),
-          accuracy: Number(simonResult.details.accuracy ?? 0),
-        };
-      }
-
       const nbackRow = groupRows.find((g) => g.test_type === "nback");
-      const nbackResult = nbackRow?.resultats_test?.[0];
-      if (nbackResult?.details) {
-        scores.nback = {
-          accuracy: Number(nbackResult.details.accuracy ?? 0),
-          targetErrorRate: Number(nbackResult.valeur ?? 0),
-          dPrime: Number(nbackResult.details.d_prime ?? 0),
-        };
-      }
-
       const tmtRow = groupRows.find((g) => g.test_type === "tmt");
-      const tmtResult = tmtRow?.resultats_test?.[0];
-      if (tmtResult?.details) {
-        scores.tmt = {
-          ratioBA: Number(tmtResult.valeur ?? 0),
-          timeA: Number(tmtResult.details.time_a ?? 0),
-          timeB: Number(tmtResult.details.time_b ?? 0),
-        };
-      }
-
-      const sgs = computeSGS(scores);
+      const simonResult = simonRow?.resultats_test?.find(
+        (r: any) => r.details
+      ) ?? simonRow?.resultats_test?.[0];
 
       // Order matches the radar/labels: Réaction, Inhibition, Mémoire, Attention, Flexibilité (5 dimensions)
       const orderedKeys = [

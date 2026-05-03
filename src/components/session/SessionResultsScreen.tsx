@@ -124,7 +124,6 @@ export function SessionResultsScreen() {
                 { metrique: "avgRT", valeur: d.avgRT, unite: "ms" },
                 { metrique: "simonEffect", valeur: d.simonEffect, unite: "ms" },
                 { metrique: "incongruentErrorRate", valeur: d.incongruentErrorRate, unite: "ratio" },
-                { metrique: "simon_effect", valeur: d.simonEffect, unite: "ms" }, // legacy summary
               ];
             } else if (result.testId === "nback") {
               const d = result.data as NBackResultData;
@@ -140,7 +139,7 @@ export function SessionResultsScreen() {
               metricRows = [
                 { metrique: "ratioBA", valeur: d.ratioBA, unite: "ratio" },
                 { metrique: "timeA", valeur: d.partA.completionTime, unite: "ms" },
-                { metrique: "ratio_ba", valeur: d.ratioBA, unite: "ratio" }, // legacy summary
+                
               ];
             }
 

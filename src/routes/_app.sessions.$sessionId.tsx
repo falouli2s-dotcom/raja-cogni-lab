@@ -9,8 +9,8 @@ import {
   getGlobalStatus,
   getStatusColor,
   type SGSResult,
-  type TestScores,
 } from "@/lib/sgs-engine";
+import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 
 export const Route = createFileRoute("/_app/sessions/$sessionId")({
   component: SessionDetailPage,
@@ -108,28 +108,7 @@ function SessionDetailPage() {
 
       const computed: DetailSession[] = [];
       for (const [key, group] of groups) {
-        const scores: TestScores = {};
-        for (const r of group.results) {
-          if (r.test_type === "simon" && r.details) {
-            scores.simon = {
-              avgRT: Number(r.details.avg_rt ?? 0),
-              simonEffect: Number(r.valeur ?? 0),
-              accuracy: Number(r.details.accuracy ?? 0),
-            };
-          } else if (r.test_type === "nback" && r.details) {
-            scores.nback = {
-              accuracy: Number(r.details.accuracy ?? 0),
-              targetErrorRate: Number(r.valeur ?? 0),
-              dPrime: Number(r.details.d_prime ?? 0),
-            };
-          } else if (r.test_type === "tmt" && r.details) {
-            scores.tmt = {
-              ratioBA: Number(r.valeur ?? 0),
-              timeA: Number(r.details.time_a ?? 0),
-              timeB: Number(r.details.time_b ?? 0),
-            };
-          }
-        }
+        const scores = buildTestScoresFromRows(group.results);
         const testCount = new Set(group.sessions.map((s) => s.test_type)).size;
         computed.push({
           sessionId: key,
