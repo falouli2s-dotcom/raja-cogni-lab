@@ -34,6 +34,7 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { computeSGS, getGlobalStatus, type SGSResult, type TestScores } from "@/lib/sgs-engine";
+import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 import { RadarChart, type RadarOverlay } from "@/components/RadarChart";
 import {
   Select,
