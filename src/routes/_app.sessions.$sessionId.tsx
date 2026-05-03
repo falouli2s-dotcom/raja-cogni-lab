@@ -9,8 +9,8 @@ import {
   getGlobalStatus,
   getStatusColor,
   type SGSResult,
-  type TestScores,
 } from "@/lib/sgs-engine";
+import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 
 export const Route = createFileRoute("/_app/sessions/$sessionId")({
   component: SessionDetailPage,
