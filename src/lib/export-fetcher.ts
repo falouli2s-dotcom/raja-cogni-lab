@@ -7,6 +7,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { computeSGS, type TestScores } from "./sgs-engine";
+import { buildTestScoresFromRows } from "./build-test-scores";
 import type { PlayerData, SessionResult, DimensionScore, TestMetric } from "./pdf-export-engine";
 
 // Maps sgs-engine dimension keys (in fixed order) to display labels for the radar/bars.
