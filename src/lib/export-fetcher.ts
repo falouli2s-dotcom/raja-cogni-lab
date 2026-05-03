@@ -72,6 +72,14 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
         }))
       );
       const scores: TestScores = buildTestScoresFromRows(allResults);
+      const sgs = computeSGS(scores);
+
+      const simonRow = groupRows.find((g) => g.test_type === "simon");
+      const nbackRow = groupRows.find((g) => g.test_type === "nback");
+      const tmtRow = groupRows.find((g) => g.test_type === "tmt");
+      const simonResult = simonRow?.resultats_test?.find(
+        (r: any) => r.details
+      ) ?? simonRow?.resultats_test?.[0];
 
       // Order matches the radar/labels: Réaction, Inhibition, Mémoire, Attention, Flexibilité (5 dimensions)
       const orderedKeys = [
