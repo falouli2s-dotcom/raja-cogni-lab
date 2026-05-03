@@ -30,6 +30,7 @@ const WEIGHTS: Record<string, number> = {
  * 200ms → 100, 600ms+ → 0
  */
 function normalizeRT(avgRT: number): number {
+  if (!Number.isFinite(avgRT)) return 50;
   if (avgRT <= 200) return 100;
   if (avgRT >= 600) return 0;
   return Math.round(((600 - avgRT) / 400) * 100);
@@ -40,6 +41,7 @@ function normalizeRT(avgRT: number): number {
  * 0ms → 100, 120ms+ → 0
  */
 function normalizeSimonEffect(effect: number): number {
+  if (!Number.isFinite(effect)) return 50;
   if (effect <= 0) return 100;
   if (effect >= 120) return 0;
   return Math.round(((120 - effect) / 120) * 100);
@@ -47,9 +49,9 @@ function normalizeSimonEffect(effect: number): number {
 
 /**
  * Normalize N-Back accuracy (%) to 0-100 score.
- * Already 0-100, just clamp.
  */
 function normalizeNBackAccuracy(accuracy: number): number {
+  if (!Number.isFinite(accuracy)) return 50;
   return Math.max(0, Math.min(100, Math.round(accuracy)));
 }
 
@@ -58,6 +60,7 @@ function normalizeNBackAccuracy(accuracy: number): number {
  * 1.0 → 100, 4.0+ → 0
  */
 function normalizeRatioBA(ratio: number): number {
+  if (!Number.isFinite(ratio)) return 50;
   if (ratio <= 1.0) return 100;
   if (ratio >= 4.0) return 0;
   return Math.round(((4.0 - ratio) / 3.0) * 100);
