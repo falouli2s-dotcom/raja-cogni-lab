@@ -7,9 +7,9 @@ import {
   computeSGS,
   getGlobalStatus,
   type SGSResult,
-  type TestScores,
 } from "@/lib/sgs-engine";
 import { groupTestSessions } from "@/lib/group-test-sessions";
+import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 
 export const Route = createFileRoute("/_app/sessions/")({
   component: SessionHistoryPage,
