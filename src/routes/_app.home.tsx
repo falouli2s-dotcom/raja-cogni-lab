@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { computeSGS, type SGSResult, type TestScores } from "@/lib/sgs-engine";
+import { computeSGS, type SGSResult } from "@/lib/sgs-engine";
+import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 import { NotificationBell } from "@/components/NotificationBell";
 
 type HomeSession = {
