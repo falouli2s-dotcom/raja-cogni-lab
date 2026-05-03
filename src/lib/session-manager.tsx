@@ -128,10 +128,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (simonResult) {
         const d = simonResult.data as SimonResultData;
         scores.simon = {
-          avgRT: d.avgRT,
-          simonEffect: d.simonEffect,
-          accuracy: d.accuracy,
-        };
+            avgRT: d.avgRT,
+            simonEffect: d.simonEffect,
+            accuracy: d.accuracy,
+            incongruentErrorRate: d.incongruentErrorRate,
+          };
       }
 
       const nbackResult = session.results.find(r => r.testId === "nback");
@@ -151,6 +152,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           ratioBA: d.ratioBA,
           timeA: d.partA.completionTime,
           timeB: d.partB.completionTime,
+          partAErrors: d.partA.errors,
         };
       }
     }

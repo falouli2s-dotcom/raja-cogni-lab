@@ -37,33 +37,36 @@ function normalizeRT(avgRT: number): number {
 }
 
 /**
- * Normalize Simon effect (ms) to 0-100 score.
- * 0ms → 100, 120ms+ → 0
+ * Normalize inhibition score from Simon effect (ms) and incongruent error rate.
+ * Combines speed (effect) and accuracy (error rate), each weighted 50%.
  */
-function normalizeSimonEffect(effect: number): number {
-  if (!Number.isFinite(effect)) return 50;
-  if (effect <= 0) return 100;
-  if (effect >= 120) return 0;
-  return Math.round(((120 - effect) / 120) * 100);
+function normalizeInhibition(simonEffect: number, incongruentErrorRate: number): number {
+  const effectScore = simonEffect <= 0
+    ? 100
+    : Math.max(0, Math.round(((120 - simonEffect) / 120) * 100));
+  const errorScore = Math.max(0, Math.round((1 - incongruentErrorRate * 2) * 100));
+  return Math.round(effectScore * 0.5 + errorScore * 0.5);
 }
 
 /**
- * Normalize N-Back accuracy (%) to 0-100 score.
+ * Normalize N-Back d-prime sensitivity index to 0-100 score.
+ * dPrime 0 → 0, 3+ → 100
  */
-function normalizeNBackAccuracy(accuracy: number): number {
-  if (!Number.isFinite(accuracy)) return 50;
-  return Math.max(0, Math.min(100, Math.round(accuracy)));
+function normalizeNBack(dPrime: number): number {
+  if (!Number.isFinite(dPrime)) return 50;
+  return Math.max(0, Math.min(100, Math.round((dPrime / 3) * 100)));
 }
 
 /**
  * Normalize TMT B/A ratio to 0-100 score.
- * 1.0 → 100, 4.0+ → 0
+ * ratio < 1 → suspect (capped at 70), 1.0–1.5 → 100, 4.0+ → 0
  */
 function normalizeRatioBA(ratio: number): number {
   if (!Number.isFinite(ratio)) return 50;
-  if (ratio <= 1.0) return 100;
+  if (ratio < 1.0) return 70;
+  if (ratio <= 1.5) return 100;
   if (ratio >= 4.0) return 0;
-  return Math.round(((4.0 - ratio) / 3.0) * 100);
+  return Math.round(((4.0 - ratio) / 2.5) * 100);
 }
 
 function getStatus(score: number): CognitiveDimension["status"] {
@@ -78,6 +81,7 @@ export interface TestScores {
     avgRT: number;
     simonEffect: number;
     accuracy: number;
+    incongruentErrorRate: number;
   };
   nback?: {
     accuracy: number;
@@ -88,6 +92,7 @@ export interface TestScores {
     ratioBA: number;
     timeA: number;
     timeB: number;
+    partAErrors?: number;
   };
 }
 
@@ -108,8 +113,10 @@ export function computeSGS(scores: TestScores): SGSResult {
     status: getStatus(rtScore),
   });
 
-  // 2. Contrôle Inhibiteur (Simon effect)
-  const inhibScore = scores.simon ? normalizeSimonEffect(scores.simon.simonEffect) : 50;
+  // 2. Contrôle Inhibiteur (Simon effect + incongruent error rate)
+  const inhibScore = scores.simon
+    ? normalizeInhibition(scores.simon.simonEffect, scores.simon.incongruentErrorRate)
+    : 50;
   dimensions.push({
     key: "inhibition",
     label: "Contrôle Inhibiteur",
@@ -119,14 +126,14 @@ export function computeSGS(scores: TestScores): SGSResult {
     status: getStatus(inhibScore),
   });
 
-  // 3. Mémoire de Travail (N-Back accuracy)
-  const memScore = scores.nback ? normalizeNBackAccuracy(scores.nback.accuracy) : 50;
+  // 3. Mémoire de Travail (N-Back d-prime)
+  const memScore = scores.nback ? normalizeNBack(scores.nback.dPrime) : 50;
   dimensions.push({
     key: "workingMemory",
     label: "Mémoire de Travail",
     score: memScore,
-    raw: scores.nback?.accuracy,
-    unit: "%",
+    raw: scores.nback?.dPrime,
+    unit: "d'",
     status: getStatus(memScore),
   });
 
@@ -141,7 +148,7 @@ export function computeSGS(scores: TestScores): SGSResult {
     status: getStatus(flexScore),
   });
 
-  // 5. Attention Sélective — proxy: TMT Part A speed (faster = more focused attention)
+  // 5. Attention Sélective — proxy: TMT Part A speed + error penalty
   // Normalize TMT-A time: 30s → 100, 120s+ → 0
   let attentionScore = 50;
   let attentionRaw: number | undefined;
@@ -150,9 +157,11 @@ export function computeSGS(scores: TestScores): SGSResult {
     const timeASeconds = scores.tmt.timeA > 1000
       ? scores.tmt.timeA / 1000
       : scores.tmt.timeA;
-    attentionScore = Math.round(
+    const baseTimeScore = Math.round(
       (1 - Math.min(1, Math.max(0, (timeASeconds - 30) / 90))) * 100
     );
+    const errorPenalty = Math.min(100, (scores.tmt.partAErrors ?? 0) * 5);
+    attentionScore = Math.max(0, baseTimeScore - errorPenalty);
     attentionRaw = scores.tmt.timeA; // keep original raw value for display
   }
   dimensions.push({

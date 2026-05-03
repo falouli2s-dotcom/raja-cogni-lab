@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import { Brain, Clock, Zap, GitBranch, Eye, TrendingUp, Home } from "lucide-react";
@@ -41,7 +41,7 @@ export function SessionResultsScreen() {
   const navigate = useNavigate();
   const { session, finishSession, resetSession } = useSession();
   const [sgs, setSgs] = useState<SGSResult | null>(null);
-  const [saved, setSaved] = useState(false);
+  const savedRef = useRef(false);
 
   useEffect(() => {
     if (!sgs && session) {
@@ -52,8 +52,8 @@ export function SessionResultsScreen() {
 
   // Save to DB and localStorage once
   useEffect(() => {
-    if (!sgs || !session || saved) return;
-    setSaved(true);
+    if (!sgs || !session || savedRef.current) return;
+    savedRef.current = true;
 
     // Save to localStorage
     saveSessionToHistory({ ...session, sgs, status: "completed", completedAt: new Date().toISOString() });
@@ -139,7 +139,7 @@ export function SessionResultsScreen() {
               metricRows = [
                 { metrique: "ratioBA", valeur: d.ratioBA, unite: "ratio" },
                 { metrique: "timeA", valeur: d.partA.completionTime, unite: "ms" },
-                
+                { metrique: "partAErrors", valeur: d.partA.errors, unite: "count" },
               ];
             }
 
@@ -184,7 +184,7 @@ export function SessionResultsScreen() {
         console.warn("Could not save session:", e);
       }
     })();
-  }, [sgs, session, saved]);
+  }, [sgs, session]);
 
   if (!sgs) {
     return (
