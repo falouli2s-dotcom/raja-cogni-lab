@@ -26,14 +26,19 @@ const WEIGHTS: Record<string, number> = {
 };
 
 /**
- * Normalize reaction time (ms) to 0-100 score.
- * 200ms → 100, 600ms+ → 0
+ * Inverse Efficiency Score (IES) — Townsend & Ashby (1983)
+ * Combines reaction time and accuracy to control for speed-accuracy trade-off.
+ * IES = avgRT / proportion_correct
+ * Lower IES = better performance.
+ * Normalization: IES ~200ms (perfect) → 100, IES ~800ms+ → 0
  */
-function normalizeRT(avgRT: number): number {
-  if (!Number.isFinite(avgRT)) return 50;
-  if (avgRT <= 200) return 100;
-  if (avgRT >= 600) return 0;
-  return Math.round(((600 - avgRT) / 400) * 100);
+function normalizeIES(avgRT: number, accuracy: number): number {
+  const pc = accuracy / 100;
+  if (pc <= 0) return 0;
+  const ies = avgRT / pc;
+  if (ies <= 200) return 100;
+  if (ies >= 800) return 0;
+  return Math.max(0, Math.round(((800 - ies) / 600) * 100));
 }
 
 /**
@@ -102,14 +107,19 @@ export interface TestScores {
 export function computeSGS(scores: TestScores): SGSResult {
   const dimensions: CognitiveDimension[] = [];
 
-  // 1. Temps de Réaction (Simon avgRT)
-  const rtScore = scores.simon ? normalizeRT(scores.simon.avgRT) : 50;
+  // 1. Temps de Réaction — IES (Inverse Efficiency Score, Townsend & Ashby 1983)
+  const rtScore = scores.simon
+    ? normalizeIES(scores.simon.avgRT, scores.simon.accuracy)
+    : 50;
+  const iesRaw = scores.simon && scores.simon.accuracy > 0
+    ? Math.round(scores.simon.avgRT / (scores.simon.accuracy / 100))
+    : scores.simon?.avgRT;
   dimensions.push({
     key: "reactionTime",
     label: "Temps de Réaction",
     score: rtScore,
-    raw: scores.simon?.avgRT,
-    unit: "ms",
+    raw: iesRaw,
+    unit: "ms (IES)",
     status: getStatus(rtScore),
   });
 
@@ -148,28 +158,27 @@ export function computeSGS(scores: TestScores): SGSResult {
     status: getStatus(flexScore),
   });
 
-  // 5. Attention Sélective — proxy: TMT Part A speed + error penalty
-  // Normalize TMT-A time: 30s → 100, 120s+ → 0
+  // 5. Attention Sélective — TMT-A Efficiency Score (adapté de Schiehser et al. 2015)
+  // TMT-Ae = (nodesCompleted - errors) / timeSeconds
   let attentionScore = 50;
   let attentionRaw: number | undefined;
   if (scores.tmt) {
-    // Convert ms → seconds if needed (TMT returns ms)
     const timeASeconds = scores.tmt.timeA > 1000
       ? scores.tmt.timeA / 1000
       : scores.tmt.timeA;
-    const baseTimeScore = Math.round(
-      (1 - Math.min(1, Math.max(0, (timeASeconds - 30) / 90))) * 100
-    );
-    const errorPenalty = Math.min(100, (scores.tmt.partAErrors ?? 0) * 5);
-    attentionScore = Math.max(0, baseTimeScore - errorPenalty);
-    attentionRaw = scores.tmt.timeA; // keep original raw value for display
+    const totalNodes = 25; // nœuds totaux TMT-A
+    const errorCount = scores.tmt.partAErrors ?? 0;
+    const efficiency = (totalNodes - errorCount) / timeASeconds; // nœuds corrects par seconde
+    // Normalisation : plafond à 1.5 nœuds/s (≈ 25 nœuds en 17s, 0 erreur) → 100, plancher à 0
+    attentionScore = Math.max(0, Math.min(100, Math.round((efficiency / 1.5) * 100)));
+    attentionRaw = Math.round(efficiency * 100) / 100; // garder 2 décimales
   }
   dimensions.push({
     key: "attention",
     label: "Attention Sélective",
     score: attentionScore,
     raw: attentionRaw,
-    unit: "s",
+    unit: "nœuds/s (TMT-Ae)",
     status: getStatus(attentionScore),
   });
 
