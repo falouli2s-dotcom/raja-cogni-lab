@@ -15,7 +15,7 @@ const dimensionIcons: Record<string, typeof Brain> = {
   inhibition: Zap,
   workingMemory: Brain,
   flexibility: GitBranch,
-  attention: Eye,
+  vitesse_visuo_perceptuelle: Eye,
 };
 
 function getRecommendations(sgs: SGSResult): string[] {

@@ -36,7 +36,7 @@ const DIM_LABELS: Record<string, string> = {
   flexibility: "Flexibilité",
   workingMemory: "Mémoire",
   inhibition: "Inhibition",
-  attention: "Attention",
+  vitesse_visuo_perceptuelle: "Vitesse V.-P.",
 };
 
 function getGreeting(): string {

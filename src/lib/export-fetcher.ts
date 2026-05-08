@@ -16,7 +16,7 @@ const DIMENSION_LABELS: Record<string, string> = {
   inhibition: "Inhibition",
   workingMemory: "Mémoire de travail",
   flexibility: "Flexibilité",
-  attention: "Attention",
+  vitesse_visuo_perceptuelle: "Vitesse Visuo-Perceptuelle",
 };
 
 // ─── Single player ────────────────────────────────────────────────────────────
@@ -81,12 +81,12 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
         (r: any) => r.details
       ) ?? simonRow?.resultats_test?.[0];
 
-      // Order matches the radar/labels: Réaction, Inhibition, Mémoire, Attention, Flexibilité (5 dimensions)
+      // Order matches the radar/labels: Réaction, Inhibition, Mémoire, Vitesse V.-P., Flexibilité (5 dimensions)
       const orderedKeys = [
         "reactionTime",
         "inhibition",
         "workingMemory",
-        "attention",
+        "vitesse_visuo_perceptuelle",
         "flexibility",
       ];
       const dimensions: DimensionScore[] = orderedKeys.map((key) => {
