@@ -19,7 +19,7 @@ export interface SGSResult {
 // Scientific weights (sum = 1.0) — based on cognitive synthesis for football
 const WEIGHTS: Record<string, number> = {
   flexibility: 0.28,
-  attention: 0.22,
+  vitesse_visuo_perceptuelle: 0.22,
   workingMemory: 0.22,
   inhibition: 0.17,
   reactionTime: 0.11,
@@ -158,10 +158,10 @@ export function computeSGS(scores: TestScores): SGSResult {
     status: getStatus(flexScore),
   });
 
-  // 5. Attention Sélective — TMT-A Efficiency Score (adapté de Schiehser et al. 2015)
+  // 5. Vitesse Visuo-Perceptuelle — TMT-A Efficiency Score (adapté de Schiehser et al. 2015)
   // TMT-Ae = (nodesCompleted - errors) / timeSeconds
-  let attentionScore = 50;
-  let attentionRaw: number | undefined;
+  let vvpScore = 50;
+  let vvpRaw: number | undefined;
   if (scores.tmt) {
     const timeASeconds = scores.tmt.timeA > 1000
       ? scores.tmt.timeA / 1000
@@ -170,16 +170,16 @@ export function computeSGS(scores: TestScores): SGSResult {
     const errorCount = scores.tmt.partAErrors ?? 0;
     const efficiency = (totalNodes - errorCount) / timeASeconds; // nœuds corrects par seconde
     // Normalisation : plafond à 1.5 nœuds/s (≈ 25 nœuds en 17s, 0 erreur) → 100, plancher à 0
-    attentionScore = Math.max(0, Math.min(100, Math.round((efficiency / 1.5) * 100)));
-    attentionRaw = Math.round(efficiency * 100) / 100; // garder 2 décimales
+    vvpScore = Math.max(0, Math.min(100, Math.round((efficiency / 1.5) * 100)));
+    vvpRaw = Math.round(efficiency * 100) / 100; // garder 2 décimales
   }
   dimensions.push({
-    key: "attention",
-    label: "Attention Sélective",
-    score: attentionScore,
-    raw: attentionRaw,
+    key: "vitesse_visuo_perceptuelle",
+    label: "Vitesse Visuo-Perceptuelle",
+    score: vvpScore,
+    raw: vvpRaw,
     unit: "nœuds/s (TMT-Ae)",
-    status: getStatus(attentionScore),
+    status: getStatus(vvpScore),
   });
 
   // Weighted global score

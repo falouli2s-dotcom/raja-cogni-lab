@@ -518,7 +518,7 @@ function CoachSessions() {
     { key: "flexibility", label: "Flexibilité\ncognitive", short: "Flexibilité", Icon: Shuffle },
     { key: "workingMemory", label: "Mémoire de\ntravail", short: "Mémoire", Icon: Database },
     { key: "inhibition", label: "Contrôle\ninhibiteur", short: "Inhibition", Icon: ShieldCheck },
-    { key: "attention", label: "Attention\nsélective", short: "Attention", Icon: Eye },
+    { key: "vitesse_visuo_perceptuelle", label: "Vitesse\nVisuo-Perceptuelle", short: "Vitesse V.-P.", Icon: Eye },
   ];
 
   const radarDimensions: CognitiveDimension[] = RADAR_AXES.map((a) => {

@@ -149,7 +149,7 @@ const TEST_LABELS: Record<string, string> = {
 
 const DIMENSION_LABELS: Record<string, string> = {
   flexibility: "Flexibilité cognitive",
-  attention: "Attention sélective",
+  vitesse_visuo_perceptuelle: "Vitesse Visuo-Perceptuelle",
   workingMemory: "Mémoire de travail",
   inhibition: "Inhibition",
   reactionTime: "Temps de réaction",
@@ -479,7 +479,7 @@ function CoachDashboard() {
       }
       const RADAR_KEYS: { key: string; label: string }[] = [
         { key: "flexibility", label: "Flexibilité\ncognitive" },
-        { key: "attention", label: "Attention\nSélective" },
+        { key: "vitesse_visuo_perceptuelle", label: "Vitesse\nVisuo-Perceptuelle" },
         { key: "workingMemory", label: "Mémoire\nTravail" },
         { key: "inhibition", label: "Inhibition" },
         { key: "reactionTime", label: "Réaction" },

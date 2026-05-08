@@ -45,7 +45,7 @@ interface RadarChartProps {
 // Scientific weights matching sgs-engine WEIGHTS (sum = 1.0)
 const WEIGHTS: Record<string, number> = {
   flexibility: 0.28,
-  attention: 0.22,
+  vitesse_visuo_perceptuelle: 0.22,
   workingMemory: 0.22,
   inhibition: 0.17,
   reactionTime: 0.11,

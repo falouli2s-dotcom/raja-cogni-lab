@@ -63,7 +63,7 @@ const DIMENSIONS = [
   { key: "inhibition", label: "Contrôle Inhibiteur", icon: Zap },
   { key: "workingMemory", label: "Mémoire de Travail", icon: Brain },
   { key: "flexibility", label: "Flexibilité Cognitive", icon: GitBranch },
-  { key: "attention", label: "Attention Sélective", icon: Eye },
+  { key: "vitesse_visuo_perceptuelle", label: "Vitesse Visuo-Perceptuelle", icon: Eye },
 ] as const;
 
 const PERIOD_LABELS: Record<"7d" | "30d" | "all", string> = {
