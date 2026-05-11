@@ -367,7 +367,7 @@ function ProfilePage() {
           ) : (
             <p className="text-base font-bold text-foreground">{stats.count > 0 ? stats.count : "—"}</p>
           )}
-          <p className="text-[10px] leading-tight text-muted-foreground">Sessions</p>
+          <p className="text-[10px] leading-tight text-muted-foreground">{t.profile.sessions}</p>
         </div>
         <div className="flex flex-col items-center gap-1 border-x border-border px-1 text-center">
           <Trophy className="h-4 w-4 text-accent" />
@@ -376,7 +376,7 @@ function ProfilePage() {
           ) : (
             <p className="text-base font-bold text-foreground">{stats.bestSGS !== null ? Math.round(stats.bestSGS) : "—"}</p>
           )}
-          <p className="text-[10px] leading-tight text-muted-foreground">Meilleur SGS</p>
+          <p className="text-[10px] leading-tight text-muted-foreground">{t.profile.bestSGS}</p>
         </div>
         <div className="flex flex-col items-center gap-1 px-1 text-center">
           <CalendarDays className="h-4 w-4 text-primary" />
@@ -385,7 +385,7 @@ function ProfilePage() {
           ) : (
             <p className="text-xs font-bold text-foreground">{stats.lastDate ? format(new Date(stats.lastDate), "dd MMM yyyy", { locale: fr }) : "—"}</p>
           )}
-          <p className="text-[10px] leading-tight text-muted-foreground">Dernière</p>
+          <p className="text-[10px] leading-tight text-muted-foreground">{t.profile.lastSession}</p>
         </div>
       </motion.div>
 
