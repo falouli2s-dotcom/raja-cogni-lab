@@ -123,5 +123,5 @@ export type Translations = (typeof translations)["fr"];
 
 export function useT(): Translations {
   const { lang } = useLanguage();
-  return translations[lang];
+  return translations[lang] as Translations;
 }
