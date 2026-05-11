@@ -276,21 +276,21 @@ function HomePage() {
                     <>
                       <TrendingUp className="h-3.5 w-3.5 text-emerald-300" />
                       <span className="text-xs font-semibold text-emerald-300">
-                        +{delta} vs session précédente
+                        +{delta} {t.home.vsLastSession}
                       </span>
                     </>
                   ) : delta < 0 ? (
                     <>
                       <TrendingDown className="h-3.5 w-3.5 text-rose-300" />
                       <span className="text-xs font-semibold text-rose-300">
-                        {delta} vs session précédente
+                        {delta} {t.home.vsLastSession}
                       </span>
                     </>
                   ) : (
                     <>
                       <Minus className="h-3.5 w-3.5 text-primary-foreground/50" />
                       <span className="text-xs font-semibold text-primary-foreground/50">
-                        0 vs session précédente
+                        0 {t.home.vsLastSession}
                       </span>
                     </>
                   )}
