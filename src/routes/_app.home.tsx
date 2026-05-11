@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { computeSGS, type SGSResult } from "@/lib/sgs-engine";
 import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 import { NotificationBell } from "@/components/NotificationBell";
+import { useT } from "@/locales/translations";
 
 type HomeSession = {
   sessionId: string;
@@ -30,27 +31,6 @@ export const Route = createFileRoute("/_app/home")({
 });
 
 const PROFILE_BANNER_DISMISS_KEY = "cogni_profile_banner_dismissed";
-
-const DIM_LABELS: Record<string, string> = {
-  reactionTime: "Réaction",
-  flexibility: "Flexibilité",
-  workingMemory: "Mémoire",
-  inhibition: "Inhibition",
-  vitesse_visuo_perceptuelle: "Vitesse V.-P.",
-};
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Bon matin";
-  if (h < 18) return "Bon après-midi";
-  return "Bonsoir";
-}
-
-function scoreLabel(score: number): string {
-  if (score >= 70) return "Élevé";
-  if (score >= 40) return "Moyen";
-  return "À travailler";
-}
 
 function barColor(score: number): string {
   if (score >= 70) return "bg-emerald-400";
