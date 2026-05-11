@@ -410,7 +410,7 @@ function HistoryPage() {
           ) : (
             <Download className="h-4 w-4" />
           )}
-          <span className="ml-1.5 text-xs font-semibold">PDF</span>
+          <span className="ms-1.5 text-xs font-semibold">PDF</span>
         </Button>
       </motion.div>
 

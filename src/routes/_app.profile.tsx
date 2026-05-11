@@ -398,7 +398,7 @@ function ProfilePage() {
             <button
               key={i}
               onClick={item.action}
-              className={`flex items-center justify-between px-4 py-4 text-left transition-colors active:bg-muted ${i !== menuItems.length - 1 ? "border-b border-border" : ""}`}
+              className={`flex items-center justify-between px-4 py-4 text-start transition-colors active:bg-muted ${i !== menuItems.length - 1 ? "border-b border-border" : ""}`}
             >
               <div className="flex items-center gap-3">
                 <Icon className="h-5 w-5 text-muted-foreground" />
@@ -413,7 +413,7 @@ function ProfilePage() {
       {/* Logout */}
       <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="mt-6">
         <Button variant="destructive" onClick={handleLogout} className="h-12 w-full text-base font-semibold">
-          <LogOut className="mr-2 h-5 w-5" /> Se déconnecter
+          <LogOut className="me-2 h-5 w-5" /> Se déconnecter
         </Button>
       </motion.div>
 
@@ -436,8 +436,8 @@ function ProfilePage() {
               <label className="text-sm font-medium text-foreground mb-1 block">Date de naissance</label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dateNaissance && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                  <Button variant="outline" className={cn("w-full justify-start text-start font-normal", !dateNaissance && "text-muted-foreground")}>
+                    <CalendarIcon className="me-2 h-4 w-4" />
                     {dateNaissance ? format(dateNaissance, "d MMMM yyyy", { locale: fr }) : "Sélectionner"}
                   </Button>
                 </PopoverTrigger>
@@ -517,7 +517,7 @@ function ProfilePage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Minimum 8 caractères"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
