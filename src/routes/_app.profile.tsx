@@ -291,17 +291,17 @@ function ProfilePage() {
   }
 
   const menuItems = [
-    { icon: BarChart3, label: "Historique des sessions", action: () => navigate({ to: "/sessions" }) },
-    { icon: User, label: "Informations personnelles", action: () => setOpenSheet("personal") },
-    { icon: Shield, label: "Sécurité", action: () => setOpenSheet("security") },
-    { icon: Bell, label: "Notifications", action: () => setOpenSheet("notifications") },
-    { icon: Palette, label: "Apparence", action: () => setOpenSheet("appearance") },
+    { icon: BarChart3, label: t.profile.sessionHistory, action: () => navigate({ to: "/sessions" }) },
+    { icon: User, label: t.profile.personalInfo, action: () => setOpenSheet("personal") },
+    { icon: Shield, label: t.profile.security, action: () => setOpenSheet("security") },
+    { icon: Bell, label: t.profile.notifications, action: () => setOpenSheet("notifications") },
+    { icon: Palette, label: t.profile.appearance, action: () => setOpenSheet("appearance") },
   ];
 
   return (
     <div className="px-5 pt-12 pb-4">
       <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-        <h1 className="text-2xl font-bold text-foreground">Profil</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.profile.title}</h1>
       </motion.div>
 
       {/* User info card */}
