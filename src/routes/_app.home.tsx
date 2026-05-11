@@ -45,6 +45,26 @@ function scoreTextColor(score: number): string {
 }
 
 function HomePage() {
+  const t = useT();
+  const DIM_LABELS: Record<string, string> = {
+    reactionTime: t.home.reaction,
+    flexibility: t.home.flexibility,
+    workingMemory: t.home.memory,
+    inhibition: t.home.inhibition,
+    vitesse_visuo_perceptuelle: t.home.vvp,
+  };
+  const getGreeting = (): string => {
+    const h = new Date().getHours();
+    if (h < 12) return t.home.goodMorning;
+    if (h < 18) return t.home.goodAfternoon;
+    return t.home.goodEvening;
+  };
+  const scoreLabel = (score: number): string => {
+    if (score >= 70) return t.home.high;
+    if (score >= 40) return t.home.medium;
+    return t.home.low;
+  };
+
   const [lastSession, setLastSession] = useState<HomeSession | null>(null);
   const [prevSession, setPrevSession] = useState<HomeSession | null>(null);
   const [showProfileBanner, setShowProfileBanner] = useState(false);
