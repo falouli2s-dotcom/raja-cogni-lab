@@ -293,7 +293,7 @@ export function SessionResultsScreen() {
         transition={{ delay: 0.4 }}
         className="mt-6"
       >
-        <h2 className="mb-3 text-lg font-semibold text-foreground">Recommandations</h2>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">{t.session.recommendations}</h2>
         <div className="flex flex-col gap-2">
           {recommendations.map((rec, i) => (
             <div key={i} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
@@ -302,7 +302,7 @@ export function SessionResultsScreen() {
             </div>
           ))}
           {recommendations.length === 0 && (
-            <p className="text-sm text-muted-foreground">Tous tes scores sont bons ! Continue comme ça. 🎉</p>
+            <p className="text-sm text-muted-foreground">{t.session.allScoresGood} 🎉</p>
           )}
         </div>
       </motion.div>
