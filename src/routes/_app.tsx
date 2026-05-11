@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
+import { useLanguage, type Lang } from "@/lib/language-context";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const navigate = useNavigate();
+  const { setLang } = useLanguage();
   const [ready, setReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -20,12 +22,16 @@ function AppLayout() {
       }
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, preferred_language")
         .eq("id", session.user.id)
         .maybeSingle();
-      if ((profile as { role?: string } | null)?.role === "coach") {
+      const p = profile as { role?: string; preferred_language?: Lang } | null;
+      if (p?.role === "coach") {
         navigate({ to: "/coach/dashboard", replace: true });
         return;
+      }
+      if (p?.preferred_language === "fr" || p?.preferred_language === "ar") {
+        setLang(p.preferred_language);
       }
       setReady(true);
     });

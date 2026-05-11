@@ -10,6 +10,9 @@ export const translations = {
       profile: "Profil",
       close: "Fermer",
     },
+    profile: {
+      language: "Langue",
+    },
     dimensions: {
       reactionTime: "Temps de Réaction",
       inhibition: "Contrôle Inhibiteur",
@@ -88,6 +91,9 @@ export const translations = {
       exercises: "التمارين",
       profile: "الملف الشخصي",
       close: "إغلاق",
+    },
+    profile: {
+      language: "اللغة",
     },
     dimensions: {
       reactionTime: "وقت الاستجابة",
