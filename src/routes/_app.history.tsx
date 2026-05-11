@@ -717,7 +717,7 @@ function HistoryPage() {
                   <button
                     key={g.groupId}
                     onClick={() => setSelected(g)}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors active:bg-muted"
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-start transition-colors active:bg-muted"
                   >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted">
                       <BarChart3 className="h-5 w-5 text-muted-foreground" />

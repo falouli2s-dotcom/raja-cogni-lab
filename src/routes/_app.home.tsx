@@ -276,21 +276,21 @@ function HomePage() {
                     <>
                       <TrendingUp className="h-3.5 w-3.5 text-emerald-300" />
                       <span className="text-xs font-semibold text-emerald-300">
-                        +{delta} vs session précédente
+                        +{delta} {t.home.vsLastSession}
                       </span>
                     </>
                   ) : delta < 0 ? (
                     <>
                       <TrendingDown className="h-3.5 w-3.5 text-rose-300" />
                       <span className="text-xs font-semibold text-rose-300">
-                        {delta} vs session précédente
+                        {delta} {t.home.vsLastSession}
                       </span>
                     </>
                   ) : (
                     <>
                       <Minus className="h-3.5 w-3.5 text-primary-foreground/50" />
                       <span className="text-xs font-semibold text-primary-foreground/50">
-                        0 vs session précédente
+                        0 {t.home.vsLastSession}
                       </span>
                     </>
                   )}
@@ -329,7 +329,7 @@ function HomePage() {
               to="/sessions"
               className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary-foreground"
             >
-              Rapport complet <ChevronRight className="h-3.5 w-3.5" />
+              {t.home.fullReport} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         ) : (
@@ -338,13 +338,13 @@ function HomePage() {
               <p className="text-sm text-primary-foreground/70">{t.home.sgsLabel}</p>
               <p className="mt-1 text-4xl font-bold text-primary-foreground">--</p>
               <p className="mt-2 max-w-[180px] text-xs text-primary-foreground/60">
-                Lance ta première session pour découvrir ton profil cognitif
+                {t.home.startFirstSession}
               </p>
               <Link
                 to="/tests"
                 className="mt-3 inline-flex items-center gap-1 rounded-xl bg-primary-foreground/15 px-3 py-1.5 text-xs font-semibold text-primary-foreground"
               >
-                Commencer <ChevronRight className="h-3 w-3" />
+                {t.home.start} <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-foreground/15">
@@ -366,19 +366,19 @@ function HomePage() {
           <p className="text-2xl font-bold text-foreground tabular-nums">
             {totalSessions > 0 ? totalSessions : sgs ? "1+" : "0"}
           </p>
-          <p className="text-xs text-muted-foreground">Sessions</p>
+          <p className="text-xs text-muted-foreground">{t.home.sessions}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <Dumbbell className="mb-2 h-5 w-5 text-primary" />
           <p className="text-2xl font-bold text-foreground tabular-nums">0</p>
-          <p className="text-xs text-muted-foreground">Exercices</p>
+          <p className="text-xs text-muted-foreground">{t.home.exercises}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <Target className="mb-2 h-5 w-5 text-accent" />
           <p className="text-2xl font-bold text-foreground">
             {sgs ? scoreLabel(sgs.global) : "--"}
           </p>
-          <p className="text-xs text-muted-foreground">Niveau</p>
+          <p className="text-xs text-muted-foreground">{t.home.level}</p>
         </div>
       </motion.div>
 
@@ -391,9 +391,9 @@ function HomePage() {
           className="mb-4 rounded-2xl border border-border bg-card p-4"
         >
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-foreground">Exercices recommandés</p>
+            <p className="text-sm font-semibold text-foreground">{t.home.recommendedExercises}</p>
             <Link to="/exercises" className="text-xs font-semibold text-accent">
-              Voir tout
+              {t.home.seeAll}
             </Link>
           </div>
           {weakDimensions.map((d, i) => (
@@ -438,9 +438,9 @@ function HomePage() {
             </div>
             <div>
               <p className="font-semibold text-foreground">
-                {sgs ? "Nouvelle session" : "Démarrer l'évaluation"}
+                {sgs ? t.home.newSession : t.home.startAssessment}
               </p>
-              <p className="text-xs text-muted-foreground">3 tests · ~20 minutes</p>
+              <p className="text-xs text-muted-foreground">{t.home.testsDuration}</p>
             </div>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -456,8 +456,8 @@ function HomePage() {
                 <BarChart3 className="h-5 w-5 text-accent" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Historique</p>
-                <p className="text-xs text-muted-foreground">Voir ta progression dans le temps</p>
+                <p className="font-semibold text-foreground">{t.home.history}</p>
+                <p className="text-xs text-muted-foreground">{t.home.seeProgress}</p>
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />

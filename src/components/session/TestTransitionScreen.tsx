@@ -91,7 +91,7 @@ export function TestTransitionScreen() {
         className="mt-8 w-full max-w-sm"
       >
         <Button onClick={proceedToNextTest} className="h-14 w-full text-base font-semibold" size="lg">
-          {t.session.nextTest} <ArrowRight className="me-2 h-5 w-5" />
+          {t.session.nextTest} <ArrowRight className="ms-2 h-5 w-5" />
         </Button>
       </motion.div>
     </div>

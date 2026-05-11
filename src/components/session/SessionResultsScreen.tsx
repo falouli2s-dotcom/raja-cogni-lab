@@ -19,20 +19,20 @@ const dimensionIcons: Record<string, typeof Brain> = {
   vitesse_visuo_perceptuelle: Eye,
 };
 
-function getRecommendations(sgs: SGSResult): string[] {
+function getRecommendations(sgs: SGSResult, t: ReturnType<typeof useT>): string[] {
   const recs: string[] = [];
   for (const dim of sgs.dimensions) {
     if (dim.key === "reactionTime" && dim.raw && dim.raw > 450) {
-      recs.push("Travaille ta vitesse de réaction avec des exercices de rapidité");
+      recs.push(t.session.rec1);
     }
     if (dim.key === "inhibition" && dim.raw && dim.raw > 80) {
-      recs.push("Renforce ton inhibition avec des exercices de contrôle attentionnel");
+      recs.push(t.session.rec2);
     }
     if (dim.key === "workingMemory" && dim.score < 70) {
-      recs.push("Entraîne ta mémoire de travail avec des exercices N-Back progressifs");
+      recs.push(t.session.rec3);
     }
     if (dim.key === "flexibility" && dim.raw && dim.raw > 2.5) {
-      recs.push("Améliore ta flexibilité cognitive avec des exercices d'alternance");
+      recs.push(t.session.rec4);
     }
   }
   return recs;
@@ -204,7 +204,7 @@ export function SessionResultsScreen() {
   }
 
   const globalStatus = getGlobalStatus(sgs.global);
-  const recommendations = getRecommendations(sgs);
+  const recommendations = getRecommendations(sgs, t);
 
   const handleFinish = () => {
     resetSession();
@@ -293,7 +293,7 @@ export function SessionResultsScreen() {
         transition={{ delay: 0.4 }}
         className="mt-6"
       >
-        <h2 className="mb-3 text-lg font-semibold text-foreground">Recommandations</h2>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">{t.session.recommendations}</h2>
         <div className="flex flex-col gap-2">
           {recommendations.map((rec, i) => (
             <div key={i} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
@@ -302,7 +302,7 @@ export function SessionResultsScreen() {
             </div>
           ))}
           {recommendations.length === 0 && (
-            <p className="text-sm text-muted-foreground">Tous tes scores sont bons ! Continue comme ça. 🎉</p>
+            <p className="text-sm text-muted-foreground">{t.session.allScoresGood} 🎉</p>
           )}
         </div>
       </motion.div>
