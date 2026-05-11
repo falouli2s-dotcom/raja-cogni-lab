@@ -40,6 +40,14 @@ function getRecommendations(sgs: SGSResult): string[] {
 
 export function SessionResultsScreen() {
   const navigate = useNavigate();
+  const t = useT();
+  const dimLabelMap: Record<string, string> = {
+    reactionTime: t.dimensions.reactionTime,
+    inhibition: t.dimensions.inhibition,
+    workingMemory: t.dimensions.workingMemory,
+    flexibility: t.dimensions.flexibility,
+    vitesse_visuo_perceptuelle: t.dimensions.vitesseVisuoPerceptuelle,
+  };
   const { session, finishSession, resetSession } = useSession();
   const [sgs, setSgs] = useState<SGSResult | null>(null);
   const savedRef = useRef(false);
@@ -206,8 +214,8 @@ export function SessionResultsScreen() {
   return (
     <div className="min-h-screen bg-background px-5 pt-12 pb-24">
       <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-        <h1 className="text-2xl font-bold text-foreground">Session terminée !</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Voici ton profil cognitif complet</p>
+        <h1 className="text-2xl font-bold text-foreground">{t.session.sessionFinished}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t.session.hereIsYourProfile}</p>
       </motion.div>
 
       {/* SGS Global */}
@@ -217,7 +225,7 @@ export function SessionResultsScreen() {
         transition={{ delay: 0.1 }}
         className="mt-6 rounded-2xl border border-border bg-card p-6 text-center"
       >
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Score Global Synthétique</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.session.sgsTitle}</p>
         <div className="mt-3 flex items-baseline justify-center gap-1">
           <span className="text-5xl font-bold text-foreground">{sgs.global}</span>
           <span className="text-lg text-muted-foreground">/100</span>
@@ -232,7 +240,7 @@ export function SessionResultsScreen() {
         transition={{ delay: 0.2 }}
         className="mt-6 rounded-2xl border border-border bg-card p-4"
       >
-        <p className="mb-2 text-center text-sm font-semibold text-foreground">Profil cognitif</p>
+        <p className="mb-2 text-center text-sm font-semibold text-foreground">{t.session.cognitiveProfile}</p>
         <RadarChart dimensions={sgs.dimensions} size={280} />
       </motion.div>
 
@@ -243,7 +251,7 @@ export function SessionResultsScreen() {
         transition={{ delay: 0.3 }}
         className="mt-6"
       >
-        <h2 className="mb-3 text-lg font-semibold text-foreground">Détail par dimension</h2>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">{t.session.detailByDimension}</h2>
         <div className="flex flex-col gap-3">
           {sgs.dimensions.map((dim) => {
             const Icon = dimensionIcons[dim.key] || Brain;
@@ -255,7 +263,7 @@ export function SessionResultsScreen() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">{dim.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{dimLabelMap[dim.key] ?? dim.label}</p>
                     <p className={`text-sm font-bold ${statusColor}`}>{dim.score}/100</p>
                   </div>
                   <div className="mt-1.5 h-1.5 w-full rounded-full bg-muted">
@@ -268,7 +276,7 @@ export function SessionResultsScreen() {
                   </div>
                   {dim.raw !== undefined && (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Valeur brute : {typeof dim.raw === "number" ? dim.raw.toFixed(1) : dim.raw} {dim.unit}
+                      {t.session.rawValue} {typeof dim.raw === "number" ? dim.raw.toFixed(1) : dim.raw} {dim.unit}
                     </p>
                   )}
                 </div>
@@ -307,7 +315,7 @@ export function SessionResultsScreen() {
         className="mt-8"
       >
         <Button onClick={handleFinish} className="h-14 w-full text-base font-semibold" size="lg">
-          <Home className="mr-2 h-5 w-5" /> Terminer
+          <Home className="me-2 h-5 w-5" /> {t.session.finish}
         </Button>
       </motion.div>
     </div>
