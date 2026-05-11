@@ -438,9 +438,9 @@ function HomePage() {
             </div>
             <div>
               <p className="font-semibold text-foreground">
-                {sgs ? "Nouvelle session" : "Démarrer l'évaluation"}
+                {sgs ? t.home.newSession : t.home.startAssessment}
               </p>
-              <p className="text-xs text-muted-foreground">3 tests · ~20 minutes</p>
+              <p className="text-xs text-muted-foreground">{t.home.testsDuration}</p>
             </div>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
