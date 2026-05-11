@@ -192,12 +192,14 @@ function FilterRow({
   selected,
   onToggle,
   colorFn,
+  renderItem,
 }: {
   label: string;
   items: string[];
   selected: string[];
   onToggle: (v: string) => void;
   colorFn?: (v: string) => string;
+  renderItem?: (v: string) => string;
 }) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none items-center">
@@ -219,7 +221,7 @@ function FilterRow({
                 : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
             }`}
           >
-            {item}
+            {renderItem ? renderItem(item) : item}
           </button>
         );
       })}
