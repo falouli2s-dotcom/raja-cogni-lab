@@ -94,6 +94,8 @@ interface SessionContextValue {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
+  const { lang } = useLanguage();
+  const tests = useMemo(() => getSessionTests(lang), [lang]);
   const [session, setSession] = useState<SessionData | null>(null);
   const [step, setStep] = useState<SessionStep>("start");
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -119,7 +121,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
       return { ...prev, results: [...prev.results, result] };
     });
-    if (currentTestIndex < SESSION_TESTS.length - 1) {
+    if (currentTestIndex < tests.length - 1) {
       setStep("transition");
     } else {
       setStep("final-results");
@@ -183,12 +185,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getCurrentTest = useCallback(() => {
-    return SESSION_TESTS[currentTestIndex] ?? null;
-  }, [currentTestIndex]);
+    return tests[currentTestIndex] ?? null;
+  }, [currentTestIndex, tests]);
 
   const getNextTest = useCallback(() => {
-    return SESSION_TESTS[currentTestIndex + 1] ?? null;
-  }, [currentTestIndex]);
+    return tests[currentTestIndex + 1] ?? null;
+  }, [currentTestIndex, tests]);
 
   const getTestResult = useCallback((testId: TestId) => {
     return session?.results.find(r => r.testId === testId);
