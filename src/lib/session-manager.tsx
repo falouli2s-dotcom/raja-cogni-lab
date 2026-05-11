@@ -126,7 +126,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } else {
       setStep("final-results");
     }
-  }, [currentTestIndex]);
+  }, [currentTestIndex, tests.length]);
 
   const proceedToNextTest = useCallback(() => {
     setCurrentTestIndex(prev => prev + 1);
