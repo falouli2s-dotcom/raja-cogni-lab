@@ -218,18 +218,18 @@ function HomePage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground">
-                  Complète ton profil joueur pour des recommandations personnalisées selon ton poste !
+                  {t.home.completeProfilePrompt}
                 </p>
                 <Link
                   to="/profile"
                   className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-accent"
                 >
-                  → Compléter le profil
+                  {t.home.completeProfileCta}
                 </Link>
               </div>
               <button
                 onClick={dismissBanner}
-                aria-label="Fermer"
+                aria-label={t.common.close}
                 className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors active:bg-muted"
               >
                 <X className="h-4 w-4" />
@@ -250,7 +250,7 @@ function HomePage() {
           <div>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm text-primary-foreground/70">Score Global (SGS)</p>
+                <p className="text-sm text-primary-foreground/70">{t.home.sgsLabel}</p>
                 <div className="mt-1 flex items-baseline gap-1">
                   <p className="text-5xl font-bold leading-none text-primary-foreground tabular-nums">
                     {sgs.global}
@@ -269,7 +269,7 @@ function HomePage() {
                     <>
                       <Minus className="h-3.5 w-3.5 text-primary-foreground/40" />
                       <span className="text-xs font-semibold text-primary-foreground/50">
-                        — pas de session précédente
+                        {t.home.noPreviousSession}
                       </span>
                     </>
                   ) : delta > 0 ? (
@@ -335,7 +335,7 @@ function HomePage() {
         ) : (
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm text-primary-foreground/70">Score Global (SGS)</p>
+              <p className="text-sm text-primary-foreground/70">{t.home.sgsLabel}</p>
               <p className="mt-1 text-4xl font-bold text-primary-foreground">--</p>
               <p className="mt-2 max-w-[180px] text-xs text-primary-foreground/60">
                 Lance ta première session pour découvrir ton profil cognitif
