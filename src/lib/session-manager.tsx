@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, useCallback, type ReactNode } from "react";
 import { computeSimonResults, type SimonTrial } from "@/lib/simon-engine";
 import { computeNBackResults, type NBackTrial } from "@/lib/nback-engine";
 import type { TMTCombinedResults } from "@/lib/tmt-engine";
 import { computeSGS, type SGSResult, type TestScores } from "@/lib/sgs-engine";
+import { translations } from "@/locales/translations";
+import { useLanguage, type Lang } from "@/lib/language-context";
 
 export type TestId = "simon" | "nback" | "tmt";
 
@@ -13,11 +15,20 @@ export interface TestDefinition {
   duration: string;
 }
 
-export const SESSION_TESTS: TestDefinition[] = [
-  { id: "simon", name: "Tâche de Simon", description: "Inhibition & Temps de réaction", duration: "~5 min" },
-  { id: "nback", name: "N-Back 2", description: "Mémoire de travail", duration: "~8 min" },
-  { id: "tmt", name: "Trail Making Test", description: "Flexibilité cognitive", duration: "~6 min" },
-];
+export const SESSION_TEST_IDS: readonly TestId[] = ["simon", "nback", "tmt"] as const;
+
+export function getSessionTests(lang: Lang): TestDefinition[] {
+  const t = translations[lang].session;
+  const meta: Record<TestId, { name: string; description: string; duration: string }> = {
+    simon: { name: t.simonName, description: t.simonDesc, duration: "~5 min" },
+    nback: { name: t.nbackName, description: t.nbackDesc, duration: "~8 min" },
+    tmt:   { name: t.tmtName,   description: t.tmtDesc,   duration: "~6 min" },
+  };
+  return SESSION_TEST_IDS.map((id) => ({ id, ...meta[id] }));
+}
+
+// Backward-compat: callers using only .length still work.
+export const SESSION_TESTS: TestDefinition[] = getSessionTests("fr");
 
 export type SessionStatus = "idle" | "in-progress" | "completed";
 export type SessionStep = "start" | "instructions" | "running-test" | "transition" | "final-results";
