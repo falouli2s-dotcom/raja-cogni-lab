@@ -391,9 +391,9 @@ function HomePage() {
           className="mb-4 rounded-2xl border border-border bg-card p-4"
         >
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-foreground">Exercices recommandés</p>
+            <p className="text-sm font-semibold text-foreground">{t.home.recommendedExercises}</p>
             <Link to="/exercises" className="text-xs font-semibold text-accent">
-              Voir tout
+              {t.home.seeAll}
             </Link>
           </div>
           {weakDimensions.map((d, i) => (
