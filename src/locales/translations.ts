@@ -92,6 +92,9 @@ export const translations = {
       profile: "الملف الشخصي",
       close: "إغلاق",
     },
+    profile: {
+      language: "اللغة",
+    },
     dimensions: {
       reactionTime: "وقت الاستجابة",
       inhibition: "التحكم التثبيطي",
