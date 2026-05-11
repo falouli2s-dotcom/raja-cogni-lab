@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ExerciseCard } from "./ExerciseCard";
 import { ExerciseModal } from "./ExerciseModal";
 import { BLOCS, NIVEAUX, STIMULUS_TYPES, BLOC_COLORS } from "./exercise-constants";
+import { useT } from "@/locales/translations";
 import type { Exercice } from "@/routes/_app.exercises";
 
 interface Props {
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export function ExerciseCatalog({ exercices, loading }: Props) {
+  const t = useT();
+  const niveauLabel = (n: string) =>
+    n === "Faible" ? t.exercises.levelLow : n === "Moyen" ? t.exercises.levelMedium : n === "Élevé" ? t.exercises.levelHigh : n;
   const [search, setSearch] = useState("");
   const [selectedBlocs, setSelectedBlocs] = useState<string[]>([]);
   const [selectedNiveaux, setSelectedNiveaux] = useState<string[]>([]);
