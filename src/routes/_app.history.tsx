@@ -33,6 +33,7 @@ import {
   Dot,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/locales/translations";
 import { computeSGS, getGlobalStatus, type SGSResult, type TestScores } from "@/lib/sgs-engine";
 import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 import { RadarChart, type RadarOverlay } from "@/components/RadarChart";
