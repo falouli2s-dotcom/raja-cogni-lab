@@ -38,6 +38,8 @@ interface NotifPrefs {
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { lang, setLang } = useLanguage();
+  const t = useT();
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string>("");
   const [profile, setProfile] = useState<{ full_name: string | null; birth_date: string | null; category: PlayerCategory | null; position: PlayerPosition | null; dominant_foot: DominantFoot | null; avatar_url: string | null } | null>(null);
