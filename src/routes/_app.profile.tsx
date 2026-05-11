@@ -600,6 +600,35 @@ function ProfilePage() {
               <span className={cn("text-sm font-semibold", theme === "dark" ? "text-primary" : "text-muted-foreground")}>Sombre</span>
             </button>
           </div>
+          <div className="mt-6 border-t border-border pt-4">
+            <p className="mb-3 text-sm font-medium text-foreground">{t.profile.language}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setLang("fr")}
+                className={cn(
+                  "h-12 rounded-xl border-2 text-sm font-semibold transition-colors",
+                  lang === "fr"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground"
+                )}
+              >
+                FR
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang("ar")}
+                className={cn(
+                  "h-12 rounded-xl border-2 text-sm font-semibold transition-colors",
+                  lang === "ar"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground"
+                )}
+              >
+                عربية
+              </button>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     </div>
