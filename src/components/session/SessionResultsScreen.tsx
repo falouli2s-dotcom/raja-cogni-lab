@@ -19,20 +19,20 @@ const dimensionIcons: Record<string, typeof Brain> = {
   vitesse_visuo_perceptuelle: Eye,
 };
 
-function getRecommendations(sgs: SGSResult): string[] {
+function getRecommendations(sgs: SGSResult, t: ReturnType<typeof useT>): string[] {
   const recs: string[] = [];
   for (const dim of sgs.dimensions) {
     if (dim.key === "reactionTime" && dim.raw && dim.raw > 450) {
-      recs.push("Travaille ta vitesse de réaction avec des exercices de rapidité");
+      recs.push(t.session.rec1);
     }
     if (dim.key === "inhibition" && dim.raw && dim.raw > 80) {
-      recs.push("Renforce ton inhibition avec des exercices de contrôle attentionnel");
+      recs.push(t.session.rec2);
     }
     if (dim.key === "workingMemory" && dim.score < 70) {
-      recs.push("Entraîne ta mémoire de travail avec des exercices N-Back progressifs");
+      recs.push(t.session.rec3);
     }
     if (dim.key === "flexibility" && dim.raw && dim.raw > 2.5) {
-      recs.push("Améliore ta flexibilité cognitive avec des exercices d'alternance");
+      recs.push(t.session.rec4);
     }
   }
   return recs;
