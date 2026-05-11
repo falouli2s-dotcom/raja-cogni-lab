@@ -9,7 +9,8 @@ import { getGlobalStatus, getStatusColor, type SGSResult } from "@/lib/sgs-engin
 import { supabase } from "@/integrations/supabase/client";
 import type { SimonResultData, NBackResultData } from "@/lib/session-manager";
 import type { TMTCombinedResults } from "@/lib/tmt-engine";
-import { useT } from "@/locales/translations";
+import { useLanguage, type Lang } from "@/lib/language-context";
+import { translations, useT } from "@/locales/translations";
 
 const dimensionIcons: Record<string, typeof Brain> = {
   reactionTime: Clock,
@@ -19,20 +20,21 @@ const dimensionIcons: Record<string, typeof Brain> = {
   vitesse_visuo_perceptuelle: Eye,
 };
 
-function getRecommendations(sgs: SGSResult, t: ReturnType<typeof useT>): string[] {
+function getRecommendations(sgs: SGSResult, lang: Lang | string): string[] {
+  const sessionT = translations[lang === "ar" ? "ar" : "fr"].session;
   const recs: string[] = [];
   for (const dim of sgs.dimensions) {
     if (dim.key === "reactionTime" && dim.raw && dim.raw > 450) {
-      recs.push(t.session.rec1);
+      recs.push(sessionT.rec1);
     }
     if (dim.key === "inhibition" && dim.raw && dim.raw > 80) {
-      recs.push(t.session.rec2);
+      recs.push(sessionT.rec2);
     }
     if (dim.key === "workingMemory" && dim.score < 70) {
-      recs.push(t.session.rec3);
+      recs.push(sessionT.rec3);
     }
     if (dim.key === "flexibility" && dim.raw && dim.raw > 2.5) {
-      recs.push(t.session.rec4);
+      recs.push(sessionT.rec4);
     }
   }
   return recs;
@@ -40,6 +42,7 @@ function getRecommendations(sgs: SGSResult, t: ReturnType<typeof useT>): string[
 
 export function SessionResultsScreen() {
   const navigate = useNavigate();
+  const { lang } = useLanguage();
   const t = useT();
   const dimLabelMap: Record<string, string> = {
     reactionTime: t.dimensions.reactionTime,
@@ -204,7 +207,7 @@ export function SessionResultsScreen() {
   }
 
   const globalStatus = getGlobalStatus(sgs.global);
-  const recommendations = getRecommendations(sgs, t);
+  const recommendations = getRecommendations(sgs, lang);
 
   const handleFinish = () => {
     resetSession();
