@@ -200,7 +200,7 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5 text-foreground" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -212,7 +212,7 @@ export function NotificationBell() {
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            className="absolute right-0 top-12 z-50 w-[min(20rem,90vw)] overflow-hidden rounded-2xl border border-border bg-popover shadow-2xl"
+            className="absolute end-0 top-12 z-50 w-[min(20rem,90vw)] overflow-hidden rounded-2xl border border-border bg-popover shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <p className="text-sm font-semibold text-foreground">Notifications</p>
@@ -242,7 +242,7 @@ export function NotificationBell() {
                       key={n.id}
                       onClick={() => handleClick(n)}
                       disabled={processed}
-                      className={`flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors ${
+                      className={`flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-start transition-colors ${
                         processed
                           ? "cursor-not-allowed bg-muted/30 opacity-60"
                           : `hover:bg-muted/40 ${n.is_read ? "" : "bg-primary/5"}`

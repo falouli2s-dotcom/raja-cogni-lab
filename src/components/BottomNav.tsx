@@ -1,16 +1,18 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Brain, Dumbbell, User, TrendingUp } from "lucide-react";
-
-const tabs = [
-  { to: "/home", label: "Accueil", icon: Home },
-  { to: "/tests", label: "Tests", icon: Brain },
-  { to: "/history", label: "Historique", icon: TrendingUp },
-  { to: "/exercises", label: "Exercices", icon: Dumbbell },
-  { to: "/profile", label: "Profil", icon: User },
-] as const;
+import { useT } from "@/locales/translations";
 
 export function BottomNav() {
   const location = useLocation();
+  const t = useT();
+
+  const tabs = [
+    { to: "/home", label: t.common.home, icon: Home },
+    { to: "/tests", label: t.common.tests, icon: Brain },
+    { to: "/history", label: t.common.history, icon: TrendingUp },
+    { to: "/exercises", label: t.common.exercises, icon: Dumbbell },
+    { to: "/profile", label: t.common.profile, icon: User },
+  ] as const;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom">

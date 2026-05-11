@@ -3,6 +3,7 @@ import { CheckCircle, ArrowRight, Brain, Zap, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession, type TestResult, type SimonResultData, type NBackResultData } from "@/lib/session-manager";
 import type { TMTCombinedResults } from "@/lib/tmt-engine";
+import { useT } from "@/locales/translations";
 
 const testIcons: Record<string, typeof Brain> = {
   simon: Zap,
@@ -14,15 +15,15 @@ function getResultSummary(result: TestResult): string {
   switch (result.testId) {
     case "simon": {
       const d = result.data as SimonResultData;
-      return `Précision ${d.accuracy.toFixed(0)}% · TR moyen ${d.avgRT.toFixed(0)}ms`;
+      return `${d.accuracy.toFixed(0)}% · ${d.avgRT.toFixed(0)}ms`;
     }
     case "nback": {
       const d = result.data as NBackResultData;
-      return `Précision ${d.accuracy.toFixed(0)}% · d' = ${d.dPrime.toFixed(2)}`;
+      return `${d.accuracy.toFixed(0)}% · d' = ${d.dPrime.toFixed(2)}`;
     }
     case "tmt": {
       const d = result.data as TMTCombinedResults;
-      return `Ratio B/A = ${d.ratioBA.toFixed(2)} · A: ${(d.partA.completionTime / 1000).toFixed(1)}s · B: ${(d.partB.completionTime / 1000).toFixed(1)}s`;
+      return `B/A = ${d.ratioBA.toFixed(2)} · A: ${(d.partA.completionTime / 1000).toFixed(1)}s · B: ${(d.partB.completionTime / 1000).toFixed(1)}s`;
     }
     default:
       return "";
@@ -30,7 +31,8 @@ function getResultSummary(result: TestResult): string {
 }
 
 export function TestTransitionScreen() {
-  const { session, proceedToNextTest, getNextTest, currentTestIndex } = useSession();
+  const { session, proceedToNextTest, getNextTest } = useSession();
+  const t = useT();
   const lastResult = session?.results[session.results.length - 1];
   const nextTest = getNextTest();
 
@@ -50,11 +52,11 @@ export function TestTransitionScreen() {
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <CheckCircle className="h-7 w-7 text-primary" />
         </div>
-        <p className="text-lg font-bold text-foreground">Test terminé !</p>
+        <p className="text-lg font-bold text-foreground">{t.session.testFinished}</p>
         <div className="mt-2 flex items-center justify-center gap-2">
           <CompletedIcon className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-muted-foreground">
-            {session?.results.length || 0}/{3} tests complétés
+            {t.session.testsCompleted(session?.results.length || 0)}
           </span>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">{getResultSummary(lastResult)}</p>
@@ -68,7 +70,7 @@ export function TestTransitionScreen() {
         className="mt-6 w-full max-w-sm rounded-2xl border border-border bg-card p-5"
       >
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Test suivant
+          {t.session.nextTest}
         </p>
         <div className="mt-3 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -89,7 +91,7 @@ export function TestTransitionScreen() {
         className="mt-8 w-full max-w-sm"
       >
         <Button onClick={proceedToNextTest} className="h-14 w-full text-base font-semibold" size="lg">
-          Test Suivant <ArrowRight className="ml-2 h-5 w-5" />
+          {t.session.nextTest} <ArrowRight className="me-2 h-5 w-5" />
         </Button>
       </motion.div>
     </div>

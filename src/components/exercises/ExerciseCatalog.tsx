@@ -83,17 +83,17 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
         transition={{ delay: 0.05 }}
         className="mt-4 relative"
       >
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Rechercher un exercice…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 pr-8 bg-card border-border"
+          className="ps-9 pe-8 bg-card border-border"
         />
         {search && (
           <button
             onClick={() => setSearch("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2"
+            className="absolute end-3 top-1/2 -translate-y-1/2"
           >
             <X className="h-4 w-4 text-muted-foreground" />
           </button>

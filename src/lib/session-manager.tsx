@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, useCallback, type ReactNode } from "react";
 import { computeSimonResults, type SimonTrial } from "@/lib/simon-engine";
 import { computeNBackResults, type NBackTrial } from "@/lib/nback-engine";
 import type { TMTCombinedResults } from "@/lib/tmt-engine";
 import { computeSGS, type SGSResult, type TestScores } from "@/lib/sgs-engine";
+import { translations } from "@/locales/translations";
+import { useLanguage, type Lang } from "@/lib/language-context";
 
 export type TestId = "simon" | "nback" | "tmt";
 
@@ -13,11 +15,20 @@ export interface TestDefinition {
   duration: string;
 }
 
-export const SESSION_TESTS: TestDefinition[] = [
-  { id: "simon", name: "Tâche de Simon", description: "Inhibition & Temps de réaction", duration: "~5 min" },
-  { id: "nback", name: "N-Back 2", description: "Mémoire de travail", duration: "~8 min" },
-  { id: "tmt", name: "Trail Making Test", description: "Flexibilité cognitive", duration: "~6 min" },
-];
+export const SESSION_TEST_IDS: readonly TestId[] = ["simon", "nback", "tmt"] as const;
+
+export function getSessionTests(lang: Lang): TestDefinition[] {
+  const t = translations[lang].session;
+  const meta: Record<TestId, { name: string; description: string; duration: string }> = {
+    simon: { name: t.simonName, description: t.simonDesc, duration: "~5 min" },
+    nback: { name: t.nbackName, description: t.nbackDesc, duration: "~8 min" },
+    tmt:   { name: t.tmtName,   description: t.tmtDesc,   duration: "~6 min" },
+  };
+  return SESSION_TEST_IDS.map((id) => ({ id, ...meta[id] }));
+}
+
+// Backward-compat: callers using only .length still work.
+export const SESSION_TESTS: TestDefinition[] = getSessionTests("fr");
 
 export type SessionStatus = "idle" | "in-progress" | "completed";
 export type SessionStep = "start" | "instructions" | "running-test" | "transition" | "final-results";
@@ -83,6 +94,8 @@ interface SessionContextValue {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
+  const { lang } = useLanguage();
+  const tests = useMemo(() => getSessionTests(lang), [lang]);
   const [session, setSession] = useState<SessionData | null>(null);
   const [step, setStep] = useState<SessionStep>("start");
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -108,12 +121,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
       return { ...prev, results: [...prev.results, result] };
     });
-    if (currentTestIndex < SESSION_TESTS.length - 1) {
+    if (currentTestIndex < tests.length - 1) {
       setStep("transition");
     } else {
       setStep("final-results");
     }
-  }, [currentTestIndex]);
+  }, [currentTestIndex, tests.length]);
 
   const proceedToNextTest = useCallback(() => {
     setCurrentTestIndex(prev => prev + 1);
@@ -172,12 +185,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getCurrentTest = useCallback(() => {
-    return SESSION_TESTS[currentTestIndex] ?? null;
-  }, [currentTestIndex]);
+    return tests[currentTestIndex] ?? null;
+  }, [currentTestIndex, tests]);
 
   const getNextTest = useCallback(() => {
-    return SESSION_TESTS[currentTestIndex + 1] ?? null;
-  }, [currentTestIndex]);
+    return tests[currentTestIndex + 1] ?? null;
+  }, [currentTestIndex, tests]);
 
   const getTestResult = useCallback((testId: TestId) => {
     return session?.results.find(r => r.testId === testId);
