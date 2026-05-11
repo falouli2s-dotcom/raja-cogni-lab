@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { computeSGS, type SGSResult } from "@/lib/sgs-engine";
 import { buildTestScoresFromRows } from "@/lib/build-test-scores";
+import { useLanguage } from "@/lib/language-context";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useT } from "@/locales/translations";
 
@@ -45,6 +46,7 @@ function scoreTextColor(score: number): string {
 }
 
 function HomePage() {
+  const { lang } = useLanguage();
   const t = useT();
   const DIM_LABELS: Record<string, string> = {
     reactionTime: t.home.reaction,
@@ -258,7 +260,7 @@ function HomePage() {
                   <span className="text-sm text-primary-foreground/60">/100</span>
                 </div>
                 <p className="mt-2 text-xs text-primary-foreground/60">
-                  {new Date(lastSession!.startedAt).toLocaleDateString("fr-FR", {
+                  {new Date(lastSession!.startedAt).toLocaleDateString(lang === "ar" ? "ar-MA" : "fr-FR", {
                     weekday: "long",
                     day: "numeric",
                     month: "short",
