@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { Brain, Zap, GitBranch, Clock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SESSION_TESTS, useSession } from "@/lib/session-manager";
+import { getSessionTests, useSession } from "@/lib/session-manager";
+import { useLanguage } from "@/lib/language-context";
+import { useT } from "@/locales/translations";
 
 const testIcons: Record<string, typeof Brain> = {
   simon: Zap,
@@ -17,13 +19,16 @@ const testColors: Record<string, { text: string; bg: string }> = {
 
 export function SessionStartScreen() {
   const { startSession } = useSession();
+  const { lang } = useLanguage();
+  const t = useT();
+  const tests = getSessionTests(lang);
 
   return (
     <div className="min-h-screen bg-background px-5 pt-12 pb-24">
       <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-        <h1 className="text-2xl font-bold text-foreground">Évaluation Cognitive</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.session.cognitiveAssessment}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Passe les 3 tests pour obtenir ton profil cognitif complet
+          {t.session.assessmentSubtitle}
         </p>
       </motion.div>
 
@@ -35,7 +40,7 @@ export function SessionStartScreen() {
         className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-muted p-3"
       >
         <Clock className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-foreground">Durée estimée : ~20 minutes</span>
+        <span className="text-sm font-medium text-foreground">{t.session.estimatedDuration}</span>
       </motion.div>
 
       {/* Test list */}
@@ -45,7 +50,7 @@ export function SessionStartScreen() {
         transition={{ delay: 0.2 }}
         className="mt-6 flex flex-col gap-3"
       >
-        {SESSION_TESTS.map((test, i) => {
+        {tests.map((test, i) => {
           const Icon = testIcons[test.id] || Brain;
           const colors = testColors[test.id];
           return (
@@ -76,7 +81,7 @@ export function SessionStartScreen() {
         className="mt-6 rounded-xl border border-border bg-secondary/50 p-4"
       >
         <p className="text-sm text-muted-foreground">
-          Chaque test inclut une phase d'entraînement obligatoire. Tu ne peux pas revenir en arrière ni passer un test.
+          {t.session.trainingNotice}
         </p>
       </motion.div>
 
@@ -88,7 +93,7 @@ export function SessionStartScreen() {
         className="mt-8"
       >
         <Button onClick={startSession} className="h-14 w-full text-base font-semibold" size="lg">
-          <Play className="mr-2 h-5 w-5" /> Démarrer la Session
+          <Play className="me-2 h-5 w-5" /> {t.session.startSession}
         </Button>
       </motion.div>
     </div>

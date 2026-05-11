@@ -9,6 +9,7 @@ import { getGlobalStatus, getStatusColor, type SGSResult } from "@/lib/sgs-engin
 import { supabase } from "@/integrations/supabase/client";
 import type { SimonResultData, NBackResultData } from "@/lib/session-manager";
 import type { TMTCombinedResults } from "@/lib/tmt-engine";
+import { useT } from "@/locales/translations";
 
 const dimensionIcons: Record<string, typeof Brain> = {
   reactionTime: Clock,
