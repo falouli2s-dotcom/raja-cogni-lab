@@ -366,19 +366,19 @@ function HomePage() {
           <p className="text-2xl font-bold text-foreground tabular-nums">
             {totalSessions > 0 ? totalSessions : sgs ? "1+" : "0"}
           </p>
-          <p className="text-xs text-muted-foreground">Sessions</p>
+          <p className="text-xs text-muted-foreground">{t.home.sessions}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <Dumbbell className="mb-2 h-5 w-5 text-primary" />
           <p className="text-2xl font-bold text-foreground tabular-nums">0</p>
-          <p className="text-xs text-muted-foreground">Exercices</p>
+          <p className="text-xs text-muted-foreground">{t.home.exercises}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <Target className="mb-2 h-5 w-5 text-accent" />
           <p className="text-2xl font-bold text-foreground">
             {sgs ? scoreLabel(sgs.global) : "--"}
           </p>
-          <p className="text-xs text-muted-foreground">Niveau</p>
+          <p className="text-xs text-muted-foreground">{t.home.level}</p>
         </div>
       </motion.div>
 
