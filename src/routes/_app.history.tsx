@@ -402,7 +402,7 @@ function HistoryPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t.history.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {groups.length} session{groups.length !== 1 ? "s" : ""} ({PERIOD_LABELS[period]})
+            {groups.length} {t.history.sessions} ({PERIOD_LABELS[period]})
           </p>
         </div>
         <Button
