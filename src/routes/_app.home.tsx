@@ -456,8 +456,8 @@ function HomePage() {
                 <BarChart3 className="h-5 w-5 text-accent" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Historique</p>
-                <p className="text-xs text-muted-foreground">Voir ta progression dans le temps</p>
+                <p className="font-semibold text-foreground">{t.home.history}</p>
+                <p className="text-xs text-muted-foreground">{t.home.seeProgress}</p>
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
