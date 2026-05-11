@@ -10,6 +10,9 @@ export const translations = {
       profile: "Profil",
       close: "Fermer",
     },
+    profile: {
+      language: "Langue",
+    },
     dimensions: {
       reactionTime: "Temps de Réaction",
       inhibition: "Contrôle Inhibiteur",
