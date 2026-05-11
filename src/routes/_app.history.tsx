@@ -141,6 +141,12 @@ function groupSessions(sessions: DbSession[], results: DbResult[]): SessionGroup
 // ───────── Page ─────────
 function HistoryPage() {
   const navigate = useNavigate();
+  const t = useT();
+  const PERIOD_LABELS: Record<"7d" | "30d" | "all", string> = {
+    "7d": t.history.days7,
+    "30d": t.history.days30,
+    all: t.history.all,
+  };
   const search = Route.useSearch();
   const period = search.period as "7d" | "30d" | "all";
   const [loading, setLoading] = useState(true);
