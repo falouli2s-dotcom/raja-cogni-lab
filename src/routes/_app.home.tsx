@@ -329,7 +329,7 @@ function HomePage() {
               to="/sessions"
               className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary-foreground"
             >
-              Rapport complet <ChevronRight className="h-3.5 w-3.5" />
+              {t.home.fullReport} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         ) : (
