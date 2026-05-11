@@ -347,7 +347,7 @@ function ProfilePage() {
               disabled={deletingAvatar || uploadingAvatar}
               className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-destructive transition-opacity active:opacity-70 disabled:opacity-50"
             >
-              <Trash2 className="h-3 w-3" /> Supprimer la photo
+              <Trash2 className="h-3 w-3" /> {t.profile.deletePhoto}
             </button>
           )}
         </div>
