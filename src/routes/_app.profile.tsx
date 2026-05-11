@@ -417,7 +417,7 @@ function ProfilePage() {
       {/* Logout */}
       <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="mt-6">
         <Button variant="destructive" onClick={handleLogout} className="h-12 w-full text-base font-semibold">
-          <LogOut className="me-2 h-5 w-5" /> Se déconnecter
+          <LogOut className="me-2 h-5 w-5" /> {t.profile.logout}
         </Button>
       </motion.div>
 
