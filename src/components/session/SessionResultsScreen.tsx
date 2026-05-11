@@ -204,7 +204,7 @@ export function SessionResultsScreen() {
   }
 
   const globalStatus = getGlobalStatus(sgs.global);
-  const recommendations = getRecommendations(sgs);
+  const recommendations = getRecommendations(sgs, t);
 
   const handleFinish = () => {
     resetSession();
