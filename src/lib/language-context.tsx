@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Lang = "fr" | "ar";
 
@@ -38,6 +39,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     }
+    // Fire-and-forget persist to user's profile if signed in
+    void (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase
+          .from("profiles")
+          .update({ preferred_language: l } as never)
+          .eq("id", user.id);
+      } catch {
+        // ignore
+      }
+    })();
   };
 
   return (
