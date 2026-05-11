@@ -9,7 +9,7 @@ interface LanguageContextValue {
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
-const STORAGE_KEY = "cogniraja_instructions_lang";
+const STORAGE_KEY = "cogniraja_lang";
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
@@ -23,6 +23,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const dir: "ltr" | "rtl" = lang === "ar" ? "rtl" : "ltr";
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.dir = dir;
+    document.documentElement.lang = lang;
+  }, [lang, dir]);
+
   const setLang = (l: Lang) => {
     setLangState(l);
     try {
@@ -31,8 +39,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       // ignore
     }
   };
-
-  const dir: "ltr" | "rtl" = lang === "ar" ? "rtl" : "ltr";
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, dir }}>
