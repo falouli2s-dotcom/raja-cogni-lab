@@ -338,13 +338,13 @@ function HomePage() {
               <p className="text-sm text-primary-foreground/70">{t.home.sgsLabel}</p>
               <p className="mt-1 text-4xl font-bold text-primary-foreground">--</p>
               <p className="mt-2 max-w-[180px] text-xs text-primary-foreground/60">
-                Lance ta première session pour découvrir ton profil cognitif
+                {t.home.startFirstSession}
               </p>
               <Link
                 to="/tests"
                 className="mt-3 inline-flex items-center gap-1 rounded-xl bg-primary-foreground/15 px-3 py-1.5 text-xs font-semibold text-primary-foreground"
               >
-                Commencer <ChevronRight className="h-3 w-3" />
+                {t.home.start} <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-foreground/15">
