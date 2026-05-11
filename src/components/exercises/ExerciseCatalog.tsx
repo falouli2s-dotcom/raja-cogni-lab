@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ExerciseCard } from "./ExerciseCard";
 import { ExerciseModal } from "./ExerciseModal";
 import { BLOCS, NIVEAUX, STIMULUS_TYPES, BLOC_COLORS } from "./exercise-constants";
+import { useT } from "@/locales/translations";
 import type { Exercice } from "@/routes/_app.exercises";
 
 interface Props {
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export function ExerciseCatalog({ exercices, loading }: Props) {
+  const t = useT();
+  const niveauLabel = (n: string) =>
+    n === "Faible" ? t.exercises.levelLow : n === "Moyen" ? t.exercises.levelMedium : n === "Élevé" ? t.exercises.levelHigh : n;
   const [search, setSearch] = useState("");
   const [selectedBlocs, setSelectedBlocs] = useState<string[]>([]);
   const [selectedNiveaux, setSelectedNiveaux] = useState<string[]>([]);
@@ -69,10 +73,9 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
   return (
     <div className="px-4 pt-10 pb-28">
       <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-        <h1 className="text-2xl font-bold text-foreground">Exercices Cognitifs</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.exercises.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {filtered.length} exercice{filtered.length !== 1 ? "s" : ""} affiché
-          {filtered.length !== 1 ? "s" : ""} sur {exercices.length}
+          {t.exercises.shownOf(filtered.length, exercices.length)}
         </p>
       </motion.div>
 
@@ -85,7 +88,7 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
       >
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Rechercher un exercice…"
+          placeholder={t.exercises.searchPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="ps-9 pe-8 bg-card border-border"
@@ -103,27 +106,28 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
       {/* Filters */}
       <div className="mt-4 space-y-2">
         <FilterRow
-          label="Bloc"
+          label={t.exercises.bloc}
           items={BLOCS}
           selected={selectedBlocs}
           onToggle={(v) => toggleChip(v, selectedBlocs, setSelectedBlocs)}
           colorFn={(v) => BLOC_COLORS[v] || "bg-muted text-muted-foreground"}
         />
         <FilterRow
-          label="Niveau"
+          label={t.exercises.niveau}
           items={NIVEAUX}
           selected={selectedNiveaux}
           onToggle={(v) => toggleChip(v, selectedNiveaux, setSelectedNiveaux)}
+          renderItem={niveauLabel}
         />
         <FilterRow
-          label="Stimulus"
+          label={t.exercises.stimulus}
           items={STIMULUS_TYPES}
           selected={selectedStimulus}
           onToggle={(v) => toggleChip(v, selectedStimulus, setSelectedStimulus)}
         />
         {indicateurs.length > 0 && (
           <FilterRow
-            label="Indicateur"
+            label={t.exercises.indicateur}
             items={indicateurs}
             selected={selectedIndicateurs}
             onToggle={(v) => toggleChip(v, selectedIndicateurs, setSelectedIndicateurs)}
@@ -140,7 +144,7 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
             }}
             className="text-xs text-primary underline"
           >
-            Réinitialiser les filtres
+            {t.exercises.resetFilters}
           </button>
         )}
       </div>
@@ -156,7 +160,7 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
           animate={{ opacity: 1 }}
           className="mt-12 text-center text-sm text-muted-foreground"
         >
-          Aucun exercice trouvé
+          {t.exercises.noResult}
         </motion.div>
       ) : (
         <div className="mt-4 flex flex-col gap-3">
@@ -188,12 +192,14 @@ function FilterRow({
   selected,
   onToggle,
   colorFn,
+  renderItem,
 }: {
   label: string;
   items: string[];
   selected: string[];
   onToggle: (v: string) => void;
   colorFn?: (v: string) => string;
+  renderItem?: (v: string) => string;
 }) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none items-center">
@@ -215,7 +221,7 @@ function FilterRow({
                 : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
             }`}
           >
-            {item}
+            {renderItem ? renderItem(item) : item}
           </button>
         );
       })}

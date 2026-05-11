@@ -33,6 +33,7 @@ import {
   Dot,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/locales/translations";
 import { computeSGS, getGlobalStatus, type SGSResult, type TestScores } from "@/lib/sgs-engine";
 import { buildTestScoresFromRows } from "@/lib/build-test-scores";
 import { RadarChart, type RadarOverlay } from "@/components/RadarChart";
@@ -140,6 +141,12 @@ function groupSessions(sessions: DbSession[], results: DbResult[]): SessionGroup
 // ───────── Page ─────────
 function HistoryPage() {
   const navigate = useNavigate();
+  const t = useT();
+  const PERIOD_LABELS: Record<"7d" | "30d" | "all", string> = {
+    "7d": t.history.days7,
+    "30d": t.history.days30,
+    all: t.history.all,
+  };
   const search = Route.useSearch();
   const period = search.period as "7d" | "30d" | "all";
   const [loading, setLoading] = useState(true);
@@ -313,7 +320,7 @@ function HistoryPage() {
   if (error) {
     return (
       <div className="px-5 pt-12 pb-24">
-        <h1 className="text-2xl font-bold text-foreground">Historique</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.history.title}</h1>
         <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center">
           <p className="text-sm text-destructive">{error}</p>
         </div>
@@ -326,7 +333,7 @@ function HistoryPage() {
     return (
       <div className="px-5 pt-12 pb-24">
         <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-          <h1 className="text-2xl font-bold text-foreground">Historique</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.history.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Suis ton évolution cognitive</p>
         </motion.div>
         <motion.div
@@ -393,9 +400,9 @@ function HistoryPage() {
         className="flex items-start justify-between gap-3"
       >
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Historique</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.history.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {groups.length} session{groups.length !== 1 ? "s" : ""} ({PERIOD_LABELS[period]})
+            {groups.length} {t.history.sessions} ({PERIOD_LABELS[period]})
           </p>
         </div>
         <Button
@@ -410,7 +417,7 @@ function HistoryPage() {
           ) : (
             <Download className="h-4 w-4" />
           )}
-          <span className="ms-1.5 text-xs font-semibold">PDF</span>
+          <span className="ms-1.5 text-xs font-semibold">{t.history.pdf}</span>
         </Button>
       </motion.div>
 
@@ -484,7 +491,7 @@ function HistoryPage() {
             transition={{ delay: 0.1 }}
             className="mt-6 rounded-2xl border border-border bg-card p-4"
           >
-            <h2 className="mb-3 text-sm font-semibold text-foreground">Évolution du SGS</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">{t.history.sgsEvolution}</h2>
             <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
