@@ -44,7 +44,8 @@ function AdminCoachesPage() {
       .select("*")
       .order("created_at", { ascending: false });
     if (error) {
-      toast.error("Erreur de chargement : " + error.message);
+      console.error(error);
+      toast.error("Erreur de chargement, veuillez réessayer");
     } else {
       setRequests((data ?? []) as CoachRequest[]);
     }
@@ -82,7 +83,8 @@ function AdminCoachesPage() {
       .eq("id", req.user_id);
 
     if (profileErr) {
-      toast.error("Erreur profil : " + profileErr.message);
+      console.error(profileErr);
+      toast.error("Erreur lors de la mise à jour du profil");
       setActingId(null);
       return;
     }
@@ -96,7 +98,8 @@ function AdminCoachesPage() {
       .eq("id", req.id);
 
     if (reqErr) {
-      toast.error("Erreur demande : " + reqErr.message);
+      console.error(reqErr);
+      toast.error("Erreur lors du traitement de la demande");
     } else {
       toast.success(approve ? "Coach approuvé" : "Demande refusée");
       await loadRequests();

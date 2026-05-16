@@ -340,11 +340,12 @@ function CoachSessions() {
         const { error } = await (supabase as any)
           .from("sessions_planifiees")
           .insert(row);
+        if (error) console.error(error);
         return {
           playerId: pid,
           playerName: displayName(pid),
           ok: !error,
-          error: error?.message,
+          error: error ? "Erreur lors de la planification" : undefined,
         };
       })
     );

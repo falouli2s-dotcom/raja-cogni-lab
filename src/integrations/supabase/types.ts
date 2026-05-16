@@ -398,6 +398,10 @@ export type Database = {
         Returns: number
       }
       is_admin: { Args: never; Returns: boolean }
+      player_complete_session: {
+        Args: { _session_id: string }
+        Returns: undefined
+      }
       recompute_sgs_global_backfill: {
         Args: { p_sid: string }
         Returns: undefined

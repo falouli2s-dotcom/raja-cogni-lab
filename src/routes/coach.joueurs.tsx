@@ -145,8 +145,9 @@ function CoachJoueurs() {
 
       setEmail("");
       await loadRelations(coachId);
-    } catch (err: any) {
-      toast.error(err?.message ?? "Erreur lors de l'envoi");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de l'envoi, veuillez réessayer");
     } finally {
       setSending(false);
     }

@@ -164,7 +164,8 @@ function RegisterPage() {
         const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
         avatarUrl = pub.publicUrl;
       } else {
-        toast.error("Avatar non uploadé : " + uploadError.message);
+        console.error(uploadError);
+        toast.error("Avatar non uploadé, veuillez réessayer");
       }
     }
 

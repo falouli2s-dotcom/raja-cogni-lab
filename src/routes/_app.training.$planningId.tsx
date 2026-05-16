@@ -496,21 +496,15 @@ function TrainingDetailPage() {
                   const allDone = (count ?? 0) >= totalExercises;
 
                   if (allDone) {
-                    const { error: updateError, count: updateCount } =
-                      await (supabase as any)
-                        .from("sessions_planifiees")
-                        .update({
-                          status: "completed",
-                          completed_at: new Date().toISOString(),
-                        })
-                        .eq("id", planningId);
+                    const { error: updateError } = await (supabase as any).rpc(
+                      "player_complete_session",
+                      { _session_id: planningId },
+                    );
 
-                    if (updateError || (updateCount !== null && updateCount === 0)) {
+                    if (updateError) {
                       console.error(
-                        "[Planning] status update failed — RLS?",
+                        "[Planning] status update failed",
                         updateError,
-                        "rows affected:",
-                        updateCount,
                       );
                     }
                     toast.success("Séance terminée ! Bon travail 💪");
