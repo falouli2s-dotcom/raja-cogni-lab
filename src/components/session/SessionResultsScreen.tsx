@@ -187,10 +187,9 @@ export function SessionResultsScreen() {
           .maybeSingle();
 
         if (pendingSession) {
-          await supabase
-            .from("sessions_planifiees")
-            .update({ status: "completed" })
-            .eq("id", pendingSession.id);
+          await (supabase as any).rpc("player_complete_session", {
+            _session_id: pendingSession.id,
+          });
         }
       } catch (e) {
         console.warn("Could not save session:", e);

@@ -190,8 +190,9 @@ function ProfilePage() {
         avatar_url: `${publicUrl}?v=${Date.now()}`,
       }));
       toast.success("Photo de profil mise à jour");
-    } catch (err: any) {
-      toast.error(err.message || "Échec de l'upload");
+    } catch (err) {
+      console.error(err);
+      toast.error("Échec de l'upload, veuillez réessayer");
     } finally {
       setUploadingAvatar(false);
     }
@@ -219,8 +220,9 @@ function ProfilePage() {
         avatar_url: null,
       }));
       toast.success("Photo supprimée");
-    } catch (err: any) {
-      toast.error(err.message || "Échec de la suppression");
+    } catch (err) {
+      console.error(err);
+      toast.error("Échec de la suppression, veuillez réessayer");
     } finally {
       setDeletingAvatar(false);
     }
@@ -240,7 +242,7 @@ function ProfilePage() {
     };
     const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
     setSavingPersonal(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { console.error(error); toast.error("Impossible d'enregistrer, veuillez réessayer"); return; }
     setProfile((p) => ({
       full_name: payload.full_name,
       birth_date: payload.birth_date,
