@@ -18,11 +18,11 @@ export interface SGSResult {
 
 // Scientific weights (sum = 1.0) — based on cognitive synthesis for football
 const WEIGHTS: Record<string, number> = {
-  flexibility: 0.28,
-  vitesse_visuo_perceptuelle: 0.22,
-  workingMemory: 0.22,
-  inhibition: 0.17,
-  reactionTime: 0.11,
+  flexibility: 0.20,
+  vitesse_visuo_perceptuelle: 0.20,
+  workingMemory: 0.20,
+  inhibition: 0.20,
+  reactionTime: 0.20,
 };
 
 /**
