@@ -29,6 +29,7 @@ import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
 import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
 import { Route as AppSessionsIndexRouteImport } from './routes/_app.sessions.index'
 import { Route as CoachJoueurPlayerIdRouteImport } from './routes/coach.joueur.$playerId'
+import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
 import { Route as AppTrainingPlanningIdRouteImport } from './routes/_app.training.$planningId'
 import { Route as AppTestsSessionRouteImport } from './routes/_app.tests.session'
 import { Route as AppSessionsSessionIdRouteImport } from './routes/_app.sessions.$sessionId'
@@ -132,6 +133,11 @@ const CoachJoueurPlayerIdRoute = CoachJoueurPlayerIdRouteImport.update({
   path: '/joueur/$playerId',
   getParentRoute: () => CoachRoute,
 } as any)
+const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
+  id: '/api/public/seed-demo',
+  path: '/api/public/seed-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppTrainingPlanningIdRoute = AppTrainingPlanningIdRouteImport.update({
   id: '/training/$planningId',
   path: '/training/$planningId',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/training/$planningId': typeof AppTrainingPlanningIdRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/sessions/': typeof AppSessionsIndexRoute
   '/tests/': typeof AppTestsIndexRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/tests/session': typeof AppTestsSessionRoute
   '/training/$planningId': typeof AppTrainingPlanningIdRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/sessions': typeof AppSessionsIndexRoute
   '/tests': typeof AppTestsIndexRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/_app/sessions/$sessionId': typeof AppSessionsSessionIdRoute
   '/_app/tests/session': typeof AppTestsSessionRoute
   '/_app/training/$planningId': typeof AppTrainingPlanningIdRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/coach/joueur/$playerId': typeof CoachJoueurPlayerIdRoute
   '/_app/sessions/': typeof AppSessionsIndexRoute
   '/_app/tests/': typeof AppTestsIndexRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/training/$planningId'
+    | '/api/public/seed-demo'
     | '/coach/joueur/$playerId'
     | '/sessions/'
     | '/tests/'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/tests/session'
     | '/training/$planningId'
+    | '/api/public/seed-demo'
     | '/coach/joueur/$playerId'
     | '/sessions'
     | '/tests'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/_app/sessions/$sessionId'
     | '/_app/tests/session'
     | '/_app/training/$planningId'
+    | '/api/public/seed-demo'
     | '/coach/joueur/$playerId'
     | '/_app/sessions/'
     | '/_app/tests/'
@@ -307,6 +319,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AdminCoachesRoute: typeof AdminCoachesRoute
+  ApiPublicSeedDemoRoute: typeof ApiPublicSeedDemoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -451,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoachJoueurPlayerIdRouteImport
       parentRoute: typeof CoachRoute
     }
+    '/api/public/seed-demo': {
+      id: '/api/public/seed-demo'
+      path: '/api/public/seed-demo'
+      fullPath: '/api/public/seed-demo'
+      preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/training/$planningId': {
       id: '/_app/training/$planningId'
       path: '/training/$planningId'
@@ -530,6 +550,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AdminCoachesRoute: AdminCoachesRoute,
+  ApiPublicSeedDemoRoute: ApiPublicSeedDemoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
