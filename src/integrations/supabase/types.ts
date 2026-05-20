@@ -386,6 +386,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_user_emails: {
+        Args: never
+        Returns: {
+          email: string
+          id: string
+        }[]
+      }
       find_player_by_email: {
         Args: { _email: string }
         Returns: {
