@@ -220,11 +220,17 @@ function drawDimensionBars(
   startY: number,
   avgRtMs?: number | null
 ): number {
+  const safeDims = (dimensions ?? []).filter(
+    (d): d is DimensionScore =>
+      !!d && Number.isFinite(Number(d.score)) && typeof d.label === "string"
+  );
+  if (safeDims.length === 0) return startY;
+
   const w = doc.internal.pageSize.getWidth();
   const barW = w - 80;
   let y = startY;
 
-  dimensions.forEach((dim) => {
+  safeDims.forEach((dim) => {
     // Label
     doc.setTextColor(...COLOR.dark);
     doc.setFontSize(8);
