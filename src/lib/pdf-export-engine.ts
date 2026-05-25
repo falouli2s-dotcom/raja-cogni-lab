@@ -473,7 +473,7 @@ function buildCognitiveRadarSvg(rawScores: number[], sgsScore: number): string {
     <text x="${cx}" y="${cy - 7}" text-anchor="middle" fill="#475569"
           font-size="7" font-family="Inter, Arial, sans-serif" font-weight="600" letter-spacing="1">SGS</text>
     <text x="${cx}" y="${cy + 9}" text-anchor="middle" fill="#0f172a"
-          font-size="18" font-family="monospace" font-weight="700">${Math.round(sgsScore)}</text>`;
+          font-size="18" font-family="monospace" font-weight="700">${Math.round(safeSgs)}</text>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="600" height="600">
     <rect width="400" height="400" fill="#ffffff"/>
