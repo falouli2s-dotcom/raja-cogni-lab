@@ -405,12 +405,12 @@ function buildCognitiveRadarSvg(rawScores: number[], sgsScore: number): string {
   // to prevent `dataPts[i].x` crashes when fewer dimensions are supplied.
   const cleaned = (rawScores ?? [])
     .map((s) => (Number.isFinite(Number(s)) ? Number(s) : 0));
-  const scores: number[] = Array.from({ length: 6 }, (_, i) => cleaned[i] ?? 0);
+  const n = RADAR_AXIS_LABELS.length; // exactly 5
+  const scores: number[] = Array.from({ length: n }, (_, i) => cleaned[i] ?? 0);
   const safeSgs = Number.isFinite(Number(sgsScore)) ? Number(sgsScore) : 0;
   const cx = 200;
   const cy = 200;
   const maxR = 140;
-  const n = 6;
   const angles = Array.from({ length: n }, (_, i) => (360 / n) * i);
   const polar = (deg: number, r: number) => {
     const a = ((deg - 90) * Math.PI) / 180;
