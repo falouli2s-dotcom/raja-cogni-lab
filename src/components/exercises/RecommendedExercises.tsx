@@ -54,6 +54,17 @@ export function RecommendedExercises({ onSelect }: Props) {
                 onClick={() => onSelect(ex)}
                 className="snap-start shrink-0 w-[240px] text-left rounded-2xl border border-border bg-card p-3 hover:shadow-lg active:scale-[0.98] transition"
               >
+                {ex.image_url && (
+                  <img
+                    src={ex.image_url}
+                    alt={ex.titre}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                    className="w-full aspect-video rounded-xl object-cover bg-muted mb-2"
+                  />
+                )}
                 <Badge
                   variant="outline"
                   className={`text-[10px] border ${DIMENSION_BADGE_CLASS[rec.dimensionKey]}`}
