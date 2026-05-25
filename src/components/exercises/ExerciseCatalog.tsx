@@ -4,6 +4,7 @@ import { Loader2, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ExerciseCard } from "./ExerciseCard";
 import { ExerciseModal } from "./ExerciseModal";
+import { RecommendedExercises } from "./RecommendedExercises";
 import { BLOCS, NIVEAUX, STIMULUS_TYPES, BLOC_COLORS } from "./exercise-constants";
 import { useT } from "@/locales/translations";
 import type { Exercice } from "@/routes/_app.exercises";
@@ -78,6 +79,9 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
           {t.exercises.shownOf(filtered.length, exercices.length)}
         </p>
       </motion.div>
+
+      <RecommendedExercises onSelect={setModalExercice} />
+
 
       {/* Search */}
       <motion.div
