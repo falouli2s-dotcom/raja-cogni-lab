@@ -220,11 +220,17 @@ function drawDimensionBars(
   startY: number,
   avgRtMs?: number | null
 ): number {
+  const safeDims = (dimensions ?? []).filter(
+    (d): d is DimensionScore =>
+      !!d && Number.isFinite(Number(d.score)) && typeof d.label === "string"
+  );
+  if (safeDims.length === 0) return startY;
+
   const w = doc.internal.pageSize.getWidth();
   const barW = w - 80;
   let y = startY;
 
-  dimensions.forEach((dim) => {
+  safeDims.forEach((dim) => {
     // Label
     doc.setTextColor(...COLOR.dark);
     doc.setFontSize(8);
@@ -394,7 +400,13 @@ function radarLevelColor(score: number): string {
  * Builds a self-contained SVG string of the CogniLab cognitive radar.
  * Uses absolute hex colors and inline font-families — safe for canvas rasterization.
  */
-function buildCognitiveRadarSvg(scores: number[], sgsScore: number): string {
+function buildCognitiveRadarSvg(rawScores: number[], sgsScore: number): string {
+  // Guard: sanitize input — filter non-finite entries and pad to n axes with 0
+  // to prevent `dataPts[i].x` crashes when fewer dimensions are supplied.
+  const cleaned = (rawScores ?? [])
+    .map((s) => (Number.isFinite(Number(s)) ? Number(s) : 0));
+  const scores: number[] = Array.from({ length: 6 }, (_, i) => cleaned[i] ?? 0);
+  const safeSgs = Number.isFinite(Number(sgsScore)) ? Number(sgsScore) : 0;
   const cx = 200;
   const cy = 200;
   const maxR = 140;
@@ -467,7 +479,7 @@ function buildCognitiveRadarSvg(scores: number[], sgsScore: number): string {
     <text x="${cx}" y="${cy - 7}" text-anchor="middle" fill="#475569"
           font-size="7" font-family="Inter, Arial, sans-serif" font-weight="600" letter-spacing="1">SGS</text>
     <text x="${cx}" y="${cy + 9}" text-anchor="middle" fill="#0f172a"
-          font-size="18" font-family="monospace" font-weight="700">${Math.round(sgsScore)}</text>`;
+          font-size="18" font-family="monospace" font-weight="700">${Math.round(safeSgs)}</text>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="600" height="600">
     <rect width="400" height="400" fill="#ffffff"/>
@@ -780,6 +792,11 @@ export async function exportPlayerReport(
   player: PlayerData,
   options: Partial<ExportOptions> = {}
 ): Promise<void> {
+  // Data guard: bail early when the player payload isn't ready or has no sessions
+  if (!player || !Array.isArray(player.sessions) || player.sessions.length === 0) {
+    throw new Error("Aucune session disponible pour ce joueur — export impossible.");
+  }
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const latest = latestSession(player);
