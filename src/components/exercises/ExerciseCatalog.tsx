@@ -80,6 +80,9 @@ export function ExerciseCatalog({ exercices, loading }: Props) {
         </p>
       </motion.div>
 
+      <RecommendedExercises onSelect={setModalExercice} />
+
+
       {/* Search */}
       <motion.div
         initial={{ y: 10, opacity: 0 }}
