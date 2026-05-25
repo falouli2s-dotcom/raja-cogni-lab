@@ -792,6 +792,11 @@ export async function exportPlayerReport(
   player: PlayerData,
   options: Partial<ExportOptions> = {}
 ): Promise<void> {
+  // Data guard: bail early when the player payload isn't ready or has no sessions
+  if (!player || !Array.isArray(player.sessions) || player.sessions.length === 0) {
+    throw new Error("Aucune session disponible pour ce joueur — export impossible.");
+  }
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const latest = latestSession(player);
