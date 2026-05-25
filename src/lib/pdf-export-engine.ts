@@ -394,7 +394,13 @@ function radarLevelColor(score: number): string {
  * Builds a self-contained SVG string of the CogniLab cognitive radar.
  * Uses absolute hex colors and inline font-families — safe for canvas rasterization.
  */
-function buildCognitiveRadarSvg(scores: number[], sgsScore: number): string {
+function buildCognitiveRadarSvg(rawScores: number[], sgsScore: number): string {
+  // Guard: sanitize input — filter non-finite entries and pad to n axes with 0
+  // to prevent `dataPts[i].x` crashes when fewer dimensions are supplied.
+  const cleaned = (rawScores ?? [])
+    .map((s) => (Number.isFinite(Number(s)) ? Number(s) : 0));
+  const scores: number[] = Array.from({ length: 6 }, (_, i) => cleaned[i] ?? 0);
+  const safeSgs = Number.isFinite(Number(sgsScore)) ? Number(sgsScore) : 0;
   const cx = 200;
   const cy = 200;
   const maxR = 140;
