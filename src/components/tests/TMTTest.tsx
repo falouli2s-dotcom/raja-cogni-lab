@@ -225,12 +225,14 @@ export function TMTTest({ onComplete }: TMTTestProps) {
         />
       </div>
 
-      {/* Next target hint */}
-      <div className="mt-2 text-center">
-        <span className="text-xs text-muted-foreground">
-          Prochain : <strong className="text-foreground">{expectedNode?.label}</strong>
-        </span>
-      </div>
+      {/* Next target hint — training only */}
+      {isTraining && (
+        <div className="mt-2 text-center">
+          <span className="text-xs text-muted-foreground">
+            Prochain : <strong className="text-foreground">{expectedNode?.label}</strong>
+          </span>
+        </div>
+      )}
 
       {/* Node area */}
       <div ref={containerRef} className="relative mx-2 mt-2 flex-1">
