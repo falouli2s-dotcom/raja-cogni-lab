@@ -9,48 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as CoachRouteImport } from './routes/coach'
-import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as CoachSessionsRouteImport } from './routes/coach.sessions'
-import { Route as CoachProfilRouteImport } from './routes/coach.profil'
-import { Route as CoachPendingRouteImport } from './routes/coach.pending'
-import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
-import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
-import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
-import { Route as AppProfileRouteImport } from './routes/_app.profile'
-import { Route as AppHomeRouteImport } from './routes/_app.home'
-import { Route as AppHistoryRouteImport } from './routes/_app.history'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as CoachRouteImport } from './routes/coach'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
-import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
+import { Route as AppHistoryRouteImport } from './routes/_app.history'
+import { Route as AppHomeRouteImport } from './routes/_app.home'
+import { Route as AppProfileRouteImport } from './routes/_app.profile'
+import { Route as AdminCoachesRouteImport } from './routes/admin.coaches'
+import { Route as CoachDashboardRouteImport } from './routes/coach.dashboard'
+import { Route as CoachJoueursRouteImport } from './routes/coach.joueurs'
+import { Route as CoachPendingRouteImport } from './routes/coach.pending'
+import { Route as CoachProfilRouteImport } from './routes/coach.profil'
+import { Route as CoachSessionsRouteImport } from './routes/coach.sessions'
 import { Route as AppSessionsIndexRouteImport } from './routes/_app.sessions.index'
-import { Route as CoachJoueurPlayerIdRouteImport } from './routes/coach.joueur.$playerId'
-import { Route as AppTrainingPlanningIdRouteImport } from './routes/_app.training.$planningId'
-import { Route as AppTestsSessionRouteImport } from './routes/_app.tests.session'
 import { Route as AppSessionsSessionIdRouteImport } from './routes/_app.sessions.$sessionId'
+import { Route as AppTestsIndexRouteImport } from './routes/_app.tests.index'
+import { Route as AppTestsSessionRouteImport } from './routes/_app.tests.session'
+import { Route as AppTrainingPlanningIdRouteImport } from './routes/_app.training.$planningId'
+import { Route as CoachJoueurPlayerIdRouteImport } from './routes/coach.joueur.$playerId'
 
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachRoute = CoachRouteImport.update({
@@ -58,53 +47,29 @@ const CoachRoute = CoachRouteImport.update({
   path: '/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CoachSessionsRoute = CoachSessionsRouteImport.update({
-  id: '/sessions',
-  path: '/sessions',
-  getParentRoute: () => CoachRoute,
-} as any)
-const CoachProfilRoute = CoachProfilRouteImport.update({
-  id: '/profil',
-  path: '/profil',
-  getParentRoute: () => CoachRoute,
-} as any)
-const CoachPendingRoute = CoachPendingRouteImport.update({
-  id: '/pending',
-  path: '/pending',
-  getParentRoute: () => CoachRoute,
-} as any)
-const CoachJoueursRoute = CoachJoueursRouteImport.update({
-  id: '/joueurs',
-  path: '/joueurs',
-  getParentRoute: () => CoachRoute,
-} as any)
-const CoachDashboardRoute = CoachDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => CoachRoute,
-} as any)
-const AdminCoachesRoute = AdminCoachesRouteImport.update({
-  id: '/admin/coaches',
-  path: '/admin/coaches',
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppProfileRoute = AppProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AppRoute,
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppHomeRoute = AppHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
+const AppExercisesRoute = AppExercisesRouteImport.update({
+  id: '/exercises',
+  path: '/exercises',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHistoryRoute = AppHistoryRouteImport.update({
@@ -112,9 +77,54 @@ const AppHistoryRoute = AppHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => AppRoute,
 } as any)
-const AppExercisesRoute = AppExercisesRouteImport.update({
-  id: '/exercises',
-  path: '/exercises',
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AdminCoachesRoute = AdminCoachesRouteImport.update({
+  id: '/admin/coaches',
+  path: '/admin/coaches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachDashboardRoute = CoachDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachJoueursRoute = CoachJoueursRouteImport.update({
+  id: '/joueurs',
+  path: '/joueurs',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachPendingRoute = CoachPendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachProfilRoute = CoachProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => CoachRoute,
+} as any)
+const CoachSessionsRoute = CoachSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => CoachRoute,
+} as any)
+const AppSessionsIndexRoute = AppSessionsIndexRouteImport.update({
+  id: '/sessions/',
+  path: '/sessions/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSessionsSessionIdRoute = AppSessionsSessionIdRouteImport.update({
+  id: '/sessions/$sessionId',
+  path: '/sessions/$sessionId',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTestsIndexRoute = AppTestsIndexRouteImport.update({
@@ -122,30 +132,20 @@ const AppTestsIndexRoute = AppTestsIndexRouteImport.update({
   path: '/tests/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppSessionsIndexRoute = AppSessionsIndexRouteImport.update({
-  id: '/sessions/',
-  path: '/sessions/',
+const AppTestsSessionRoute = AppTestsSessionRouteImport.update({
+  id: '/tests/session',
+  path: '/tests/session',
   getParentRoute: () => AppRoute,
-} as any)
-const CoachJoueurPlayerIdRoute = CoachJoueurPlayerIdRouteImport.update({
-  id: '/joueur/$playerId',
-  path: '/joueur/$playerId',
-  getParentRoute: () => CoachRoute,
 } as any)
 const AppTrainingPlanningIdRoute = AppTrainingPlanningIdRouteImport.update({
   id: '/training/$planningId',
   path: '/training/$planningId',
   getParentRoute: () => AppRoute,
 } as any)
-const AppTestsSessionRoute = AppTestsSessionRouteImport.update({
-  id: '/tests/session',
-  path: '/tests/session',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSessionsSessionIdRoute = AppSessionsSessionIdRouteImport.update({
-  id: '/sessions/$sessionId',
-  path: '/sessions/$sessionId',
-  getParentRoute: () => AppRoute,
+const CoachJoueurPlayerIdRoute = CoachJoueurPlayerIdRouteImport.update({
+  id: '/joueur/$playerId',
+  path: '/joueur/$playerId',
+  getParentRoute: () => CoachRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -311,39 +311,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/coach': {
-      id: '/coach'
-      path: '/coach'
-      fullPath: '/coach'
-      preLoaderRoute: typeof CoachRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -353,67 +325,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/coach/sessions': {
-      id: '/coach/sessions'
-      path: '/sessions'
-      fullPath: '/coach/sessions'
-      preLoaderRoute: typeof CoachSessionsRouteImport
-      parentRoute: typeof CoachRoute
-    }
-    '/coach/profil': {
-      id: '/coach/profil'
-      path: '/profil'
-      fullPath: '/coach/profil'
-      preLoaderRoute: typeof CoachProfilRouteImport
-      parentRoute: typeof CoachRoute
-    }
-    '/coach/pending': {
-      id: '/coach/pending'
-      path: '/pending'
-      fullPath: '/coach/pending'
-      preLoaderRoute: typeof CoachPendingRouteImport
-      parentRoute: typeof CoachRoute
-    }
-    '/coach/joueurs': {
-      id: '/coach/joueurs'
-      path: '/joueurs'
-      fullPath: '/coach/joueurs'
-      preLoaderRoute: typeof CoachJoueursRouteImport
-      parentRoute: typeof CoachRoute
-    }
-    '/coach/dashboard': {
-      id: '/coach/dashboard'
-      path: '/dashboard'
-      fullPath: '/coach/dashboard'
-      preLoaderRoute: typeof CoachDashboardRouteImport
-      parentRoute: typeof CoachRoute
-    }
-    '/admin/coaches': {
-      id: '/admin/coaches'
-      path: '/admin/coaches'
-      fullPath: '/admin/coaches'
-      preLoaderRoute: typeof AdminCoachesRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/profile': {
-      id: '/_app/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AppProfileRouteImport
-      parentRoute: typeof AppRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/home': {
-      id: '/_app/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof AppHomeRouteImport
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/exercises': {
+      id: '/_app/exercises'
+      path: '/exercises'
+      fullPath: '/exercises'
+      preLoaderRoute: typeof AppExercisesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/history': {
@@ -423,11 +374,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHistoryRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/exercises': {
-      id: '/_app/exercises'
-      path: '/exercises'
-      fullPath: '/exercises'
-      preLoaderRoute: typeof AppExercisesRouteImport
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/admin/coaches': {
+      id: '/admin/coaches'
+      path: '/admin/coaches'
+      fullPath: '/admin/coaches'
+      preLoaderRoute: typeof AdminCoachesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach/dashboard': {
+      id: '/coach/dashboard'
+      path: '/dashboard'
+      fullPath: '/coach/dashboard'
+      preLoaderRoute: typeof CoachDashboardRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/joueurs': {
+      id: '/coach/joueurs'
+      path: '/joueurs'
+      fullPath: '/coach/joueurs'
+      preLoaderRoute: typeof CoachJoueursRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/pending': {
+      id: '/coach/pending'
+      path: '/pending'
+      fullPath: '/coach/pending'
+      preLoaderRoute: typeof CoachPendingRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/profil': {
+      id: '/coach/profil'
+      path: '/profil'
+      fullPath: '/coach/profil'
+      preLoaderRoute: typeof CoachProfilRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/coach/sessions': {
+      id: '/coach/sessions'
+      path: '/sessions'
+      fullPath: '/coach/sessions'
+      preLoaderRoute: typeof CoachSessionsRouteImport
+      parentRoute: typeof CoachRoute
+    }
+    '/_app/sessions/': {
+      id: '/_app/sessions/'
+      path: '/sessions'
+      fullPath: '/sessions/'
+      preLoaderRoute: typeof AppSessionsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sessions/$sessionId': {
+      id: '/_app/sessions/$sessionId'
+      path: '/sessions/$sessionId'
+      fullPath: '/sessions/$sessionId'
+      preLoaderRoute: typeof AppSessionsSessionIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/tests/': {
@@ -437,19 +451,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTestsIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/sessions/': {
-      id: '/_app/sessions/'
-      path: '/sessions'
-      fullPath: '/sessions/'
-      preLoaderRoute: typeof AppSessionsIndexRouteImport
+    '/_app/tests/session': {
+      id: '/_app/tests/session'
+      path: '/tests/session'
+      fullPath: '/tests/session'
+      preLoaderRoute: typeof AppTestsSessionRouteImport
       parentRoute: typeof AppRoute
-    }
-    '/coach/joueur/$playerId': {
-      id: '/coach/joueur/$playerId'
-      path: '/joueur/$playerId'
-      fullPath: '/coach/joueur/$playerId'
-      preLoaderRoute: typeof CoachJoueurPlayerIdRouteImport
-      parentRoute: typeof CoachRoute
     }
     '/_app/training/$planningId': {
       id: '/_app/training/$planningId'
@@ -458,19 +465,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTrainingPlanningIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/tests/session': {
-      id: '/_app/tests/session'
-      path: '/tests/session'
-      fullPath: '/tests/session'
-      preLoaderRoute: typeof AppTestsSessionRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/sessions/$sessionId': {
-      id: '/_app/sessions/$sessionId'
-      path: '/sessions/$sessionId'
-      fullPath: '/sessions/$sessionId'
-      preLoaderRoute: typeof AppSessionsSessionIdRouteImport
-      parentRoute: typeof AppRoute
+    '/coach/joueur/$playerId': {
+      id: '/coach/joueur/$playerId'
+      path: '/joueur/$playerId'
+      fullPath: '/coach/joueur/$playerId'
+      preLoaderRoute: typeof CoachJoueurPlayerIdRouteImport
+      parentRoute: typeof CoachRoute
     }
   }
 }
