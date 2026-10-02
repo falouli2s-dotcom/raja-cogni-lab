@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type State = "idle" | "waiting" | "green" | "result" | "early" | "done";
 const MAX_TRIALS = 5;
@@ -77,14 +76,6 @@ export function ReactionTimeTester({ onClose }: { onClose: () => void }) {
       set(next.length >= MAX_TRIALS ? "done" : "result");
     }
   }, []);
-
-  const restart = () => {
-    clearTimers();
-    timesRef.current = [];
-    setTimes([]);
-    setLast(null);
-    set("idle");
-  };
 
   const avg = times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
   const sorted = [...times].sort((a, b) => a - b);
