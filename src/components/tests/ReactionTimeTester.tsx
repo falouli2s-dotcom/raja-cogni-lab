@@ -108,7 +108,10 @@ export function ReactionTimeTester({ onClose }: { onClose: () => void }) {
       </button>
 
       {state === "done" ? (
-        <div className="flex h-full flex-col items-center justify-center gap-6 bg-background px-6">
+        <div
+          onPointerDown={onClose}
+          className="flex h-full flex-col items-center justify-center gap-6 bg-background px-6"
+        >
           <h2 className="text-2xl font-bold text-foreground">Résultats</h2>
           <ul className="w-full max-w-xs space-y-2 text-center text-base text-foreground">
             {times.map((t, i) => (
@@ -119,10 +122,7 @@ export function ReactionTimeTester({ onClose }: { onClose: () => void }) {
             <p>Moyenne : <strong className="text-foreground">{avg} ms</strong></p>
             <p>Médiane : <strong className="text-foreground">{median} ms</strong></p>
           </div>
-          <div className="flex w-full max-w-xs flex-col gap-3">
-            <Button className="h-12" onClick={restart}>Recommencer</Button>
-            <Button variant="outline" className="h-12" onClick={onClose}>Fermer</Button>
-          </div>
+          <p className="mt-6 animate-pulse text-sm text-muted-foreground">Appuie n'importe où pour quitter</p>
         </div>
       ) : (
         <div
