@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Brain, Zap, GitBranch, Clock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Timer } from "lucide-react";
+import { ReactionTimeTester } from "@/components/tests/ReactionTimeTester";
 
 export const Route = createFileRoute("/_app/tests/")({
   component: TestsPage,
@@ -41,8 +44,17 @@ const tests = [
 ];
 
 function TestsPage() {
+  const [rtOpen, setRtOpen] = useState(false);
   return (
     <div className="px-5 pt-12 pb-24">
+      {rtOpen && <ReactionTimeTester onClose={() => setRtOpen(false)} />}
+      <div className="mb-6 flex items-center gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+          <Timer className="h-5 w-5 text-primary" />
+        </div>
+        <p className="flex-1 font-semibold text-foreground">Tester le temps de réaction</p>
+        <Button size="sm" onClick={() => setRtOpen(true)}>Commencer</Button>
+      </div>
       <motion.div
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
