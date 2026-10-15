@@ -4,6 +4,7 @@ import { CheckCircle, XCircle, AlertTriangle, Maximize2 } from "lucide-react";
 import {
   SimonTrial,
   SIMON_CONFIG,
+  isSimonCongruent,
   generateTrials,
   computeSimonResults,
 } from "@/lib/simon-engine";
@@ -244,7 +245,6 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       <div className="relative flex flex-1 min-h-0">
         {/* LEFT zone = ROUGE */}
         <button
-          ref={leftZoneRef}
           onPointerDown={() => handleResponse("red")}
           aria-label="Zone Rouge"
           className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
@@ -270,7 +270,6 @@ export function SimonTest({ onComplete }: SimonTestProps) {
 
         {/* RIGHT zone = VERT */}
         <button
-          ref={rightZoneRef}
           onPointerDown={() => handleResponse("green")}
           aria-label="Zone Vert"
           className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
