@@ -127,7 +127,12 @@ export async function fetchPlayerExportData(playerId: string): Promise<PlayerDat
           tmt: toMetrics(tmtRow),
         },
         simonRawTrials: Array.isArray(simonResult?.details?.raw_trials)
-          ? simonResult.details.raw_trials
+          ? simonResult.details.raw_trials.map((t: any) => {
+              // Recompute congruence from raw data (left = Rouge, right = Vert)
+              const respSide = t.stimulus === "Rouge" ? "Gauche" : "Droite";
+              if (!t.stimulus || !t.side) return t;
+              return { ...t, type: respSide === t.side ? "Congruent" : "Incongruent" };
+            })
           : [],
       };
     }

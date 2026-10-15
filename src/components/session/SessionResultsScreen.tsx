@@ -99,7 +99,7 @@ export function SessionResultsScreen() {
               accuracy: (result.data as SimonResultData).accuracy,
               raw_trials: (result.rawTrials ?? []).map((t: any) => ({
                 trialNumber: t.trialNumber,
-                type: t.isCongruent ? "Congruent" : "Incongruent",
+                type: isSimonCongruent(t) ? "Congruent" : "Incongruent",
                 stimulus: t.color === "green" ? "Vert" : "Rouge",
                 side: t.position === "left" ? "Gauche" : "Droite",
                 response: t.responded
