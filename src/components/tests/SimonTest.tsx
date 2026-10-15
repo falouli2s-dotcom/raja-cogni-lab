@@ -245,7 +245,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       <div className="relative flex flex-1 min-h-0">
         {/* LEFT zone = ROUGE */}
         <button
-          onPointerDown={() => handleResponse("red")}
+          onPointerDown={(e) => handleResponse("red", e.timeStamp)}
           aria-label="Zone Rouge"
           className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
         >
@@ -270,7 +270,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
 
         {/* RIGHT zone = VERT */}
         <button
-          onPointerDown={() => handleResponse("green")}
+          onPointerDown={(e) => handleResponse("green", e.timeStamp)}
           aria-label="Zone Vert"
           className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
         >
