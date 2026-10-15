@@ -8,6 +8,7 @@ import {
   computeSimonResults,
 } from "@/lib/simon-engine";
 import { useFullscreen } from "@/hooks/use-fullscreen";
+import { SimonResults } from "@/components/tests/SimonResults";
 
 type Phase = "training" | "transition" | "real" | "done";
 
@@ -27,7 +28,9 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   const [showStimulus, setShowStimulus] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "correct" | "wrong" | "timeout"; text: string } | null>(null);
   const [currentTrials, setCurrentTrials] = useState(generateTrials(SIMON_CONFIG.trainingTrials));
-  const [allRealTrials, setAllRealTrials] = useState<SimonTrial[]>([]);
+  const realTrialsRef = useRef<SimonTrial[]>([]);
+  const [finalResults, setFinalResults] = useState<ReturnType<typeof computeSimonResults> | null>(null);
+  const [finalTrials, setFinalTrials] = useState<SimonTrial[]>([]);
 
   const stimulusStartRef = useRef<number>(0);
   const touchTimestampRef = useRef<number | null>(null);
@@ -49,21 +52,19 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       if (phase === "training") {
         setPhase("transition");
       } else if (phase === "real") {
-        setAllRealTrials((prev) => {
-          const finalTrials = [...prev, trial].slice(-SIMON_CONFIG.realTrials);
-          const results = computeSimonResults(finalTrials);
-          setTimeout(() => onComplete(results, finalTrials), 100);
-          return finalTrials;
-        });
+        const finished = [...realTrialsRef.current, trial].slice(-SIMON_CONFIG.realTrials);
+        realTrialsRef.current = finished;
+        setFinalResults(computeSimonResults(finished));
+        setFinalTrials(finished);
         setPhase("done");
       }
     } else {
       if (phase === "real") {
-        setAllRealTrials((prev) => [...prev, trial]);
+        realTrialsRef.current = [...realTrialsRef.current, trial];
       }
       setTrialIndex(nextIndex);
     }
-  }, [trialIndex, totalTrials, phase, onComplete]);
+  }, [trialIndex, totalTrials, phase]);
 
   const showNextTrial = useCallback(() => {
     setFeedback(null);
@@ -162,7 +163,9 @@ export function SimonTest({ onComplete }: SimonTestProps) {
     const realTrials = generateTrials(SIMON_CONFIG.realTrials);
     setCurrentTrials(realTrials);
     setTrialIndex(0);
-    setAllRealTrials([]);
+    realTrialsRef.current = [];
+    setFinalResults(null);
+    setFinalTrials([]);
     setPhase("real");
   }
 
@@ -199,10 +202,18 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   }
 
   if (phase === "done") {
+    if (!finalResults) {
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      );
+    }
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
+      <SimonResults
+        results={finalResults}
+        onContinue={() => onComplete(finalResults, finalTrials)}
+      />
     );
   }
 
