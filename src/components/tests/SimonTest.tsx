@@ -4,6 +4,7 @@ import { CheckCircle, XCircle, AlertTriangle, Maximize2 } from "lucide-react";
 import {
   SimonTrial,
   SIMON_CONFIG,
+  isSimonCongruent,
   generateTrials,
   computeSimonResults,
 } from "@/lib/simon-engine";
@@ -33,11 +34,14 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   const [finalTrials, setFinalTrials] = useState<SimonTrial[]>([]);
 
   const stimulusStartRef = useRef<number>(0);
-  const touchTimestampRef = useRef<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const fixationTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const responded = useRef(false);
-  const leftZoneRef = useRef<HTMLButtonElement>(null);
-  const rightZoneRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => () => {
+    clearTimeout(fixationTimeoutRef.current);
+    clearTimeout(timeoutRef.current);
+  }, []);
 
   const isTraining = phase === "training";
   const totalTrials = currentTrials.length;
@@ -54,6 +58,11 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       } else if (phase === "real") {
         const finished = [...realTrialsRef.current, trial].slice(-SIMON_CONFIG.realTrials);
         realTrialsRef.current = finished;
+        // TEMP debug — remove later
+        console.table(finished.map((t) => ({
+          trialNumber: t.trialNumber, color: t.color, position: t.position,
+          isCongruent: isSimonCongruent(t), responseTime: t.responseTime, correct: t.correct,
+        })));
         setFinalResults(computeSimonResults(finished));
         setFinalTrials(finished);
         setPhase("done");
@@ -67,11 +76,13 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   }, [trialIndex, totalTrials, phase]);
 
   const showNextTrial = useCallback(() => {
+    stimulusStartRef.current = 0;
+    clearTimeout(fixationTimeoutRef.current);
     setFeedback(null);
     setShowStimulus(false);
     setShowFixation(true);
 
-    setTimeout(() => {
+    fixationTimeoutRef.current = setTimeout(() => {
       setShowFixation(false);
       setShowStimulus(true);
       responded.current = false;
@@ -104,19 +115,18 @@ export function SimonTest({ onComplete }: SimonTestProps) {
   }, [trialIndex, currentTrials, isTraining, advanceTrial]);
 
   // Handle response: tap LEFT zone = "red", tap RIGHT zone = "green"
-  const handleResponse = useCallback((chosenColor: "green" | "red") => {
+  const handleResponse = useCallback((chosenColor: "green" | "red", eventTime: number) => {
     if (!showStimulus || responded.current || !currentTrial) return;
+    if (stimulusStartRef.current === 0 || eventTime < stimulusStartRef.current) return;
     responded.current = true;
     clearTimeout(timeoutRef.current);
 
-    // Prefer touchstart timestamp (captured before React state update); fall back to now()
-    const responseTimestamp = touchTimestampRef.current ?? performance.now();
-    touchTimestampRef.current = null;
-    const rt = responseTimestamp - stimulusStartRef.current;
+    const rt = eventTime - stimulusStartRef.current;
     const isCorrect = chosenColor === currentTrial.color;
 
     const trial: SimonTrial = {
       ...currentTrial,
+      isCongruent: isSimonCongruent(currentTrial),
       responseTime: Math.round(rt),
       correct: isCorrect,
       responded: true,
@@ -134,23 +144,6 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       advanceTrial(trial);
     }
   }, [showStimulus, currentTrial, isTraining, advanceTrial]);
-
-  // FIX 4: Capture touchstart timestamp BEFORE React state update for precise RT
-  useEffect(() => {
-    const left = leftZoneRef.current;
-    const right = rightZoneRef.current;
-    if (!left || !right) return;
-
-    const onTouchLeft = () => { touchTimestampRef.current = performance.now(); };
-    const onTouchRight = () => { touchTimestampRef.current = performance.now(); };
-
-    left.addEventListener("touchstart", onTouchLeft, { passive: true });
-    right.addEventListener("touchstart", onTouchRight, { passive: true });
-    return () => {
-      left.removeEventListener("touchstart", onTouchLeft);
-      right.removeEventListener("touchstart", onTouchRight);
-    };
-  }, []);
 
   useEffect(() => {
     if ((phase === "training" || phase === "real") && trialIndex < totalTrials) {
@@ -252,8 +245,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
       <div className="relative flex flex-1 min-h-0">
         {/* LEFT zone = ROUGE */}
         <button
-          ref={leftZoneRef}
-          onPointerDown={() => handleResponse("red")}
+          onPointerDown={(e) => handleResponse("red", e.timeStamp)}
           aria-label="Zone Rouge"
           className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
         >
@@ -278,8 +270,7 @@ export function SimonTest({ onComplete }: SimonTestProps) {
 
         {/* RIGHT zone = VERT */}
         <button
-          ref={rightZoneRef}
-          onPointerDown={() => handleResponse("green")}
+          onPointerDown={(e) => handleResponse("green", e.timeStamp)}
           aria-label="Zone Vert"
           className="flex flex-1 flex-col items-center justify-center gap-4 active:bg-card/5 transition-colors"
         >
