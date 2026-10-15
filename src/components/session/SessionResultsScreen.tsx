@@ -1,3 +1,4 @@
+import { isSimonCongruent } from "@/lib/simon-engine";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
