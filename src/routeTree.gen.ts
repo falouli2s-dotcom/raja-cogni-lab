@@ -15,6 +15,7 @@ import { Route as CoachRouteImport } from './routes/coach'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SimonPreviewRouteImport } from './routes/simon-preview'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
@@ -60,6 +61,11 @@ const LoginRoute = LoginRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimonPreviewRoute = SimonPreviewRouteImport.update({
+  id: '/simon-preview',
+  path: '/simon-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/simon-preview': typeof SimonPreviewRoute
   '/verify-email': typeof VerifyEmailRoute
   '/exercises': typeof AppExercisesRoute
   '/history': typeof AppHistoryRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/simon-preview': typeof SimonPreviewRoute
   '/verify-email': typeof VerifyEmailRoute
   '/exercises': typeof AppExercisesRoute
   '/history': typeof AppHistoryRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/simon-preview': typeof SimonPreviewRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/exercises': typeof AppExercisesRoute
   '/_app/history': typeof AppHistoryRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/simon-preview'
     | '/verify-email'
     | '/exercises'
     | '/history'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/simon-preview'
     | '/verify-email'
     | '/exercises'
     | '/history'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/simon-preview'
     | '/verify-email'
     | '/_app/exercises'
     | '/_app/history'
@@ -305,6 +317,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  SimonPreviewRoute: typeof SimonPreviewRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AdminCoachesRoute: typeof AdminCoachesRoute
 }
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simon-preview': {
+      id: '/simon-preview'
+      path: '/simon-preview'
+      fullPath: '/simon-preview'
+      preLoaderRoute: typeof SimonPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -528,6 +548,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  SimonPreviewRoute: SimonPreviewRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AdminCoachesRoute: AdminCoachesRoute,
 }
